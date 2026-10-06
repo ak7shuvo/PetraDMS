@@ -128,6 +128,7 @@
 
 /* ===== Shell ===== */
 .shell { display: grid; grid-template-columns: 216px 1fr; grid-template-rows: 48px 1fr; height: 100%; }
+.shell > .banner { grid-column: 2; }
 .shell.simple { grid-template-columns: 248px 1fr; }
 .sidebar { grid-row: 1 / span 2; background: var(--black); color: var(--cream); display: flex; flex-direction: column; overflow-y: auto; }
 .brand { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-4); border-bottom: 1px solid #2c2925; }
@@ -188,3 +189,33 @@
 .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .grid.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+/* ===== Recovery sheet and print ===== */
+.print-sheet { border: 2px solid var(--black); background: var(--paper); padding: var(--sp-5); display: grid; gap: var(--sp-2); }
+.print-title { font-weight: 700; font-size: var(--fs-lg); letter-spacing: .04em; text-transform: uppercase; }
+.print-code { font-size: var(--fs-2xl); font-weight: 700; letter-spacing: .08em; text-align: left; padding: var(--sp-3) 0; }
+.print-note { color: var(--muted); font-size: var(--fs-sm); }
+@media print {
+  body * { visibility: hidden; }
+  .print-sheet, .print-sheet * { visibility: visible; }
+  .print-sheet { position: absolute; left: 0; top: 0; width: 100%; border: 2px solid #000; }
+  .no-print { display: none !important; }
+}
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); max-width: 280px; }
+.keypad .p-btn { height: 52px; font-size: var(--fs-xl); }
+.pin-dots { display: flex; gap: var(--sp-3); justify-content: center; height: 28px; align-items: center; }
+.pin-dots span { width: 14px; height: 14px; border: 2px solid var(--black); background: transparent; }
+.pin-dots span.on { background: var(--red); border-color: var(--red); }
+.user-tile { display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: left; padding: var(--sp-3) var(--sp-4); background: var(--paper); border: 1.5px solid var(--black); border-radius: var(--r-2); cursor: pointer; }
+.user-tile:hover { background: var(--cream-2); }
+.user-tile .avatar { width: 36px; height: 36px; background: var(--black); color: var(--cream); display: grid; place-items: center; font-weight: 700; flex: none; }
+.center-screen { min-height: 100%; display: grid; place-items: center; padding: var(--sp-6); background: var(--cream); }
+.auth-card { width: min(460px, 100%); }
+.wizard-card { width: min(640px, 100%); }
+.steps { display: flex; gap: 6px; margin-bottom: var(--sp-4); }
+.steps span { flex: 1; height: 5px; background: var(--cream-3); }
+.steps span.done { background: var(--red); }
+.opt-card { display: block; width: 100%; text-align: left; padding: var(--sp-3) var(--sp-4); background: var(--paper); border: 1.5px solid var(--line-strong); border-radius: var(--r-2); cursor: pointer; }
+.opt-card[aria-pressed='true'] { border-color: var(--black); box-shadow: inset 4px 0 0 var(--red); background: var(--cream-2); }
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3) var(--sp-4); }
+.form-grid .wide { grid-column: 1 / -1; }

@@ -1,4 +1,5 @@
-export * from './ipc';
+export * from './ipc/index';
+export * from './settings';
 export * from './errors';
 export * from './money';
 export * from './units';

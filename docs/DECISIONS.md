@@ -49,3 +49,19 @@ No certificate is available. `signAndEditExecutable` stays true so icon/version 
 - Dictionaries are split by file under `i18n/locales/{bn,en}/*.json` (merged with `import.meta.glob`); the parity test requires identical files, keys and `{placeholders}`.
 - When `PETRA_DATA_DIR` is set (tests, CI) Electron's `userData` moves inside it so runs never share Chromium state.
 - The style guide is not in the sidebar; it is reached by URL or Ctrl+Shift+G.
+
+## D11. IPC and application services (Phase 4)
+- One IPC channel, `petra:invoke`, carries `(channel, input)`. The preload validates the input with the channel's zod schema; the main-process `Dispatcher` validates again, checks the signed-in user's role (`public` / `user` / `manager` / `owner`), refuses writes while the licence is read-only, runs the handler and returns `{ ok, data }` or `{ ok:false, error }`. Roles are therefore enforced in the main process, not only hidden in the UI.
+- Channel outputs are typed (TypeScript) but not re-parsed with zod: they come from trusted main-process code and re-validating large lists would cost time on old PCs. Inputs are always validated.
+- Errors cross the bridge as `{code, message, params}`; the preload throws them inside an `Error` message (`PETRA_ERR:` + JSON) because custom error classes do not survive `contextBridge`. The renderer maps `code` to a translated, plain-language message (`err.<CODE>`).
+- Services live in `packages/db/src/app/` and take a `Host` interface for the few things only Electron can do (dialogs, moving the data folder). That keeps them testable with an in-memory database.
+- The signed-in session is held in the main process (single-user desktop app); the renderer asks `app:status` on every start.
+
+## D12. Authentication, recovery and licence (Phase 4)
+- PIN (4 to 6 digits) or password (6+ characters), scrypt (N=16384, r=8, p=1), stored as `pin:scrypt$...` or `password:scrypt$...` so the login screen knows whether to show the keypad. Five wrong attempts lock the account for five minutes.
+- Recovery code: 20 characters from an unambiguous alphabet (about 100 bits), shown once, stored only as an scrypt hash, reset by using it and a new code is issued. It resets the first active Owner only. There is no cloud reset.
+- Licence file: `base64url(JSON payload).base64url(Ed25519 signature)`. The payload binds to a machine code (first 16 hex characters of sha256 over hostname, CPU model, platform and architecture). Renaming the PC or changing its CPU needs a re-issued key. Expiry is inclusive of the last day (end of day UTC).
+- Trial: 30 days from the first status check. `last_seen_max` only moves forward; a clock more than 24 hours behind it means read-only until the clock is correct. Read-only blocks every `write` channel; viewing, printing, export and backup stay available.
+- Tests and CI may override the public key and machine hash with environment variables only when the app is not packaged.
+- The data folder can be chosen once, during setup (a pointer file `location.json` in `%LOCALAPPDATA%\PetraDMS` records it). If the chosen folder already holds a database, the app opens it instead of creating a new one.
+- Staff start in Simple mode, Owner and Manager in Full mode; a later choice is remembered per user.

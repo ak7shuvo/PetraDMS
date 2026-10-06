@@ -5,3 +5,7 @@ export * from './toast';
 export * from './data';
 export * from './charts';
 export * from './icons';
+export * from './Secret';
+export * from './RecoverySheet';
+export * from './ChangeSecretModal';
+export * from './CountUp';

@@ -17,6 +17,7 @@ export * from './money';
 export * from './adjustments';
 export * from './dayclose';
 export * from './integrity';
+export * from './app/index';
 
 export interface HealthInfo {
   sqliteVersion: string;

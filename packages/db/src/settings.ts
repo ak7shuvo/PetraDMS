@@ -1,53 +1,9 @@
+import { SETTING_DEFAULTS, type Settings } from '@petra/core';
 import { type Db, all, get, run } from './sql';
 import type { Ctx } from './ctx';
 
-export interface Settings {
-  allowNegativeStock: boolean;
-  creditLimitMode: 'off' | 'warn' | 'approval' | 'block';
-  minPriceMode: 'off' | 'approval';
-  taxBp: number;
-  roundOff: boolean;
-  rolloverHour: number;
-  language: 'en' | 'bn';
-  bnDigits: boolean;
-  grouping: 'lakh' | 'intl';
-  fontSize: 'normal' | 'large' | 'xlarge';
-  highContrast: boolean;
-  animations: 'full' | 'reduced' | 'off';
-  uiMode: 'simple' | 'full';
-  idleLockMinutes: number;
-  receiptFormat: 'a4' | 'thermal80' | 'thermal58';
-  printSilently: boolean;
-  printerName: string;
-  bilingualHeadings: boolean;
-  backupIntervalMinutes: number;
-  secondBackupDir: string;
-  dataDirRecommended: string;
-}
-
-export const SETTING_DEFAULTS: Settings = {
-  allowNegativeStock: false,
-  creditLimitMode: 'warn',
-  minPriceMode: 'approval',
-  taxBp: 0,
-  roundOff: false,
-  rolloverHour: 4,
-  language: 'en',
-  bnDigits: false,
-  grouping: 'lakh',
-  fontSize: 'normal',
-  highContrast: false,
-  animations: 'full',
-  uiMode: 'full',
-  idleLockMinutes: 0,
-  receiptFormat: 'a4',
-  printSilently: false,
-  printerName: '',
-  bilingualHeadings: false,
-  backupIntervalMinutes: 30,
-  secondBackupDir: '',
-  dataDirRecommended: ''
-};
+export { SETTING_DEFAULTS };
+export type { Settings };
 
 const toKey = (k: string): string => k.replace(/[A-Z]/g, (c) => '_' + c.toLowerCase());
 

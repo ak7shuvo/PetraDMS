@@ -1,10 +1,38 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Button, BrandMark, Segmented, Toasts } from '../ui';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { BrandMark, Button, Badge, ChangeSecretModal, Modal, Segmented, Toasts } from '../ui';
+import { call } from '../api';
 import { useI18n } from '../i18n';
 import { effectiveMotion, useUi } from '../store/ui';
+import { rememberMode, useApp } from '../store/app';
 import { visibleNav } from './nav';
 import { registeredPaths } from '../pages/registry';
+
+function LicenceBanner() {
+  const { t, n } = useI18n();
+  const lic = useApp((s) => s.status?.licence);
+  const navigate = useNavigate();
+  const role = useApp((s) => s.status?.session?.role);
+  if (!lic) return null;
+  let text: string | null = null;
+  let warn = false;
+  if (lic.state === 'expired') text = t('lic.banner.expired');
+  else if (lic.state === 'clock_rollback') text = t('lic.banner.clock');
+  else if (lic.state === 'trial') {
+    warn = true;
+    text = lic.daysLeft !== null && lic.daysLeft <= 1 ? t('lic.banner.trialLast') : t('lic.banner.trial', { n: n(lic.daysLeft ?? 0) });
+  } else if (lic.state === 'licensed' && lic.daysLeft !== null && lic.daysLeft <= 30) {
+    warn = true;
+    text = t('lic.banner.expiring', { n: n(lic.daysLeft) });
+  }
+  if (!text) return null;
+  return (
+    <div className={`banner${warn ? ' warn' : ''}`} role="status" data-testid="licence-banner" style={{ gridColumn: 2 }}>
+      <span style={{ flex: 1 }}>{text}</span>
+      {role === 'owner' && <Button size="sm" onClick={() => navigate('/settings')}>{t('lic.banner.open')}</Button>}
+    </div>
+  );
+}
 
 export function Shell() {
   const { t } = useI18n();
@@ -13,9 +41,16 @@ export function Shell() {
   const setUi = useUi((s) => s.set);
   const animations = useUi((s) => s.animations);
   const liteActive = useUi((s) => s.liteActive);
+  const session = useApp((s) => s.status?.session);
+  const refresh = useApp((s) => s.refresh);
   const loc = useLocation();
-  const nav = visibleNav(mode, registeredPaths());
+  const [account, setAccount] = useState(false);
+  const [changeOpen, setChangeOpen] = useState(false);
+  const role = session?.role ?? 'staff';
+  const nav = visibleNav(mode, registeredPaths(role));
   const [launching, setLaunching] = useState(() => effectiveMotion({ animations, liteActive }) === 'full' && !sessionStorageFlag());
+  const licence = useApp((s) => s.status?.licence);
+  const hasBanner = !!licence && (licence.state !== 'licensed' || (licence.daysLeft !== null && licence.daysLeft <= 30));
 
   useEffect(() => {
     if (!launching) return;
@@ -30,10 +65,14 @@ export function Shell() {
   }, [launching]);
 
   const title = nav.find((n) => (n.path === '/' ? loc.pathname === '/' : loc.pathname.startsWith(n.path)));
+  const signOut = async () => {
+    await call('auth:logout');
+    await refresh();
+  };
 
   return (
-    <div className={`shell${mode === 'simple' ? ' simple' : ''}${launching ? ' launching' : ''}`}>
-      <aside className="sidebar">
+    <div className={`shell${mode === 'simple' ? ' simple' : ''}${launching ? ' launching' : ''}`} style={hasBanner ? { gridTemplateRows: 'auto 48px 1fr' } : undefined}>
+      <aside className="sidebar" style={hasBanner ? { gridRow: '1 / span 3' } : undefined}>
         <div className="brand">
           <BrandMark />
           <div>
@@ -50,28 +89,33 @@ export function Shell() {
           ))}
         </nav>
         <div className="side-foot">
-          <Button size="sm" onClick={() => setUi({ mode: mode === 'simple' ? 'full' : 'simple' })} style={{ color: 'var(--cream)', borderColor: 'var(--cream-3)', background: 'transparent' }}>
+          <Button size="sm" onClick={() => session && rememberMode(session.userId, mode === 'simple' ? 'full' : 'simple')} style={{ color: 'var(--cream)', borderColor: 'var(--cream-3)', background: 'transparent' }} data-testid="mode-toggle">
             {mode === 'simple' ? t('mode.switchToFull') : t('mode.switchToSimple')}
           </Button>
         </div>
       </aside>
+      {hasBanner && <LicenceBanner />}
       <header className="topbar">
         <h1>{title ? t(title.labelKey) : t('app.name')}</h1>
-        <Segmented
-          label={t('sg.language')}
-          value={lang}
-          options={[
-            { value: 'bn', label: 'বাংলা' },
-            { value: 'en', label: 'EN' }
-          ]}
-          onChange={(v) => setUi({ lang: v })}
-        />
+        <Segmented label={t('sg.language')} value={lang} options={[{ value: 'bn', label: 'বাংলা' }, { value: 'en', label: 'EN' }]} onChange={(v) => setUi({ lang: v })} />
+        {session && (
+          <Button size="sm" onClick={() => setAccount(true)} data-testid="account">
+            {session.displayName} <Badge tone="dark">{t(`role.${session.role}`)}</Badge>
+          </Button>
+        )}
       </header>
       <main className="main">
         <div key={loc.pathname} className="page-fade">
           <Outlet />
         </div>
       </main>
+      <Modal open={account} title={session?.displayName ?? ''} onClose={() => setAccount(false)}>
+        <div className="grid" style={{ gap: 8 }}>
+          <Button onClick={() => { setAccount(false); setChangeOpen(true); }} data-testid="account-change">{t('set.changeSecret')}</Button>
+          <Button variant="dark" onClick={() => void signOut()} data-testid="signout">{t('auth.signOut')}</Button>
+        </div>
+      </Modal>
+      <ChangeSecretModal open={changeOpen} onClose={() => setChangeOpen(false)} />
       <Toasts />
     </div>
   );

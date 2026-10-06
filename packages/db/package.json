@@ -8,6 +8,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@petra/core": "workspace:*"
+    "@petra/core": "workspace:*",
+    "zod": "4.6.5"
   }
 }

@@ -22,7 +22,8 @@ export const ERROR_CODES = [
   'AUTH_FAILED',
   'LOCKED_OUT',
   'DB_NEWER',
-  'IO_FAILED'
+  'IO_FAILED',
+  'UNKNOWN'
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
@@ -41,4 +42,20 @@ export class PetraError extends Error {
 
 export function isPetraError(e: unknown): e is PetraError {
   return e instanceof PetraError;
+}
+
+export interface WireError {
+  code: ErrorCode;
+  message: string;
+  params: Record<string, string | number | boolean | null>;
+}
+
+/** Errors cross the IPC boundary as plain data; unknown errors become UNKNOWN without leaking internals. */
+export function toWireError(e: unknown): WireError {
+  if (isPetraError(e)) return { code: e.code, message: e.message, params: e.params };
+  return { code: 'UNKNOWN', message: e instanceof Error ? e.message : String(e), params: {} };
+}
+
+export function fromWireError(w: WireError): PetraError {
+  return new PetraError(w.code, w.message, w.params);
 }

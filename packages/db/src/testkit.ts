@@ -38,3 +38,10 @@ export function createTestWorld(opts: { file?: string } = {}): TestWorld {
 export function setSetting(ctx: Ctx, key: string, value: string): void {
   setRaw(ctx, key, value);
 }
+
+/** Migrated empty database (no users, no defaults), for first-run and service tests. */
+export function createBareDb(): { db: ReturnType<typeof openDatabase>; close: () => void } {
+  const db = openDatabase(':memory:');
+  migrate(db, loadMigrations(REPO_MIGRATIONS_DIR));
+  return { db, close: () => closeDatabase(db) };
+}

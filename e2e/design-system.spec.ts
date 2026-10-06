@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { launch } from './helpers';
+import { launch, completeSetup } from './helpers';
 
 test('runtime: node:sqlite runs in WAL mode with integrity ok', async () => {
   const { app, page, consoleErrors } = await launch();
-  await expect(page.getByTestId('sg-ready')).toBeHidden({ timeout: 15000 }).catch(() => undefined);
+  await completeSetup(page);
+  await page.keyboard.press('Control+Shift+G');
   await page.waitForSelector('[data-testid="journal-mode"]');
   await expect(page.getByTestId('journal-mode')).toHaveText('wal');
   await expect(page.getByTestId('integrity')).toHaveText('ok');
@@ -15,8 +16,10 @@ for (const lang of ['bn', 'en'] as const) {
   test(`style guide renders every component in ${lang} at 1366x768 with no console errors`, async () => {
     const { app, page, consoleErrors } = await launch();
     await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.setContentSize(1366, 768));
+    await completeSetup(page, { lang });
+    await page.keyboard.press('Control+Shift+G');
     await page.waitForSelector('[data-testid="style-guide"]');
-    if (lang === 'en') await page.getByRole('button', { name: 'EN', exact: true }).click();
+    if (lang === 'en') await page.getByRole('button', { name: 'EN', exact: true }).first().click();
     await expect(page.locator('html')).toHaveAttribute('lang', lang);
     await page.waitForSelector('[data-testid="sg-ready"]', { state: 'attached' });
 
@@ -70,6 +73,8 @@ test('no network requests leave the app', async () => {
     if (!/^(file|data|blob|devtools):/.test(r.url())) external.push(r.url());
   });
   await page.reload();
+  await completeSetup(page);
+  await page.keyboard.press('Control+Shift+G');
   await page.waitForSelector('[data-testid="style-guide"]');
   expect(external).toEqual([]);
   await app.close();
