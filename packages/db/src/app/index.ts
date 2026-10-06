@@ -12,3 +12,6 @@ export * from './salesServices';
 export * from './printing';
 export * from './moneyApp';
 export * from './moneyServices';
+export * from './reportsApp';
+export * from './reportServices';
+export * from './exportFiles';

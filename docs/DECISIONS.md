@@ -86,3 +86,11 @@ No certificate is available. `signAndEditExecutable` stays true so icon/version 
 - One salary sheet per month (a void sheet can be regenerated). Employees with a balance cannot be archived. A negative employee balance means an advance the employee still holds.
 - Money accounts cannot be hidden while they hold money, while default, or if they are the last cash account. Transfers between accounts are not in V1 (the plan has none).
 - `/expenses` (Full mode) and `/money` (Simple mode) are one screen with tabs: Expenses, Cash book, Close day, Accounts.
+
+## D16. Dashboard and reports (Phase 8)
+- Profit definitions live in one function (`periodFigures`): net sales = invoice totals before tax minus returns, each by its own document date; COGS includes bonus goods and subtracts the cost of returned goods; purchases are stock, not an expense; salary comes from posted sheets whose month touches the range; stock loss is damage, expiry and own use. Dashboard, summary and every grouped report use it, and the tests tie them together.
+- By-product sales add a "Rounding" row so the total equals net sales when round-off is on.
+- Report results are plain tables (`columns`, `rows`, `totals`). Cells starting with `@` and `key` columns carry i18n keys, so the renderer, PDF, CSV and Excel all translate the same result. Exports use the headings the user sees; PDFs use the business print language for digits.
+- Staff reports: summary, sales, due aging, collection sheet, low stock, expiring, customer statement. They never include cost, profit or stock value and are limited to today. Dashboard is Owner and Manager only; staff land on Sell.
+- Excel files are written by a small built-in ZIP/XLSX writer (no network, no extra dependency); text cells that start with `= + - @` are prefixed so a spreadsheet never runs them as formulas.
+- Salary in a one-day summary is the whole month's sheet (by month, as in the plan).

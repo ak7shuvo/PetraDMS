@@ -11,6 +11,8 @@ import { CustomersPage } from './Customers';
 import { EmployeesPage } from './Employees';
 import { MoneyPage } from './Money';
 import { PeoplePage } from './People';
+import { DashboardPage } from './Dashboard';
+import { ReportsPage } from './Reports';
 import { useI18n } from '../i18n';
 
 function ExpensesRoute() {
@@ -34,6 +36,7 @@ export interface PageDef {
 
 /** Each phase adds its pages here; the sidebar shows an entry only when its page exists. */
 export const PAGES: PageDef[] = [
+  { path: '/', element: <DashboardPage />, nav: true, minRole: 'manager' },
   { path: '/sales', element: <SalesPage />, nav: true, minRole: 'staff' },
   { path: '/customers', element: <CustomersPage />, nav: true, minRole: 'staff' },
   { path: '/purchases', element: <PurchasesPage />, nav: true, minRole: 'manager' },
@@ -44,6 +47,7 @@ export const PAGES: PageDef[] = [
   { path: '/employees', element: <EmployeesPage />, nav: true, minRole: 'manager' },
   { path: '/people', element: <PeoplePage />, nav: true, minRole: 'staff' },
   { path: '/money', element: <MoneyRoute />, nav: true, minRole: 'manager' },
+  { path: '/reports', element: <ReportsPage />, nav: true, minRole: 'staff' },
   { path: '/settings', element: <SettingsPage />, nav: true, minRole: 'owner' },
   { path: '/style-guide', element: <StyleGuide />, nav: false, minRole: 'staff' }
 ];

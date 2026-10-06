@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import type { CustomerDto, PriceTier } from '@petra/core';
 import { call, errorText } from '../api';
 import { useI18n } from '../i18n';
@@ -19,6 +20,10 @@ export function CustomersPage({ embedded }: { embedded?: boolean }) {
   const [owingOnly, setOwingOnly] = useState(false);
   const [archived, setArchived] = useState(false);
   const [sel, setSel] = useState<number | 'new' | null>(null);
+  const loc = useLocation();
+  useEffect(() => {
+    if ((loc.state as { add?: boolean } | null)?.add) setSel('new');
+  }, [loc.state]);
   const rows = (list.data ?? []).filter((c) => {
     if (!archived && c.status === 'archived') return false;
     if (areaId !== null && c.areaId !== areaId) return false;

@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
 import {
-  Dispatcher, PRODUCT_PUBLIC_KEY_PEM, healthInfo, loadMigrations, machineHash, migrate, openDatabase, registerCoreServices, registerCatalogServices, registerSalesServices, registerMoneyServices, closeDatabase, type Db, type Host
+  Dispatcher, PRODUCT_PUBLIC_KEY_PEM, healthInfo, loadMigrations, machineHash, migrate, openDatabase, registerCoreServices, registerCatalogServices, registerSalesServices, registerMoneyServices, registerReportServices, closeDatabase, type Db, type Host
 } from '@petra/db';
 import { ipcContract, PetraError, type PrintFormat } from '@petra/core';
 
@@ -248,6 +248,7 @@ if (!app.requestSingleInstanceLock()) {
     registerCatalogServices(dispatcher);
     registerSalesServices(dispatcher);
     registerMoneyServices(dispatcher);
+    registerReportServices(dispatcher);
     blockNetwork();
     registerIpc(dispatcher);
     if (process.argv.includes('--smoke-test')) {

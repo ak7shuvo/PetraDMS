@@ -3,7 +3,9 @@ import { PetraError, renderInvoice, renderPaymentReceipt, renderTableDoc, makeFm
 import { get } from '../sql';
 import type { Ctx } from '../ctx';
 import { loadSettings } from '../settings';
-import { loadProfile } from './coreServices';
+import { currentBusinessDate, loadProfile } from './coreServices';
+import { runReport } from './reportsApp';
+import { translate } from './exportFiles';
 import { getSale } from './salesApp';
 import { partyLedger } from './catalog';
 import type { Host } from './dispatcher';
@@ -36,6 +38,31 @@ function paymentData(ctx: Ctx, id: number): PaymentReceiptData {
 /** Builds the printable HTML and a file name stem for a document. Staff never get cost or profit here: no template prints them. */
 export function buildDoc(ctx: Ctx, host: Host, role: Role, doc: PrintDoc, format?: PrintFormat): { html: string; name: string; format: PrintFormat } {
   const c = printContext(ctx, host, doc.type === 'invoice' || doc.type === 'payment' ? format : 'a4');
+  if (doc.type === 'report') {
+    const f = makeFmt(c.opts);
+    const res = runReport(ctx, role, currentBusinessDate(ctx, loadSettings(ctx.db)), doc.params);
+    const show = (kind: string, cell: string | number | null): string => {
+      if (cell === null) return '';
+      if (typeof cell === 'string') return kind === 'date' ? f.date(cell) : translate(cell, doc.dict);
+      if (kind === 'money') return f.money(cell);
+      if (kind === 'pct') return f.digits(`${(cell / 100).toFixed(1)}%`);
+      return f.int(cell);
+    };
+    const right = (kind: string) => kind === 'money' || kind === 'qty' || kind === 'int' || kind === 'pct' || kind === 'days';
+    const period = doc.params.from || doc.params.to ? `${doc.params.from ? f.date(doc.params.from) : ''} – ${doc.params.to ? f.date(doc.params.to) : ''}` : '';
+    const html = renderTableDoc(
+      {
+        title: doc.title,
+        subtitle: period,
+        summary: res.summary.map((x) => [doc.dict[x.labelKey] ?? x.labelKey, show(x.kind, x.value)] as [string, string]),
+        columns: res.columns.map((col, i) => ({ header: doc.headers[i] ?? col.key, align: right(col.kind) ? 'r' as const : 'l' as const })),
+        rows: res.rows.map((r) => r.map((cell, i) => show(res.columns[i]?.kind ?? 'text', cell))),
+        totals: res.totals ? [res.totals.map((cell, i) => show(res.columns[i]?.kind ?? 'text', cell))] : undefined
+      },
+      c.biz, { ...c.opts, format: 'a4' }
+    );
+    return { html, name: `${doc.params.id}-${doc.params.to ?? currentBusinessDate(ctx, loadSettings(ctx.db))}`.replace(/[^\w.-]+/g, '_'), format: 'a4' };
+  }
   if (doc.type === 'invoice') {
     const sale = getSale(ctx, role, doc.id);
     return { html: renderInvoice(sale, c.biz, c.opts), name: sale.docNo, format: c.format };
@@ -77,7 +104,7 @@ export async function runPrint(ctx: Ctx, host: Host, role: Role, input: { doc: P
     await host.printHtml(html, { format, silent: s.printSilently, printerName: s.printerName });
     return { path: null };
   }
-  const file = path.join(host.dataDir, 'invoices', `${name}.pdf`);
+  const file = path.join(host.dataDir, input.doc.type === 'report' ? 'exports' : 'invoices', `${name}.pdf`);
   await host.pdfHtml(html, { format, file });
   host.reveal(file);
   return { path: file };

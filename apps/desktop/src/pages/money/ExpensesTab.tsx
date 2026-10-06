@@ -61,7 +61,7 @@ export function ExpensesTab() {
   );
 }
 
-function ExpenseModal({ open, onClose, onDone }: { open: boolean; onClose: () => void; onDone: () => void }) {
+export function ExpenseModal({ open, onClose, onDone }: { open: boolean; onClose: () => void; onDone: () => void }) {
   const { t, lang } = useI18n();
   const today = useApp((s) => s.status?.businessDate ?? '');
   const categories = useQuery('exp:categories', { includeArchived: false }, open);

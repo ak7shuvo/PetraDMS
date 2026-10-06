@@ -6,6 +6,7 @@ import { registerCoreServices } from './app/coreServices';
 import { registerCatalogServices } from './app/catalogServices';
 import { registerSalesServices } from './app/salesServices';
 import { registerMoneyServices } from './app/moneyServices';
+import { registerReportServices } from './app/reportServices';
 import { machineHash } from './app/licence';
 import { checkIntegrity, formatViolations } from './integrity';
 
@@ -44,6 +45,7 @@ export function makeApp(nowRef: { t: number } = { t: T0 }) {
   registerCatalogServices(d);
   registerSalesServices(d);
   registerMoneyServices(d);
+  registerReportServices(d);
   return { d, db, close, nowRef, printed, pdfs };
 }
 

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ch, dateStr, id } from './define';
+import { reportPrintDoc } from './reports';
 
 // ===== DTOs =====
 export type PriceTier = 'retail' | 'wholesale' | 'dealer';
@@ -192,6 +193,7 @@ export type PrintFormat = z.infer<typeof printFormat>;
 export const printDoc = z.discriminatedUnion('type', [
   z.object({ type: z.literal('invoice'), id: z.number().int().positive() }),
   z.object({ type: z.literal('payment'), id: z.number().int().positive() }),
+  reportPrintDoc,
   z.object({ type: z.literal('statement'), kind: z.enum(['customer', 'supplier']), id: z.number().int().positive(), from: dateStr.optional(), to: dateStr.optional() })
 ]);
 export type PrintDoc = z.infer<typeof printDoc>;

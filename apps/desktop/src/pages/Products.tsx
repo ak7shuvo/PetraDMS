@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import type { LookupDto, ProductDto } from '@petra/core';
 import { call, errorText } from '../api';
 import { useI18n } from '../i18n';
@@ -14,6 +15,10 @@ export function ProductsPage() {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState<number | 'all'>('all');
   const [editing, setEditing] = useState<ProductDto | 'new' | null>(null);
+  const loc = useLocation();
+  useEffect(() => {
+    if (canEdit && (loc.state as { add?: boolean } | null)?.add) setEditing('new');
+  }, [loc.state, canEdit]);
   const products = useQuery('catalog:products', { includeArchived: showArchived });
   const lookups = useQuery('catalog:lookups', undefined);
   const rows = useMemo(() => {

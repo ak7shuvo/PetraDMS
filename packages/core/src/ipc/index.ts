@@ -3,6 +3,7 @@ import { appChannels } from './app';
 import { catalogChannels } from './catalog';
 import { salesChannels } from './sales';
 import { moneyChannels } from './money';
+import { reportChannels } from './reports';
 import type { Channel } from './define';
 import type { WireError } from '../errors';
 
@@ -11,8 +12,9 @@ export * from './app';
 export * from './catalog';
 export * from './sales';
 export * from './money';
+export * from './reports';
 
-export const ipcContract = { ...appChannels, ...catalogChannels, ...salesChannels, ...moneyChannels } satisfies Record<string, Channel>;
+export const ipcContract = { ...appChannels, ...catalogChannels, ...salesChannels, ...moneyChannels, ...reportChannels } satisfies Record<string, Channel>;
 
 export type IpcChannel = keyof typeof ipcContract;
 export type IpcInput<C extends IpcChannel> = z.input<(typeof ipcContract)[C]['input']>;
