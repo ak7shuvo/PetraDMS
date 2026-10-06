@@ -28,3 +28,15 @@ CI builds on `windows-latest`, requires the installer to exceed 50 MB (a stub-on
 
 ## D8. Code signing
 No certificate is available. `signAndEditExecutable` stays true so icon/version metadata are applied; the installer is unsigned and Windows SmartScreen will warn (plan section 18).
+
+## D9. Engine design (Phase 2)
+- Prices on a product are per BASE unit; a pack may override its own tier prices (NULL = factor x base price). This avoids sub-poisha prices for gram-based goods.
+- One generic `reverseDocument` negates every still-live stock, ledger and cash row of a document (`reverses_id` points at the original). Void, invoice edit and day reopen all use it, which is why invariant I7 holds structurally. Voiding or editing needs the document's business date to be open: after a day is closed, corrections go through returns or adjustments, so closed history never changes.
+- Sale edit keeps all revisions of `sale_items` (`revision` column); only the current revision counts toward totals. Edit and void are blocked while a live return exists.
+- Expiry-tracked products never allow negative stock, even if the Owner enables it for others; this keeps I2 exact.
+- Negative stock (Owner setting): the uncovered part of a sale is costed at last purchase cost, and a later purchase only adds the value of units that remain.
+- Purchase return: stock leaves at current average cost; `variance = cost_value - credit` is added to COGS (plan 5.4).
+- Day close posts any cash difference to the cash book (`day_close` source) so the book equals the counted cash. Reopening reverses it. Only the most recent closed day can be reopened. I8 compares `created_at` with the day's `closed_at`.
+- Credit limit 0 means "no limit". `warn` returns a warning, `approval` needs a manager/owner id, `block` rejects.
+- Salary expense = sum of `salary_lines.net` by sheet month; stock loss = value of damage / expired / internal_use / adjust movements (not cash).
+- Test runs use an in-memory database and an injected clock; the 1,000-scenario and 10,000-operation tests are in `packages/db/src/property.test.ts`.

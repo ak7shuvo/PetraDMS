@@ -10,7 +10,7 @@
     "dev": "pnpm --filter @petra/desktop dev",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "eslint .",
-    "test:core": "vitest run --project core",
+    "test:core": "vitest run --project core --project db",
     "test:unit": "vitest run",
     "check:integrity": "tsx tools/check-integrity/index.ts --self-test",
     "seed:perf": "tsx tools/seed/perf.ts",
