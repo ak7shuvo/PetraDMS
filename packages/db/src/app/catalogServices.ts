@@ -22,7 +22,7 @@ export function registerCatalogServices(d: Dispatcher): void {
 
   d.register('money:accounts', ({ ctx }) => listMoneyAccounts(ctx));
   d.register('party:ledger', ({ ctx, session, input }) => {
-    if (input.kind === 'supplier') assertManager(session?.role);
+    if (input.kind !== 'customer') assertManager(session?.role);
     return partyLedger(ctx, input.kind, input.id, input.from, input.to);
   });
   d.register('payment:save', ({ ctx, session, input }) => {

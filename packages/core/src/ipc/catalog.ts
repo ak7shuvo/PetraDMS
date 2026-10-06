@@ -300,7 +300,7 @@ export const catalogChannels = {
   'catalog:supplierSave': ch<{ id: number }>()(supplierSaveInput, { access: 'manager', write: true }),
 
   'money:accounts': ch<MoneyAccountDto[]>()(none),
-  'party:ledger': ch<LedgerView>()(z.object({ kind: z.enum(['customer', 'supplier']), id: z.number().int().positive(), from: dateStr.optional(), to: dateStr.optional() })),
+  'party:ledger': ch<LedgerView>()(z.object({ kind: z.enum(['customer', 'supplier', 'employee']), id: z.number().int().positive(), from: dateStr.optional(), to: dateStr.optional() })),
   'payment:save': ch<{ id: number; docNo: string }>()(paymentSaveInput, { write: true }),
   'payment:void': ch()(z.object({ id: z.number().int().positive(), reason: z.string().trim().min(1).max(300) }), { access: 'manager', write: true }),
 

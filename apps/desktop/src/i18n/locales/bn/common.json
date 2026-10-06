@@ -172,5 +172,8 @@
   "sg.contrast": "উচ্চ কনট্রাস্ট",
   "sg.language": "ভাষা",
   "launch.skip": "এড়াতে যেকোনো কী চাপুন",
-  "sg.showError": "ত্রুটির বার্তা দেখান"
+  "sg.showError": "ত্রুটির বার্তা দেখান",
+  "act.void": "বাতিল করুন",
+  "word.number": "নম্বর",
+  "word.nameBn": "বাংলায় নাম"
 }

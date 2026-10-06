@@ -8,6 +8,20 @@ import { PurchasesPage } from './Purchases';
 import { InventoryPage } from './Inventory';
 import { SalesPage } from './Sales';
 import { CustomersPage } from './Customers';
+import { EmployeesPage } from './Employees';
+import { MoneyPage } from './Money';
+import { PeoplePage } from './People';
+import { useI18n } from '../i18n';
+
+function ExpensesRoute() {
+  const { t } = useI18n();
+  return <MoneyPage title={t('nav.expenses')} />;
+}
+
+function MoneyRoute() {
+  const { t } = useI18n();
+  return <MoneyPage title={t('nav.money')} />;
+}
 
 export interface PageDef {
   path: string;
@@ -26,6 +40,10 @@ export const PAGES: PageDef[] = [
   { path: '/inventory', element: <InventoryPage />, nav: true, minRole: 'staff' },
   { path: '/products', element: <ProductsPage />, nav: true, minRole: 'staff' },
   { path: '/suppliers', element: <SuppliersPage />, nav: true, minRole: 'manager' },
+  { path: '/expenses', element: <ExpensesRoute />, nav: true, minRole: 'manager' },
+  { path: '/employees', element: <EmployeesPage />, nav: true, minRole: 'manager' },
+  { path: '/people', element: <PeoplePage />, nav: true, minRole: 'staff' },
+  { path: '/money', element: <MoneyRoute />, nav: true, minRole: 'manager' },
   { path: '/settings', element: <SettingsPage />, nav: true, minRole: 'owner' },
   { path: '/style-guide', element: <StyleGuide />, nav: false, minRole: 'staff' }
 ];

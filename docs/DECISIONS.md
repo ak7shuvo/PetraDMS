@@ -79,3 +79,10 @@ No certificate is available. `signAndEditExecutable` stays true so icon/version 
 - A walk-in sale (no customer) must be paid in full at the retail price.
 - Printing is pure HTML from `@petra/core`; Electron renders it in a hidden window (`Host.printHtml` / `pdfHtml`). Fonts are embedded as base64 so Bangla prints offline. PDFs go to `<dataDir>/invoices/<docNo>.pdf`.
 - In a packaged build only `file://` senders are trusted on the IPC channel; `http://localhost` is allowed only in development.
+
+## D15. Money side (Phase 7)
+- All money channels need Manager or above; only the Owner reopens a day or edits money accounts. Staff see only customers in People.
+- Closing a day is allowed for today or earlier. A cash difference is booked to the cash book (`day_close`) so tomorrow's opening cash equals the counted cash. Reopening reverses it.
+- One salary sheet per month (a void sheet can be regenerated). Employees with a balance cannot be archived. A negative employee balance means an advance the employee still holds.
+- Money accounts cannot be hidden while they hold money, while default, or if they are the last cash account. Transfers between accounts are not in V1 (the plan has none).
+- `/expenses` (Full mode) and `/money` (Simple mode) are one screen with tabs: Expenses, Cash book, Close day, Accounts.

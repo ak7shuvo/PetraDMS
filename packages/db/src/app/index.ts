@@ -10,3 +10,5 @@ export * from './docref';
 export * from './salesApp';
 export * from './salesServices';
 export * from './printing';
+export * from './moneyApp';
+export * from './moneyServices';

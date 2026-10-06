@@ -76,7 +76,7 @@ export function PaymentModal({ open, kind, partyId, partyName, balance, onClose,
 }
 
 /** Running ledger of one customer or supplier (plain words: Due, Paid). */
-export function PartyLedgerView({ kind, id, reloadKey }: { kind: 'customer' | 'supplier'; id: number; reloadKey?: number }) {
+export function PartyLedgerView({ kind, id, reloadKey }: { kind: 'customer' | 'supplier' | 'employee'; id: number; reloadKey?: number }) {
   const { t, money } = useI18n();
   const date = useDisplayDate();
   const ledger = useQuery('party:ledger', { kind, id });

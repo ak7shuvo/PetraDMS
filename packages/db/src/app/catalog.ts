@@ -178,9 +178,9 @@ export function listMoneyAccounts(ctx: Ctx): MoneyAccountDto[] {
   return all<{ id: number; name: string; name_bn: string; kind: string; balance: number; is_default: number }>(ctx.db, 'SELECT id, name, name_bn, kind, balance, is_default FROM money_accounts WHERE active = 1 ORDER BY is_default DESC, id').map((a) => ({ id: a.id, name: a.name, nameBn: a.name_bn, kind: a.kind, balance: a.balance, isDefault: a.is_default === 1 }));
 }
 
-const PARTY_TABLE = { customer: 'customers', supplier: 'suppliers' } as const;
+const PARTY_TABLE = { customer: 'customers', supplier: 'suppliers', employee: 'employees' } as const;
 
-export function partyLedger(ctx: Ctx, kind: 'customer' | 'supplier', id: number, from?: string, to?: string): LedgerView {
+export function partyLedger(ctx: Ctx, kind: 'customer' | 'supplier' | 'employee', id: number, from?: string, to?: string): LedgerView {
   const party = requireRow(get<{ id: number; name: string; balance: number; phone: string }>(ctx.db, `SELECT id, name, balance, phone FROM ${PARTY_TABLE[kind]} WHERE id = ?`, id), kind, id);
   const rows = all<{ id: number; business_date: string; entry_kind: string; amount: number; note: string; ref_type: string | null; ref_id: number | null; reverses_id: number | null }>(
     ctx.db, 'SELECT id, business_date, entry_kind, amount, note, ref_type, ref_id, reverses_id FROM party_ledger WHERE party_kind = ? AND party_id = ? ORDER BY id', kind, id

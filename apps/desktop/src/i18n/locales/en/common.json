@@ -172,5 +172,8 @@
   "sg.contrast": "High contrast",
   "sg.language": "Language",
   "launch.skip": "Press any key to skip",
-  "sg.showError": "Show error toast"
+  "sg.showError": "Show error toast",
+  "act.void": "Void",
+  "word.number": "No.",
+  "word.nameBn": "Name in Bangla"
 }

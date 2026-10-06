@@ -5,6 +5,7 @@ import { Dispatcher, type Host } from './app/dispatcher';
 import { registerCoreServices } from './app/coreServices';
 import { registerCatalogServices } from './app/catalogServices';
 import { registerSalesServices } from './app/salesServices';
+import { registerMoneyServices } from './app/moneyServices';
 import { machineHash } from './app/licence';
 import { checkIntegrity, formatViolations } from './integrity';
 
@@ -42,6 +43,7 @@ export function makeApp(nowRef: { t: number } = { t: T0 }) {
   registerCoreServices(d);
   registerCatalogServices(d);
   registerSalesServices(d);
+  registerMoneyServices(d);
   return { d, db, close, nowRef, printed, pdfs };
 }
 
