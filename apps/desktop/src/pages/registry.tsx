@@ -6,6 +6,8 @@ import { ProductsPage } from './Products';
 import { SuppliersPage } from './Suppliers';
 import { PurchasesPage } from './Purchases';
 import { InventoryPage } from './Inventory';
+import { SalesPage } from './Sales';
+import { CustomersPage } from './Customers';
 
 export interface PageDef {
   path: string;
@@ -18,6 +20,8 @@ export interface PageDef {
 
 /** Each phase adds its pages here; the sidebar shows an entry only when its page exists. */
 export const PAGES: PageDef[] = [
+  { path: '/sales', element: <SalesPage />, nav: true, minRole: 'staff' },
+  { path: '/customers', element: <CustomersPage />, nav: true, minRole: 'staff' },
   { path: '/purchases', element: <PurchasesPage />, nav: true, minRole: 'manager' },
   { path: '/inventory', element: <InventoryPage />, nav: true, minRole: 'staff' },
   { path: '/products', element: <ProductsPage />, nav: true, minRole: 'staff' },

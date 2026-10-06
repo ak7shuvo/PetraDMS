@@ -7,3 +7,6 @@ export * from './catalog';
 export * from './inbound';
 export * from './catalogServices';
 export * from './docref';
+export * from './salesApp';
+export * from './salesServices';
+export * from './printing';

@@ -4,6 +4,7 @@ import { createBareDb } from './testkit';
 import { Dispatcher, type Host } from './app/dispatcher';
 import { registerCoreServices } from './app/coreServices';
 import { registerCatalogServices } from './app/catalogServices';
+import { registerSalesServices } from './app/salesServices';
 import { machineHash } from './app/licence';
 import { checkIntegrity, formatViolations } from './integrity';
 
@@ -22,6 +23,8 @@ export const setupInput = {
 
 export function makeApp(nowRef: { t: number } = { t: T0 }) {
   const { db, close } = createBareDb();
+  const printed: string[] = [];
+  const pdfs: string[] = [];
   const host: Host = {
     appVersion: '1.0.0',
     dataDir: 'C:\\PetraDMS',
@@ -29,12 +32,17 @@ export function makeApp(nowRef: { t: number } = { t: T0 }) {
     pickDataDir: async () => null,
     applyDataDir: async () => undefined,
     recommendedDataDir: () => 'D:\\PetraData',
-    pickLicenceFile: async () => null
+    pickLicenceFile: async () => null,
+    fontCss: () => '',
+    printHtml: async (html) => { printed.push(html); },
+    pdfHtml: async (html, o) => { printed.push(html); pdfs.push(o.file); },
+    reveal: () => undefined
   };
   const d = new Dispatcher(db, { publicKeyPem: PUB, machine: MACHINE }, host, () => new Date(nowRef.t).toISOString());
   registerCoreServices(d);
   registerCatalogServices(d);
-  return { d, db, close, nowRef };
+  registerSalesServices(d);
+  return { d, db, close, nowRef, printed, pdfs };
 }
 
 export type App = ReturnType<typeof makeApp>;

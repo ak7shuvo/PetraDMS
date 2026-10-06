@@ -72,3 +72,12 @@ export async function signInPin(page: Page, pin: string, userName?: string): Pro
   for (const d of pin) await page.locator('.keypad').getByRole('button', { name: d, exact: true }).click();
   await page.getByTestId('signin').click();
 }
+
+/** Calls a channel through the real preload bridge (used to seed data quickly; the UI under test is exercised separately). */
+export async function inv<T = unknown>(page: Page, channel: string, input?: unknown): Promise<T> {
+  return page.evaluate(([c, i]) => (window as unknown as { petra: { invoke: (c: string, i?: unknown) => Promise<unknown> } }).petra.invoke(c as string, i), [channel, input] as const) as Promise<T>;
+}
+
+export async function navTo(page: Page, name: string): Promise<void> {
+  await page.locator('nav').getByRole('link', { name, exact: true }).click();
+}

@@ -72,3 +72,10 @@ No certificate is available. `signAndEditExecutable` stays true so icon/version 
 - Dealer price is optional in the editor and defaults to the wholesale price.
 - A purchase without a supplier must be paid in full; with a supplier the unpaid part becomes supplier due. Stock adjustments always need a reason.
 - Landing page after sign-in is the first registered page; a dashboard replaces it in Phase 8.
+
+## D14. Sales, approvals and printing (Phase 6)
+- `auth:approve` returns a one-time token (5 minutes, bound to the requesting session user). `sale:save` and `sale:edit` accept it as `approvalToken`; managers and the Owner self-approve. Staff below minimum price or over the credit limit get `APPROVAL_REQUIRED` and the POS opens the approval modal, then retries.
+- Staff see only today's sales and never cost or profit. Return, void and edit need Manager or above.
+- A walk-in sale (no customer) must be paid in full at the retail price.
+- Printing is pure HTML from `@petra/core`; Electron renders it in a hidden window (`Host.printHtml` / `pdfHtml`). Fonts are embedded as base64 so Bangla prints offline. PDFs go to `<dataDir>/invoices/<docNo>.pdf`.
+- In a packaged build only `file://` senders are trusted on the IPC channel; `http://localhost` is allowed only in development.

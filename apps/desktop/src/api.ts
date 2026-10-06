@@ -39,3 +39,11 @@ export function errorText(e: unknown, lang = useUi.getState().lang): string {
   if (err.code === 'AUTH_FAILED' && typeof params.remaining === 'number') return `${translate(lang, 'err.AUTH_FAILED')} (${translate(lang, 'auth.attemptsLeft', { n: params.remaining })})`;
   return translate(lang, `err.${err.code}`, params);
 }
+
+export function errorCode(e: unknown): string {
+  return toPetraError(e).code;
+}
+
+export function errorParams(e: unknown): Record<string, string | number | boolean | null> {
+  return toPetraError(e).params;
+}

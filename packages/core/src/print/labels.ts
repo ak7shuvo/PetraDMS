@@ -1,0 +1,68 @@
+export type PrintLang = 'bn' | 'en';
+
+const L = {
+  invoice: ['Invoice', 'ইনভয়েস'],
+  receipt: ['Payment receipt', 'টাকা প্রাপ্তির রসিদ'],
+  paymentVoucher: ['Payment voucher', 'পরিশোধ ভাউচার'],
+  statement: ['Statement', 'বিবরণী'],
+  no: ['No.', 'নং'],
+  date: ['Date', 'তারিখ'],
+  customer: ['Customer', 'ক্রেতা'],
+  supplier: ['Supplier', 'সরবরাহকারী'],
+  walkIn: ['Walk-in customer', 'নগদ ক্রেতা'],
+  phone: ['Phone', 'ফোন'],
+  address: ['Address', 'ঠিকানা'],
+  area: ['Area', 'এলাকা'],
+  item: ['Item', 'পণ্য'],
+  qty: ['Qty', 'পরিমাণ'],
+  price: ['Price', 'দাম'],
+  disc: ['Disc.', 'ছাড়'],
+  amount: ['Amount', 'টাকা'],
+  subtotal: ['Subtotal', 'মোট'],
+  discount: ['Discount', 'ছাড়'],
+  tax: ['VAT', 'ভ্যাট'],
+  roundOff: ['Round off', 'রাউন্ড অফ'],
+  total: ['Total', 'সর্বমোট'],
+  paid: ['Paid', 'পরিশোধ'],
+  due: ['Due', 'বাকি'],
+  previousDue: ['Previous due', 'আগের বাকি'],
+  thisInvoice: ['This invoice', 'এই ইনভয়েস'],
+  totalDue: ['Total due', 'মোট বাকি'],
+  bonus: ['Bonus', 'বোনাস'],
+  stampPaid: ['PAID', 'পরিশোধিত'],
+  stampDue: ['DUE', 'বাকি'],
+  stampVoid: ['VOID', 'বাতিল'],
+  note: ['Note', 'মন্তব্য'],
+  thanks: ['Thank you!', 'ধন্যবাদ!'],
+  receivedFrom: ['Received from', 'যার কাছ থেকে পাওয়া'],
+  paidTo: ['Paid to', 'যাকে দেওয়া'],
+  reference: ['Reference', 'রেফারেন্স'],
+  account: ['Account', 'অ্যাকাউন্ট'],
+  balanceAfter: ['Balance after', 'পরের বাকি'],
+  type: ['Type', 'ধরন'],
+  balance: ['Balance', 'ব্যালেন্স'],
+  period: ['Period', 'সময়কাল'],
+  printed: ['Printed', 'ছাপা'],
+  vatNo: ['VAT/BIN', 'ভ্যাট/বিআইএন'],
+  revision: ['Revision', 'সংশোধন'],
+  details: ['Details', 'বিবরণ'],
+  billed: ['Billed', 'বিল'],
+  credited: ['Paid / returned', 'পরিশোধ / ফেরত'],
+  openingBalance: ['Opening balance', 'প্রারম্ভিক বকেয়া'],
+  kind_sale: ['Sale', 'বিক্রি'],
+  kind_purchase: ['Purchase', 'ক্রয়'],
+  kind_payment: ['Payment', 'পেমেন্ট'],
+  kind_return: ['Return', 'ফেরত'],
+  kind_adjustment: ['Adjustment', 'সমন্বয়'],
+  kind_void_reversal: ['Cancelled entry', 'বাতিল এন্ট্রি'],
+  kind_opening: ['Opening balance', 'প্রারম্ভিক বকেয়া']
+} as const;
+
+export type LabelKey = keyof typeof L;
+
+/** One label in the document language, or "English / বাংলা" when bilingual headings are on. */
+export function label(key: LabelKey, lang: PrintLang, bilingual: boolean): string {
+  const [en, bn] = L[key];
+  if (bilingual) return `${en} / ${bn}`;
+  return lang === 'bn' ? bn : en;
+}

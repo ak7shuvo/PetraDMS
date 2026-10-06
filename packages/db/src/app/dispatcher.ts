@@ -1,5 +1,7 @@
 import type { z } from 'zod';
 import { ipcContract, toWireError, type IpcChannel, type IpcOutput, type SessionDto, type Wire, PetraError, type Health } from '@petra/core';
+import { randomBytes } from 'node:crypto';
+import type { PrintFormat } from '@petra/core';
 import type { Db } from '../sql';
 import { makeCtx, type Ctx } from '../ctx';
 import { assertWritable, licenceStatus, type LicenceEnv } from './licence';
@@ -13,6 +15,12 @@ export interface Host {
   applyDataDir(path: string): Promise<void>;
   recommendedDataDir(): string;
   pickLicenceFile(): Promise<string | null>;
+  /** @font-face CSS with the bundled fonts embedded as base64, so printed pages and PDFs carry Bangla glyphs. */
+  fontCss(): string;
+  printHtml(html: string, o: { format: PrintFormat; silent: boolean; printerName: string }): Promise<void>;
+  /** Renders the HTML to a PDF file at `file` (fonts embedded). */
+  pdfHtml(html: string, o: { format: PrintFormat; file: string }): Promise<void>;
+  reveal(path: string): void;
 }
 
 export interface CallArgs<I = unknown> {
@@ -31,6 +39,7 @@ const ROLE_RANK = { staff: 1, manager: 2, owner: 3 } as const;
 
 export class Dispatcher {
   session: SessionDto | null = null;
+  private approvals = new Map<string, { approverId: number; forUser: number; expires: number }>();
   private handlers = new Map<string, AnyHandler>();
 
   constructor(
@@ -42,6 +51,24 @@ export class Dispatcher {
 
   register<C extends IpcChannel>(channel: C, h: Handler<C>): void {
     this.handlers.set(channel, h as unknown as AnyHandler);
+  }
+
+  /** One-time approval token, valid 5 minutes for the user who asked for it. */
+  issueApproval(approverId: number): string {
+    const token = randomBytes(18).toString('base64url');
+    this.approvals.set(token, { approverId, forUser: this.session?.userId ?? 0, expires: Date.parse(this.now()) + 5 * 60_000 });
+    return token;
+  }
+
+  peekApproval(token: string | undefined): number | null {
+    if (!token) return null;
+    const a = this.approvals.get(token);
+    if (!a || a.expires < Date.parse(this.now()) || a.forUser !== (this.session?.userId ?? 0)) return null;
+    return a.approverId;
+  }
+
+  consumeApproval(token: string | undefined): void {
+    if (token) this.approvals.delete(token);
   }
 
   /** Replace the database handle (restore, data-folder move). The session is cleared. */

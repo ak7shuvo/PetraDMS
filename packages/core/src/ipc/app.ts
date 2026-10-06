@@ -89,7 +89,7 @@ export const appChannels = {
   'auth:changeSecret': ch()(z.object({ oldSecret: z.string().min(1).max(128), kind: secretKind, newSecret: secret })),
   'auth:recover': ch<{ recoveryCode: string; session: SessionDto }>()(z.object({ recoveryCode: z.string().min(8).max(64), kind: secretKind, newSecret: secret }), { access: 'public' }),
   /** A manager or owner approves a staff override (min price, credit limit) by entering their secret. */
-  'auth:approve': ch<{ approverId: number; role: Role }>()(z.object({ userId: z.number().int().positive(), secret: z.string().min(1).max(128) })),
+  'auth:approve': ch<{ approverId: number; role: Role; token: string }>()(z.object({ userId: z.number().int().positive(), secret: z.string().min(1).max(128) })),
 
   'users:list': ch<UserRow[]>()(none, { access: 'owner' }),
   'users:create': ch<{ id: number }>()(z.object({ username, displayName: z.string().trim().min(1).max(80), role: z.enum(['owner', 'manager', 'staff']), kind: secretKind, secret }), { access: 'owner', write: true }),

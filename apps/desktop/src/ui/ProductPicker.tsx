@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type Ref } from 'react';
 import type { ProductDto } from '@petra/core';
 import { Input } from './controls';
 import { useI18n } from '../i18n';
 import { productName, stockText } from './format';
 
 /** Type-ahead product chooser (name, Bangla name, SKU, barcode). Arrow keys and Enter work; Esc clears. */
-export function ProductPicker({ products, onPick, placeholder, autoFocus, id, resetOnPick = true }: { products: ProductDto[]; onPick: (p: ProductDto) => void; placeholder?: string; autoFocus?: boolean; id?: string; resetOnPick?: boolean }) {
+export function ProductPicker({ products, onPick, placeholder, autoFocus, id, resetOnPick = true, inputRef, testId }: { products: ProductDto[]; onPick: (p: ProductDto) => void; placeholder?: string; autoFocus?: boolean; id?: string; resetOnPick?: boolean; inputRef?: Ref<HTMLInputElement>; testId?: string }) {
   const i18n = useI18n();
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
@@ -38,6 +38,8 @@ export function ProductPicker({ products, onPick, placeholder, autoFocus, id, re
     <div ref={box} style={{ position: 'relative' }}>
       <Input
         id={id}
+        ref={inputRef}
+        data-testid={testId}
         autoFocus={autoFocus}
         role="combobox"
         aria-expanded={open}

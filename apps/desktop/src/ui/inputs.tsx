@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type KeyboardEventHandler, type Ref } from 'react';
 import { formatDate, fromBnDigits, isIsoDate, parseMoney, toBnDigits, type Poisha } from '@petra/core';
 import { Input } from './controls';
 import { useI18n } from '../i18n';
@@ -8,10 +8,12 @@ interface BaseProps {
   invalid?: boolean;
   'aria-describedby'?: string;
   disabled?: boolean;
+  inputRef?: Ref<HTMLInputElement>;
+  onKeyDown?: KeyboardEventHandler<HTMLInputElement>;
 }
 
 /** Money entry in taka; reports integer poisha, or null while the text is not a valid amount. */
-export function MoneyInput({ value, onChange, ...rest }: BaseProps & { value: Poisha | null; onChange: (p: Poisha | null) => void }) {
+export function MoneyInput({ value, onChange, inputRef, ...rest }: BaseProps & { value: Poisha | null; onChange: (p: Poisha | null) => void }) {
   const { lang } = useI18n();
   const show = (p: Poisha | null) => (p === null ? '' : lang === 'bn' ? toBnDigits((p / 100).toFixed(p % 100 === 0 ? 0 : 2)) : (p / 100).toFixed(p % 100 === 0 ? 0 : 2));
   const [text, setText] = useState(show(value));
@@ -21,6 +23,7 @@ export function MoneyInput({ value, onChange, ...rest }: BaseProps & { value: Po
   return (
     <Input
       {...rest}
+      ref={inputRef}
       numeric
       inputMode="decimal"
       value={text}
@@ -34,7 +37,7 @@ export function MoneyInput({ value, onChange, ...rest }: BaseProps & { value: Po
 }
 
 /** Whole-number quantity entry. */
-export function QtyInput({ value, onChange, ...rest }: BaseProps & { value: number | null; onChange: (n: number | null) => void }) {
+export function QtyInput({ value, onChange, inputRef, ...rest }: BaseProps & { value: number | null; onChange: (n: number | null) => void }) {
   const { lang } = useI18n();
   const show = (n: number | null) => (n === null ? '' : lang === 'bn' ? toBnDigits(String(n)) : String(n));
   const [text, setText] = useState(show(value));
@@ -45,6 +48,7 @@ export function QtyInput({ value, onChange, ...rest }: BaseProps & { value: numb
   return (
     <Input
       {...rest}
+      ref={inputRef}
       numeric
       inputMode="numeric"
       value={text}
@@ -66,7 +70,7 @@ export function parseDisplayDate(text: string): string | null {
 }
 
 /** Date entry as DD/MM/YYYY; value is an ISO date string. */
-export function DateInput({ value, onChange, ...rest }: BaseProps & { value: string | null; onChange: (iso: string | null) => void }) {
+export function DateInput({ value, onChange, inputRef, ...rest }: BaseProps & { value: string | null; onChange: (iso: string | null) => void }) {
   const { lang } = useI18n();
   const show = (iso: string | null) => (iso && isIsoDate(iso) ? (lang === 'bn' ? toBnDigits(formatDate(iso)) : formatDate(iso)) : '');
   const [text, setText] = useState(show(value));
@@ -76,6 +80,7 @@ export function DateInput({ value, onChange, ...rest }: BaseProps & { value: str
   return (
     <Input
       {...rest}
+      ref={inputRef}
       numeric
       placeholder={lang === 'bn' ? 'দিন/মাস/বছর' : 'DD/MM/YYYY'}
       value={text}

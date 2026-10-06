@@ -118,9 +118,10 @@ export function registerCoreServices(d: Dispatcher): void {
     dispatcher.session = r.session;
     return r;
   });
-  d.register('auth:approve', ({ ctx, input }) => {
+  d.register('auth:approve', ({ ctx, input, dispatcher }) => {
     const i = input;
-    return approve(ctx, i.userId, i.secret);
+    const a = approve(ctx, i.userId, i.secret);
+    return { ...a, token: dispatcher.issueApproval(a.approverId) };
   });
 
   d.register('users:list', ({ ctx }) => listUsers(ctx));
