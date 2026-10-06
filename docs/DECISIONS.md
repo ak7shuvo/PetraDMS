@@ -40,3 +40,12 @@ No certificate is available. `signAndEditExecutable` stays true so icon/version 
 - Credit limit 0 means "no limit". `warn` returns a warning, `approval` needs a manager/owner id, `block` rejects.
 - Salary expense = sum of `salary_lines.net` by sheet month; stock loss = value of damage / expired / internal_use / adjust movements (not cash).
 - Test runs use an in-memory database and an injected clock; the 1,000-scenario and 10,000-operation tests are in `packages/db/src/property.test.ts`.
+
+## D10. UI shell (Phase 3)
+- UI preferences (language, mode, animations, font size, contrast) are per-device and live in `localStorage` (`petra.ui.v1`); business settings stay in the database (Phase 4). Defaults: Bangla, Simple mode, Animations Full.
+- The native Windows title bar and window controls are kept (plan 9.5 says standard controls stay untouched); no custom frame.
+- Router is `HashRouter` because the packaged app loads `file://` pages.
+- Motion uses the `motion` library only for modal, drawer and toast presence; everything else is CSS transforms and opacity. Durations come from the Animations setting (Reduced caps at 100 ms, Off is 0). Lite mode samples ~2 s of frames after launch and drops Full to Reduced when the median frame is above 24 ms, without changing the saved choice.
+- Dictionaries are split by file under `i18n/locales/{bn,en}/*.json` (merged with `import.meta.glob`); the parity test requires identical files, keys and `{placeholders}`.
+- When `PETRA_DATA_DIR` is set (tests, CI) Electron's `userData` moves inside it so runs never share Chromium state.
+- The style guide is not in the sidebar; it is reached by URL or Ctrl+Shift+G.

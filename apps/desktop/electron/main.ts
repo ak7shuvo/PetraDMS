@@ -9,6 +9,9 @@ const dataRoot = process.env.PETRA_DATA_DIR
   ? path.resolve(process.env.PETRA_DATA_DIR)
   : path.join(process.env.LOCALAPPDATA ?? app.getPath('userData'), 'PetraDMS');
 
+// Isolated runs also isolate Chromium's profile (localStorage, locks) so tests never share UI prefs.
+if (process.env.PETRA_DATA_DIR) app.setPath('userData', path.join(dataRoot, 'electron'));
+
 let db: Db | null = null;
 let mainWindow: BrowserWindow | null = null;
 

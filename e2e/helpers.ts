@@ -2,6 +2,7 @@ import { _electron as electron, type ElectronApplication, type Page } from '@pla
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
+import { fileURLToPath } from 'node:url';
 
 export interface Launched {
   app: ElectronApplication;
@@ -10,7 +11,7 @@ export interface Launched {
   consoleErrors: string[];
 }
 
-const desktopDir = path.resolve(__dirname, '../apps/desktop');
+const desktopDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../apps/desktop');
 
 export async function launch(opts: { dataDir?: string; env?: Record<string, string> } = {}): Promise<Launched> {
   const dataDir = opts.dataDir ?? fs.mkdtempSync(path.join(os.tmpdir(), 'petra-e2e-'));

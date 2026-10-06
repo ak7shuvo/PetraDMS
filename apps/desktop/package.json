@@ -15,8 +15,9 @@
     "dist:win": "pnpm build && electron-builder --config electron-builder.yml --win nsis --x64 --publish never",
     "dist:dir": "pnpm build && electron-builder --config electron-builder.yml --dir"
   },
-  "dependencies": {},
   "devDependencies": {
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/noto-sans-bengali": "^5.3.0",
     "@petra/core": "workspace:*",
     "@petra/db": "workspace:*",
     "@tailwindcss/vite": "4.3.3",
