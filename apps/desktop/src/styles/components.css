@@ -219,3 +219,19 @@
 .opt-card[aria-pressed='true'] { border-color: var(--black); box-shadow: inset 4px 0 0 var(--red); background: var(--cream-2); }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3) var(--sp-4); }
 .form-grid .wide { grid-column: 1 / -1; }
+
+/* ===== Picker, line grids ===== */
+.picker-list { position: absolute; z-index: 60; left: 0; right: 0; top: calc(100% + 2px); margin: 0; padding: 0; list-style: none; background: var(--paper); border: 1.5px solid var(--black); box-shadow: var(--shadow-pop); max-height: 320px; overflow: auto; }
+.picker-list li { display: flex; gap: var(--sp-3); align-items: center; padding: 8px var(--sp-3); cursor: pointer; border-bottom: 1px solid var(--line); }
+.picker-list li.hi { background: var(--red-tint); }
+.lines { width: 100%; border-collapse: collapse; }
+.lines th { text-align: left; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: 4px 6px; border-bottom: 1.5px solid var(--black); }
+.lines th.right { text-align: right; }
+.lines td { padding: 4px 6px; vertical-align: middle; border-bottom: 1px solid var(--line); }
+.lines td .p-input, .lines td .p-select { height: calc(var(--h-control) - 4px); }
+.totals { display: grid; gap: 6px; min-width: 280px; }
+.totals .row { justify-content: space-between; }
+.totals .grand { font-size: var(--fs-xl); font-weight: 700; border-top: 1.5px solid var(--black); padding-top: 6px; }
+.muted { color: var(--muted); }
+.right { text-align: right; }
+.row-actions { display: flex; gap: 6px; justify-content: flex-end; }

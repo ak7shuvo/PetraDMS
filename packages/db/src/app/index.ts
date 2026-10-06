@@ -3,3 +3,7 @@ export * from './licence';
 export * from './publicKey';
 export * from './dispatcher';
 export * from './coreServices';
+export * from './catalog';
+export * from './inbound';
+export * from './catalogServices';
+export * from './docref';

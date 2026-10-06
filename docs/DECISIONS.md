@@ -65,3 +65,10 @@ No certificate is available. `signAndEditExecutable` stays true so icon/version 
 - Tests and CI may override the public key and machine hash with environment variables only when the app is not packaged.
 - The data folder can be chosen once, during setup (a pointer file `location.json` in `%LOCALAPPDATA%\PetraDMS` records it). If the chosen folder already holds a database, the app opens it instead of creating a new one.
 - Staff start in Simple mode, Owner and Manager in Full mode; a later choice is remembered per user.
+
+## D13. Catalog, inbound and stock (Phase 5)
+- One contract file per area (`ipc/catalog.ts`); handlers in `packages/db/src/app/{catalog,inbound,catalogServices}.ts`. Staff-readable: products (cost fields null), stock, batches, alerts. Manager+: suppliers, purchases, supplier payments/ledger, movements, adjustments.
+- Packs are bigger units of the base unit (factor >= 2); the base pack is implicit. Removing a pack that appears on a document is refused (IN_USE). `trackExpiry` cannot change once a product has stock history.
+- Dealer price is optional in the editor and defaults to the wholesale price.
+- A purchase without a supplier must be paid in full; with a supplier the unpaid part becomes supplier due. Stock adjustments always need a reason.
+- Landing page after sign-in is the first registered page; a dashboard replaces it in Phase 8.

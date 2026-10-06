@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
 import {
-  Dispatcher, PRODUCT_PUBLIC_KEY_PEM, healthInfo, loadMigrations, machineHash, migrate, openDatabase, registerCoreServices, closeDatabase, type Db, type Host
+  Dispatcher, PRODUCT_PUBLIC_KEY_PEM, healthInfo, loadMigrations, machineHash, migrate, openDatabase, registerCoreServices, registerCatalogServices, closeDatabase, type Db, type Host
 } from '@petra/db';
 import { ipcContract } from '@petra/core';
 
@@ -169,6 +169,7 @@ if (!app.requestSingleInstanceLock()) {
     const publicKeyPem = !app.isPackaged && process.env.PETRA_LICENCE_PUBLIC_KEY ? process.env.PETRA_LICENCE_PUBLIC_KEY.replace(/\\n/g, '\n') : PRODUCT_PUBLIC_KEY_PEM;
     dispatcher = new Dispatcher(db, { publicKeyPem, machine: process.env.PETRA_MACHINE_HASH && !app.isPackaged ? process.env.PETRA_MACHINE_HASH : machineHash(machineFacts()) }, host);
     registerCoreServices(dispatcher);
+    registerCatalogServices(dispatcher);
     blockNetwork();
     registerIpc(dispatcher);
     if (process.argv.includes('--smoke-test')) {

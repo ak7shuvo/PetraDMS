@@ -2,18 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { generateKeyPairSync, sign as edSign, createPublicKey } from 'node:crypto';
 import { PetraError, type LicenceStatus } from '@petra/core';
 import { createBareDb } from './testkit';
+import { DAY, MACHINE, PUB, T0, makeApp, setupInput } from './testApp';
 import { makeCtx } from './ctx';
-import { Dispatcher, type Host } from './app/dispatcher';
-import { registerCoreServices } from './app/coreServices';
 import { checkLicence, installLicence, licenceStatus, machineCodeOf, machineHash, signLicence, TRIAL_DAYS, type LicencePayload } from './app/licence';
 import { LOCK_MINUTES, MAX_ATTEMPTS, generateRecoveryCode, hashSecret, verifySecret } from './app/auth';
+import { TEST_PRIVATE as privateKey } from './testApp';
 
-const { publicKey, privateKey } = generateKeyPairSync('ed25519');
-const PUB = publicKey.export({ type: 'spki', format: 'pem' }).toString();
+async function ok<T>(p: Promise<{ ok: boolean; data?: unknown; error?: { code: string } }>): Promise<T> {
+  const r = await p;
+  if (!r.ok) throw new Error(`call failed: ${r.error?.code}`);
+  return r.data as T;
+}
+
 const other = generateKeyPairSync('ed25519');
-const MACHINE = machineHash({ hostname: 'SHOP-PC', cpuModel: 'Intel(R) Core(TM) i3', platform: 'win32', arch: 'x64' });
-const DAY = 86_400_000;
-const T0 = Date.parse('2026-10-01T05:00:00.000Z');
 
 function issue(over: Partial<LicencePayload> = {}, key = privateKey): string {
   const payload: LicencePayload = { v: 1, customer: 'Rahim Traders', edition: 'standard', machine: MACHINE.slice(0, 16), issuedAt: '2026-10-01', expiresAt: null, ...over };
@@ -152,35 +153,6 @@ describe('secrets', () => {
     expect(generateRecoveryCode()).not.toBe(a);
   });
 });
-
-function makeApp(nowRef = { t: T0 }) {
-  const { db, close } = createBareDb();
-  const host: Host = {
-    appVersion: '1.0.0',
-    dataDir: 'C:\\PetraDMS',
-    health: () => ({ appVersion: '1.0.0', electronVersion: '', nodeVersion: '', sqliteVersion: '', journalMode: 'wal', synchronous: 2, foreignKeys: 1, integrity: 'ok', packaged: false, dataDir: '' }),
-    pickDataDir: async () => null,
-    applyDataDir: async () => undefined,
-    recommendedDataDir: () => 'D:\\PetraData',
-    pickLicenceFile: async () => null
-  };
-  const d = new Dispatcher(db, { publicKeyPem: PUB, machine: MACHINE }, host, clock(nowRef));
-  registerCoreServices(d);
-  return { d, close, nowRef };
-}
-
-const setupInput = {
-  language: 'bn' as const,
-  business: { name: 'Rahim Traders', nameBn: 'রহিম ট্রেডার্স', address: 'Sylhet', phone: '01712345678', email: '', taxNo: '', footerNote: '' },
-  owner: { displayName: 'Rahim', username: 'rahim', kind: 'pin' as const, secret: '4321' },
-  uiMode: 'full' as const
-};
-
-async function ok<T>(p: Promise<{ ok: boolean; data?: unknown; error?: { code: string } }>): Promise<T> {
-  const r = await p;
-  if (!r.ok) throw new Error(`call failed: ${r.error?.code}`);
-  return r.data as T;
-}
 
 describe('first run, auth and roles through the dispatcher', () => {
   it('fresh database needs setup; setup creates the owner, defaults and a recovery code, and can run only once', async () => {

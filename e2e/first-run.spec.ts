@@ -13,8 +13,9 @@ test('fresh install: wizard, recovery code, sign out, sign in, wrong PIN, lockou
   const code = await completeSetup(page, { lang: 'en' });
   expect(code).toMatch(/^([A-Z2-9]{4}-){4}[A-Z2-9]{4}$/);
 
-  // lands inside the app as Owner with the Settings screen
+  // lands inside the app as Owner
   await expect(page.getByTestId('account')).toContainText('Rahim');
+  await page.locator('nav').getByRole('link', { name: 'Settings', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Settings', exact: true }).first()).toBeVisible();
   await expect(page.getByTestId('licence-banner')).toContainText('30 days');
 
@@ -78,6 +79,7 @@ test('wizard can move the data folder before anything is stored', async () => {
 test('staff cannot reach settings; roles are enforced in the main process', async () => {
   const { app, page } = await launch();
   await completeSetup(page, { lang: 'en' });
+  await page.locator('nav').getByRole('link', { name: 'Settings', exact: true }).click();
   await page.getByRole('tab', { name: 'Users' }).click();
   await page.getByTestId('add-user').click();
   await page.getByTestId('user-username').fill('sara');
@@ -113,6 +115,7 @@ test('licence: trial banner, tampered key, key for another machine, valid key; e
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'petra-lic-'));
   let run = await launch({ dataDir, env });
   await completeSetup(run.page, { lang: 'en' });
+  await run.page.locator('nav').getByRole('link', { name: 'Settings', exact: true }).click();
   await run.page.getByRole('tab', { name: 'Licence' }).click();
   await expect(run.page.getByTestId('machine-code')).toHaveText(`${machine.slice(0, 16).toUpperCase().match(/.{4}/g)!.join('-')}`);
   await expect(run.page.getByTestId('lic-days')).toContainText('30');

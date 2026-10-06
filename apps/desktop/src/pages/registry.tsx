@@ -2,6 +2,10 @@ import type { ReactElement } from 'react';
 import type { Role } from '@petra/core';
 import { StyleGuide } from './StyleGuide';
 import { SettingsPage } from './Settings';
+import { ProductsPage } from './Products';
+import { SuppliersPage } from './Suppliers';
+import { PurchasesPage } from './Purchases';
+import { InventoryPage } from './Inventory';
 
 export interface PageDef {
   path: string;
@@ -14,6 +18,10 @@ export interface PageDef {
 
 /** Each phase adds its pages here; the sidebar shows an entry only when its page exists. */
 export const PAGES: PageDef[] = [
+  { path: '/purchases', element: <PurchasesPage />, nav: true, minRole: 'manager' },
+  { path: '/inventory', element: <InventoryPage />, nav: true, minRole: 'staff' },
+  { path: '/products', element: <ProductsPage />, nav: true, minRole: 'staff' },
+  { path: '/suppliers', element: <SuppliersPage />, nav: true, minRole: 'manager' },
   { path: '/settings', element: <SettingsPage />, nav: true, minRole: 'owner' },
   { path: '/style-guide', element: <StyleGuide />, nav: false, minRole: 'staff' }
 ];
