@@ -21,6 +21,10 @@ export interface Host {
   /** Renders the HTML to a PDF file at `file` (fonts embedded). */
   pdfHtml(html: string, o: { format: PrintFormat; file: string }): Promise<void>;
   reveal(path: string): void;
+  /** Lets the owner choose a backup file anywhere (a USB drive, a synced folder). */
+  pickBackupFile(): Promise<string | null>;
+  /** Replaces the live database with a verified file and reopens it. The session ends. */
+  restoreDatabase(verifiedDbFile: string): Promise<void>;
   /** Shrinks the window to a small always-on-top panel (Ctrl+Shift+M) or restores it. */
   setCompact(on: boolean): Promise<void>;
 }
@@ -79,6 +83,7 @@ export class Dispatcher {
   swapDb(db: Db): void {
     this.db = db;
     this.session = null;
+    this.writeGen++;
   }
 
   ctx(): Ctx {

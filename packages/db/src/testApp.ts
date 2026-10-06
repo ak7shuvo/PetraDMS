@@ -1,6 +1,13 @@
 import { generateKeyPairSync } from 'node:crypto';
 import type { IpcChannel, IpcInput, IpcOutput, Role } from '@petra/core';
+import fs from 'node:fs';
+import path from 'node:path';
 import { createBareDb } from './testkit';
+import { REPO_MIGRATIONS_DIR } from './migrationsDir';
+import { closeDatabase, openDatabase } from './index';
+import { loadMigrations, migrate } from './migrate';
+import { swapInDatabase } from './app/backup';
+import { registerSafetyServices } from './app/safetyServices';
 import { Dispatcher, type Host } from './app/dispatcher';
 import { registerCoreServices } from './app/coreServices';
 import { registerCatalogServices } from './app/catalogServices';
@@ -24,14 +31,28 @@ export const setupInput = {
   uiMode: 'full' as const
 };
 
-export function makeApp(nowRef: { t: number } = { t: T0 }) {
-  const { db, close } = createBareDb();
+/** `dataDir` makes the app file-backed (data/petra.db inside it) so backup, restore and recovery run on real files. */
+export function makeApp(nowRef: { t: number } = { t: T0 }, opts: { dataDir?: string } = {}) {
+  let db: ReturnType<typeof openDatabase>;
+  let close: () => void;
+  if (opts.dataDir) {
+    fs.mkdirSync(path.join(opts.dataDir, 'data'), { recursive: true });
+    db = openDatabase(path.join(opts.dataDir, 'data', 'petra.db'));
+    migrate(db, loadMigrations(REPO_MIGRATIONS_DIR));
+    close = () => closeDatabase(dRef.db);
+  } else {
+    const b = createBareDb();
+    db = b.db;
+    close = b.close;
+  }
+  const dRef = {} as { db: typeof db };
+  const pick: { file: string | null } = { file: null };
   const printed: string[] = [];
   const compact: boolean[] = [];
   const pdfs: string[] = [];
   const host: Host = {
     appVersion: '1.0.0',
-    dataDir: 'C:\\PetraDMS',
+    dataDir: opts.dataDir ?? 'C:\\PetraDMS',
     health: () => ({ appVersion: '1.0.0', electronVersion: '', nodeVersion: '', sqliteVersion: '', journalMode: 'wal', synchronous: 2, foreignKeys: 1, integrity: 'ok', packaged: false, dataDir: '' }),
     pickDataDir: async () => null,
     applyDataDir: async () => undefined,
@@ -41,7 +62,16 @@ export function makeApp(nowRef: { t: number } = { t: T0 }) {
     printHtml: async (html) => { printed.push(html); },
     pdfHtml: async (html, o) => { printed.push(html); pdfs.push(o.file); },
     reveal: () => undefined,
-    setCompact: async (on) => { compact.push(on); }
+    setCompact: async (on) => { compact.push(on); },
+    pickBackupFile: async () => pick.file,
+    restoreDatabase: async (file) => {
+      if (!opts.dataDir) throw new Error('restore needs a file-backed test app');
+      closeDatabase(d.db);
+      swapInDatabase(opts.dataDir, file);
+      const nd = openDatabase(path.join(opts.dataDir, 'data', 'petra.db'));
+      migrate(nd, loadMigrations(REPO_MIGRATIONS_DIR));
+      d.swapDb(nd);
+    }
   };
   const d = new Dispatcher(db, { publicKeyPem: PUB, machine: MACHINE }, host, () => new Date(nowRef.t).toISOString());
   registerCoreServices(d);
@@ -50,7 +80,9 @@ export function makeApp(nowRef: { t: number } = { t: T0 }) {
   registerMoneyServices(d);
   registerReportServices(d);
   registerToolServices(d);
-  return { d, db, close, nowRef, printed, pdfs, compact };
+  registerSafetyServices(d);
+  Object.defineProperty(dRef, 'db', { get: () => d.db });
+  return { d, db, close, nowRef, printed, pdfs, compact, pick };
 }
 
 export type App = ReturnType<typeof makeApp>;
@@ -83,6 +115,6 @@ export async function signInAs(d: Dispatcher, userId: number, role: Role): Promi
 
 /** Asserts all ten integrity invariants hold, printing violations when they do not. */
 export function expectIntegrity(app: App): void {
-  const v = checkIntegrity(app.db);
+  const v = checkIntegrity(app.d.db);
   if (v.length > 0) throw new Error(`integrity violations:\n${formatViolations(v)}`);
 }

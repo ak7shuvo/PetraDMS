@@ -71,7 +71,7 @@ describe('calculator', () => {
     expect(s.display).toBe('30');
     expect(calcPress(s, 'MC').memory).toBe(0);
     let h = calcInitial;
-    for (let i = 1; i <= 12; i++) h = ['1', '+', String(i % 10) as CalcKey, '='].reduce(calcPress, h);
+    for (let i = 1; i <= 12; i++) h = (['1', '+', String(i % 10), '='] as CalcKey[]).reduce(calcPress, h);
     expect(h.history).toHaveLength(10);
   });
 

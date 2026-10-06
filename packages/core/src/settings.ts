@@ -20,6 +20,8 @@ export const settingsSchema = z.object({
   printSilently: z.boolean(),
   printerName: z.string().max(200),
   bilingualHeadings: z.boolean(),
+  backupAuto: z.boolean(),
+  backupOnClose: z.boolean(),
   backupIntervalMinutes: z.number().int().min(5).max(1440),
   secondBackupDir: z.string().max(500),
   dataDirRecommended: z.string().max(500)
@@ -45,6 +47,8 @@ export const SETTING_DEFAULTS: Settings = {
   printSilently: false,
   printerName: '',
   bilingualHeadings: false,
+  backupAuto: true,
+  backupOnClose: true,
   backupIntervalMinutes: 30,
   secondBackupDir: '',
   dataDirRecommended: ''

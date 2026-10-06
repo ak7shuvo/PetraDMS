@@ -1,3 +1,4 @@
+import { recoveryNotice, rememberSecondDir } from './safetyApp';
 import { PetraError, businessDateFor, SETTING_DEFAULTS, type AppStatus, type BusinessProfile, type Settings } from '@petra/core';
 import { get, run } from '../sql';
 import { tx, lastClosedDate, type Ctx } from '../ctx';
@@ -41,7 +42,8 @@ export function appStatus(d: Dispatcher): AppStatus {
     settings,
     profile: loadProfile(ctx),
     businessDate: currentBusinessDate(ctx, settings),
-    dataDir: d.host.dataDir
+    dataDir: d.host.dataDir,
+    recovery: recoveryNotice(ctx)
   };
 }
 
@@ -137,7 +139,12 @@ export function registerCoreServices(d: Dispatcher): void {
   });
 
   d.register('settings:get', ({ ctx }) => loadSettings(ctx.db));
-  d.register('settings:save', ({ ctx, input }) => saveSettings(ctx, input));
+  d.register('settings:save', ({ ctx, input, host }) => {
+    const saved = saveSettings(ctx, input);
+    // The second backup folder is also remembered outside the database, so start-up recovery can find it if the database is damaged.
+    if (input.secondBackupDir !== undefined) rememberSecondDir(host.dataDir, saved.secondBackupDir);
+    return saved;
+  });
   d.register('profile:get', ({ ctx }) => loadProfile(ctx));
   d.register('profile:save', ({ ctx, input }) => saveProfile(ctx, input));
 

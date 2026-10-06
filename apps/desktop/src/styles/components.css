@@ -294,3 +294,9 @@
 .compact-stats > div { border: 1.5px solid var(--line-strong); border-radius: var(--r-2); padding: 6px 8px; background: var(--paper); display: flex; flex-direction: column; }
 .compact-stats span { font-size: var(--fs-xs); color: var(--muted); }
 .compact-stats strong { font-size: var(--fs-md); }
+.shell > .banners { grid-column: 2; display: flex; flex-direction: column; }
+.shell > .banners:empty { display: none; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; font-weight: 700; }
+.audit-json { margin: 0; padding: 8px; background: var(--cream-2); border: 1px solid var(--line); border-radius: var(--r-2); font-size: var(--fs-xs); overflow: auto; max-height: 40vh; white-space: pre-wrap; word-break: break-word; }

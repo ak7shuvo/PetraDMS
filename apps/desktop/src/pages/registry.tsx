@@ -13,6 +13,7 @@ import { MoneyPage } from './Money';
 import { PeoplePage } from './People';
 import { DashboardPage } from './Dashboard';
 import { ReportsPage } from './Reports';
+import { BackupPage } from './Backup';
 import { useI18n } from '../i18n';
 
 function ExpensesRoute() {
@@ -48,6 +49,7 @@ export const PAGES: PageDef[] = [
   { path: '/people', element: <PeoplePage />, nav: true, minRole: 'staff' },
   { path: '/money', element: <MoneyRoute />, nav: true, minRole: 'manager' },
   { path: '/reports', element: <ReportsPage />, nav: true, minRole: 'staff' },
+  { path: '/backup', element: <BackupPage />, nav: true, minRole: 'owner' },
   { path: '/settings', element: <SettingsPage />, nav: true, minRole: 'owner' },
   { path: '/style-guide', element: <StyleGuide />, nav: false, minRole: 'staff' }
 ];

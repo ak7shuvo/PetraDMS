@@ -18,7 +18,7 @@ export function crc32(buf: Uint8Array): number {
   return (c ^ 0xffffffff) >>> 0;
 }
 
-export interface ZipEntry { name: string; data: Uint8Array | string; date?: Date }
+export interface ZipEntry { name: string; data: Uint8Array | string; date?: Date; /** Keep the bytes as they are (databases do not shrink enough to be worth the time). */ store?: boolean }
 
 /** Minimal ZIP: one deflated entry per file, UTF-8 names. Enough for XLSX packages and "export everything". */
 export function makeZip(entries: ZipEntry[]): Buffer {
@@ -27,19 +27,20 @@ export function makeZip(entries: ZipEntry[]): Buffer {
   let offset = 0;
   for (const e of entries) {
     const raw = Buffer.from(typeof e.data === 'string' ? Buffer.from(e.data, 'utf8') : e.data);
-    const packed = deflateRawSync(raw);
+    const packed = e.store ? raw : deflateRawSync(raw);
+    const method = e.store ? 0 : 8;
     const name = Buffer.from(e.name, 'utf8');
     const d = e.date ?? new Date(Date.UTC(2026, 0, 1));
     const time = (d.getUTCHours() << 11) | (d.getUTCMinutes() << 5) | (d.getUTCSeconds() >> 1);
     const day = (Math.max(0, d.getUTCFullYear() - 1980) << 9) | ((d.getUTCMonth() + 1) << 5) | d.getUTCDate();
     const crc = crc32(raw);
     const local = Buffer.alloc(30);
-    local.writeUInt32LE(0x04034b50, 0); local.writeUInt16LE(20, 4); local.writeUInt16LE(0x0800, 6); local.writeUInt16LE(8, 8);
+    local.writeUInt32LE(0x04034b50, 0); local.writeUInt16LE(20, 4); local.writeUInt16LE(0x0800, 6); local.writeUInt16LE(method, 8);
     local.writeUInt16LE(time, 10); local.writeUInt16LE(day, 12); local.writeUInt32LE(crc, 14); local.writeUInt32LE(packed.length, 18); local.writeUInt32LE(raw.length, 22);
     local.writeUInt16LE(name.length, 26); local.writeUInt16LE(0, 28);
     parts.push(local, name, packed);
     const c = Buffer.alloc(46);
-    c.writeUInt32LE(0x02014b50, 0); c.writeUInt16LE(20, 4); c.writeUInt16LE(20, 6); c.writeUInt16LE(0x0800, 8); c.writeUInt16LE(8, 10);
+    c.writeUInt32LE(0x02014b50, 0); c.writeUInt16LE(20, 4); c.writeUInt16LE(20, 6); c.writeUInt16LE(0x0800, 8); c.writeUInt16LE(method, 10);
     c.writeUInt16LE(time, 12); c.writeUInt16LE(day, 14); c.writeUInt32LE(crc, 16); c.writeUInt32LE(packed.length, 20); c.writeUInt32LE(raw.length, 24);
     c.writeUInt16LE(name.length, 28); c.writeUInt32LE(offset, 42);
     central.push(c, name);

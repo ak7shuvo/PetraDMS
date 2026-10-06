@@ -15,7 +15,7 @@ describe('search, compact and labels (Phase 9 services)', () => {
     const cust = await ok(app.d, 'customer:save', { name: 'Karim Store', phone: '01711111111', type: 'wholesale', creditLimit: 0, openingBalance: 0 });
     const today = (await ok(app.d, 'app:status')).businessDate;
     await ok(app.d, 'purchase:save', { supplierId: sup.id, date: today, lines: [{ productId: milk.id, qty: 10, unitCost: 40000 }], paid: 400000 });
-    const sale = await ok(app.d, 'sale:save', { customerId: cust.id, date: today, lines: [{ productId: milk.id, qty: 1, unitPrice: 52000 }], paid: 52000 });
+    const sale = await ok(app.d, 'sale:save', { customerId: cust.id, date: today, lines: [{ productId: milk.id, qty: 1, price: 52000 }], paid: 52000 });
 
     let r = await ok(app.d, 'search:query', { q: 'marks', limit: 10 });
     expect(r.hits.map((h) => h.kind).sort()).toEqual(['product', 'purchase', 'supplier']);

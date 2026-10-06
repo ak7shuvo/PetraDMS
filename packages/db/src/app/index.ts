@@ -18,3 +18,8 @@ export * from './toolServices';
 export * from './searchApp';
 export * from './labels';
 export * from './exportFiles';
+export * from './zipRead';
+export * from './backup';
+export * from './safetyApp';
+export * from './safetyServices';
+export * from './autoBackup';

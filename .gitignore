@@ -11,3 +11,6 @@ playwright-report/
 *.db-wal
 *.db-shm
 .env
+
+# the released-schema fixtures are real data files, kept on purpose
+!packages/db/fixtures/*.db

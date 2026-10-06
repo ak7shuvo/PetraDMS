@@ -27,9 +27,36 @@ function LicenceBanner() {
   }
   if (!text) return null;
   return (
-    <div className={`banner${warn ? ' warn' : ''}`} role="status" data-testid="licence-banner" style={{ gridColumn: 2 }}>
+    <div className={`banner${warn ? ' warn' : ''}`} role="status" data-testid="licence-banner">
       <span style={{ flex: 1 }}>{text}</span>
       {role === 'owner' && <Button size="sm" onClick={() => navigate('/settings')}>{t('lic.banner.open')}</Button>}
+    </div>
+  );
+}
+
+/** Shown after the app restored a backup by itself because the data file was damaged. The Owner dismisses it once read. */
+function RecoveryBanner() {
+  const { t, n } = useI18n();
+  const rec = useApp((s) => s.status?.recovery);
+  const refresh = useApp((s) => s.refresh);
+  const role = useApp((s) => s.status?.session?.role);
+  const navigate = useNavigate();
+  if (!rec) return null;
+  const when = (iso: string) => n(`${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)} ${iso.slice(11, 16)}`);
+  return (
+    <div className="banner" role="alert" data-testid="recovery-banner">
+      <span style={{ flex: 1 }}>{t('rec.banner', { when: when(rec.backupAt) })}</span>
+      {role === 'owner' && <Button size="sm" onClick={() => navigate('/backup')}>{t('nav.backup')}</Button>}
+      <Button size="sm" onClick={() => void call('recovery:dismiss').then(refresh)} data-testid="recovery-dismiss">{t('rec.understood')}</Button>
+    </div>
+  );
+}
+
+function Banners() {
+  return (
+    <div className="banners" style={{ gridColumn: 2 }}>
+      <RecoveryBanner />
+      <LicenceBanner />
     </div>
   );
 }
@@ -50,7 +77,8 @@ export function Shell() {
   const nav = visibleNav(mode, registeredPaths(role));
   const [launching, setLaunching] = useState(() => effectiveMotion({ animations, liteActive }) === 'full' && !sessionStorageFlag());
   const licence = useApp((s) => s.status?.licence);
-  const hasBanner = !!licence && (licence.state !== 'licensed' || (licence.daysLeft !== null && licence.daysLeft <= 30));
+  const recovery = useApp((s) => s.status?.recovery);
+  const hasBanner = !!recovery || (!!licence && (licence.state !== 'licensed' || (licence.daysLeft !== null && licence.daysLeft <= 30)));
 
   useEffect(() => {
     if (!launching) return;
@@ -94,7 +122,7 @@ export function Shell() {
           </Button>
         </div>
       </aside>
-      {hasBanner && <LicenceBanner />}
+      {hasBanner && <Banners />}
       <header className="topbar">
         <h1>{title ? t(title.labelKey) : t('app.name')}</h1>
         <Segmented label={t('sg.language')} value={lang} options={[{ value: 'bn', label: 'বাংলা' }, { value: 'en', label: 'EN' }]} onChange={(v) => setUi({ lang: v })} />

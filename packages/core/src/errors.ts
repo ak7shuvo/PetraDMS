@@ -22,6 +22,9 @@ export const ERROR_CODES = [
   'AUTH_FAILED',
   'LOCKED_OUT',
   'DB_NEWER',
+  'DB_CORRUPT',
+  'BACKUP_FAILED',
+  'BACKUP_INVALID',
   'IO_FAILED',
   'UNKNOWN'
 ] as const;

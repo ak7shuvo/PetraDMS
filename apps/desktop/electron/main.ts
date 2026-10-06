@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
 import {
-  Dispatcher, PRODUCT_PUBLIC_KEY_PEM, healthInfo, loadMigrations, machineHash, migrate, openDatabase, registerCoreServices, registerCatalogServices, registerSalesServices, registerMoneyServices, registerReportServices, registerToolServices, closeDatabase, type Db, type Host
+  Dispatcher, PRODUCT_PUBLIC_KEY_PEM, healthInfo, loadMigrations, machineHash, migrate, openDatabase, registerCoreServices, registerCatalogServices, registerSalesServices, registerMoneyServices, registerReportServices, registerToolServices, registerSafetyServices, AutoBackup, createBackup, knownBackupDirs, latestVersion, makeCtx, recordRecovery, recoverIfCorrupt, swapInDatabase, closeDatabase, type Db, type Host
 } from '@petra/db';
 import { ipcContract, PetraError, type PrintFormat } from '@petra/core';
 
@@ -29,6 +29,7 @@ if (process.env.PETRA_DATA_DIR) app.setPath('userData', path.join(dataRoot, 'ele
 
 let db: Db | null = null;
 let dispatcher: Dispatcher | null = null;
+let autoBackup: AutoBackup | null = null;
 let mainWindow: BrowserWindow | null = null;
 let savedBounds: Electron.Rectangle | null = null;
 let savedMaximised = false;
@@ -42,11 +43,22 @@ function migrationsDir(): string {
   return app.isPackaged ? path.join(process.resourcesPath, 'migrations') : path.resolve(__dirname, '../../../packages/db/migrations');
 }
 
+/** Opens the database and applies any pending migrations. A database that already holds data is backed up first; if that backup fails the upgrade does not run. */
 function openAndMigrate(root: string): Db {
   ensureDirs(root);
   const d = openDatabase(path.join(root, 'data', 'petra.db'));
-  migrate(d, loadMigrations(migrationsDir()));
+  migrate(d, loadMigrations(migrationsDir()), {
+    beforeMigrate: () => {
+      createBackup(d, path.join(root, 'backups'), { kind: 'pre-migrate', appVersion: app.getVersion(), now: new Date() });
+    }
+  });
   return d;
+}
+
+/** Plan 12.2: a damaged database is replaced by the newest backup that verifies, before anything else opens it. */
+function checkAndRecover(root: string): ReturnType<typeof recoverIfCorrupt> {
+  ensureDirs(root);
+  return recoverIfCorrupt(root, knownBackupDirs(root), latestVersion(loadMigrations(migrationsDir())), new Date());
 }
 
 function machineFacts() {
@@ -139,6 +151,17 @@ const printHost = {
   },
   reveal(file: string): void {
     shell.showItemInFolder(file);
+  },
+  async pickBackupFile(): Promise<string | null> {
+    const r = await dialog.showOpenDialog(mainWindow ?? undefined!, { properties: ['openFile'], filters: [{ name: 'PetraDMS backup', extensions: ['petrabak'] }] });
+    return r.canceled ? null : (r.filePaths[0] ?? null);
+  },
+  async restoreDatabase(file: string): Promise<void> {
+    if (db) closeDatabase(db);
+    db = null;
+    swapInDatabase(dataRoot, file);
+    db = openAndMigrate(dataRoot);
+    dispatcher?.swapDb(db);
   },
   async setCompact(on: boolean): Promise<void> {
     const w = mainWindow;
@@ -274,7 +297,21 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   void app.whenReady().then(() => {
-    db = openAndMigrate(dataRoot);
+    let recovered: ReturnType<typeof recoverIfCorrupt> = { state: 'ok' };
+    try {
+      recovered = checkAndRecover(dataRoot);
+      db = openAndMigrate(dataRoot);
+    } catch (e) {
+      const code = e instanceof PetraError ? e.code : 'UNKNOWN';
+      const msg = code === 'DB_CORRUPT'
+        ? 'The data file is damaged and no usable backup was found.\nYour data has not been changed. Please contact support before doing anything else.\n\n'
+        : code === 'DB_NEWER'
+          ? 'This data was made by a newer version of PetraDMS. Install the latest version.\n\n'
+          : 'PetraDMS could not open its data safely.\nNothing has been changed.\n\n';
+      dialog.showErrorBox('PetraDMS', `${msg}${e instanceof Error ? e.message : String(e)}\n\nData folder: ${dataRoot}`);
+      app.exit(1);
+      return;
+    }
     // Tests may substitute the licence key; a packaged build always uses the embedded vendor key.
     const publicKeyPem = !app.isPackaged && process.env.PETRA_LICENCE_PUBLIC_KEY ? process.env.PETRA_LICENCE_PUBLIC_KEY.replace(/\\n/g, '\n') : PRODUCT_PUBLIC_KEY_PEM;
     dispatcher = new Dispatcher(db, { publicKeyPem, machine: process.env.PETRA_MACHINE_HASH && !app.isPackaged ? process.env.PETRA_MACHINE_HASH : machineHash(machineFacts()) }, host);
@@ -284,6 +321,12 @@ if (!app.requestSingleInstanceLock()) {
     registerMoneyServices(dispatcher);
     registerReportServices(dispatcher);
     registerToolServices(dispatcher);
+    registerSafetyServices(dispatcher, () => autoBackup);
+    autoBackup = new AutoBackup(dispatcher);
+    if (recovered.state === 'recovered') {
+      const c = makeCtx(db, null, () => new Date().toISOString());
+      recordRecovery(c, { at: new Date().toISOString(), backupAt: recovered.manifest.createdAt, backupKind: recovered.manifest.kind }, `restored ${path.basename(recovered.backupFile)}; damaged file kept as ${recovered.corruptFile}`);
+    }
     blockNetwork();
     registerIpc(dispatcher);
     if (process.argv.includes('--smoke-test')) {
@@ -299,11 +342,30 @@ if (!app.requestSingleInstanceLock()) {
       return;
     }
     createWindow();
+    // Every minute: back up if data changed and the interval has passed (a backup is skipped when nothing changed).
+    setInterval(() => {
+      try {
+        autoBackup?.tick();
+      } catch {
+        /* logged by the backup itself */
+      }
+    }, 60_000).unref();
   });
 
-  app.on('window-all-closed', () => {
+  // Closing the window fires window-all-closed; app.quit() (shutdown, installer, tests) fires before-quit and will-quit instead.
+  // Both paths make the closing backup; AutoBackup does it only once and only if data changed.
+  const finish = (): void => {
+    try {
+      autoBackup?.onClose();
+    } catch {
+      /* the failure is in the log; closing must not hang */
+    }
     if (db) closeDatabase(db);
     db = null;
+  };
+  app.on('before-quit', finish);
+  app.on('window-all-closed', () => {
+    finish();
     app.quit();
   });
 }

@@ -21,6 +21,7 @@ export function registerToolServices(d: Dispatcher): SearchService {
   });
   d.register('window:compact', async ({ host, input }) => {
     await host.setCompact(input.on);
+    return null;
   });
   return search;
 }

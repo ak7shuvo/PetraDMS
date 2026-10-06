@@ -47,6 +47,8 @@ export interface AppStatus {
   profile: BusinessProfile;
   businessDate: string;
   dataDir: string;
+  /** Set when the app restored a backup by itself at start-up (the data file was damaged). */
+  recovery: import('./safety').RecoveryNotice | null;
 }
 
 export interface LoginUser {
