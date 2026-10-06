@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import type { SaleDetail, SaleItemDto, SaleListItem } from '@petra/core';
 import { mulDiv } from '@petra/core';
 import { call, errorText } from '../api';
@@ -13,6 +14,10 @@ export function SalesPage() {
   const { t } = useI18n();
   const [tab, setTab] = useState<Tab>('new');
   const [edit, setEdit] = useState<SaleDetail | null>(null);
+  const loc = useLocation();
+  useEffect(() => {
+    if (typeof (loc.state as { open?: number } | null)?.open === 'number') { setEdit(null); setTab('invoices'); }
+  }, [loc.state, loc.key]);
   useEffect(() => {
     const open = () => { setEdit(null); setTab('new'); };
     window.addEventListener('petra:new-sale', open);
@@ -38,6 +43,11 @@ function Invoices({ onEdit }: { onEdit: (d: SaleDetail) => void }) {
   const [range, setRange] = useState<Range>({ from: role === 'staff' ? today : monthStart(today), to: today });
   const [q, setQ] = useState('');
   const [openId, setOpenId] = useState<number | null>(null);
+  const loc = useLocation();
+  useEffect(() => {
+    const st = loc.state as { open?: number } | null;
+    if (typeof st?.open === 'number') setOpenId(st.open);
+  }, [loc.state, loc.key]);
   const list = useQuery('sale:list', { from: range.from, to: range.to, ...(q.trim() ? { search: q.trim() } : {}) });
   const rows = list.data ?? [];
   const live = rows.filter((r) => r.status === 'posted');

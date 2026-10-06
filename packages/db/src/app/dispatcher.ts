@@ -21,6 +21,8 @@ export interface Host {
   /** Renders the HTML to a PDF file at `file` (fonts embedded). */
   pdfHtml(html: string, o: { format: PrintFormat; file: string }): Promise<void>;
   reveal(path: string): void;
+  /** Shrinks the window to a small always-on-top panel (Ctrl+Shift+M) or restores it. */
+  setCompact(on: boolean): Promise<void>;
 }
 
 export interface CallArgs<I = unknown> {
@@ -39,6 +41,8 @@ const ROLE_RANK = { staff: 1, manager: 2, owner: 3 } as const;
 
 export class Dispatcher {
   session: SessionDto | null = null;
+  /** Counts successful writes, so caches such as the search index know when to rebuild. */
+  writeGen = 0;
   private approvals = new Map<string, { approverId: number; forUser: number; expires: number }>();
   private handlers = new Map<string, AnyHandler>();
 
@@ -98,6 +102,7 @@ export class Dispatcher {
       const ctx = this.ctx();
       if (def.write) assertWritable(ctx, this.env);
       const data = await handler({ ctx, session: this.session, input: parsed.data, host: this.host, env: this.env, dispatcher: this });
+      if (def.write) this.writeGen++;
       return { ok: true, data };
     } catch (e) {
       return { ok: false, error: toWireError(e) };

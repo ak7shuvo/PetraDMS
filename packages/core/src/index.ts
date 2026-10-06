@@ -8,3 +8,5 @@ export * from './invoice';
 export * from './aging';
 export * from './businessDate';
 export * from './print';
+export * from './search';
+export * from './calc';

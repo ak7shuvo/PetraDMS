@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { BrandMark, Button, Badge, ChangeSecretModal, Modal, Segmented, Toasts } from '../ui';
+import { BrandMark, Button, Badge, ChangeSecretModal, ErrorBoundary, Modal, Segmented, Toasts } from '../ui';
 import { call } from '../api';
 import { useI18n } from '../i18n';
 import { effectiveMotion, useUi } from '../store/ui';
@@ -106,7 +106,7 @@ export function Shell() {
       </header>
       <main className="main">
         <div key={loc.pathname} className="page-fade">
-          <Outlet />
+          <ErrorBoundary resetKey={loc.pathname}><Outlet /></ErrorBoundary>
         </div>
       </main>
       <Modal open={account} title={session?.displayName ?? ''} onClose={() => setAccount(false)}>

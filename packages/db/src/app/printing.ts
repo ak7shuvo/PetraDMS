@@ -5,6 +5,7 @@ import type { Ctx } from '../ctx';
 import { loadSettings } from '../settings';
 import { currentBusinessDate, loadProfile } from './coreServices';
 import { runReport } from './reportsApp';
+import { renderLabels } from './labels';
 import { translate } from './exportFiles';
 import { getSale } from './salesApp';
 import { partyLedger } from './catalog';
@@ -62,6 +63,10 @@ export function buildDoc(ctx: Ctx, host: Host, role: Role, doc: PrintDoc, format
       c.biz, { ...c.opts, format: 'a4' }
     );
     return { html, name: `${doc.params.id}-${doc.params.to ?? currentBusinessDate(ctx, loadSettings(ctx.db))}`.replace(/[^\w.-]+/g, '_'), format: 'a4' };
+  }
+  if (doc.type === 'labels') {
+    const f = makeFmt(c.opts);
+    return { html: renderLabels(ctx, doc.items, { fontCss: c.opts.fontCss, bnDigits: c.opts.bnDigits, money: f.money }), name: 'labels', format: 'a4' };
   }
   if (doc.type === 'invoice') {
     const sale = getSale(ctx, role, doc.id);

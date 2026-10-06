@@ -1,9 +1,9 @@
-import { app, BrowserWindow, dialog, ipcMain, session, shell } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, screen, session, shell } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
 import {
-  Dispatcher, PRODUCT_PUBLIC_KEY_PEM, healthInfo, loadMigrations, machineHash, migrate, openDatabase, registerCoreServices, registerCatalogServices, registerSalesServices, registerMoneyServices, registerReportServices, closeDatabase, type Db, type Host
+  Dispatcher, PRODUCT_PUBLIC_KEY_PEM, healthInfo, loadMigrations, machineHash, migrate, openDatabase, registerCoreServices, registerCatalogServices, registerSalesServices, registerMoneyServices, registerReportServices, registerToolServices, closeDatabase, type Db, type Host
 } from '@petra/db';
 import { ipcContract, PetraError, type PrintFormat } from '@petra/core';
 
@@ -30,6 +30,8 @@ if (process.env.PETRA_DATA_DIR) app.setPath('userData', path.join(dataRoot, 'ele
 let db: Db | null = null;
 let dispatcher: Dispatcher | null = null;
 let mainWindow: BrowserWindow | null = null;
+let savedBounds: Electron.Rectangle | null = null;
+let savedMaximised = false;
 
 function ensureDirs(root: string): void {
   for (const d of ['data', 'backups', 'exports', 'invoices', 'logs']) fs.mkdirSync(path.join(root, d), { recursive: true });
@@ -137,6 +139,38 @@ const printHost = {
   },
   reveal(file: string): void {
     shell.showItemInFolder(file);
+  },
+  async setCompact(on: boolean): Promise<void> {
+    const w = mainWindow;
+    if (!w || w.isDestroyed()) return;
+    if (on === (savedBounds !== null)) return;
+    const tween = async (to: Electron.Rectangle): Promise<void> => {
+      const from = w.getBounds();
+      const steps = process.env.PETRA_NO_MOTION ? 1 : 12;
+      for (let i = 1; i <= steps; i++) {
+        const k = 1 - Math.pow(1 - i / steps, 3);
+        w.setBounds({ x: Math.round(from.x + (to.x - from.x) * k), y: Math.round(from.y + (to.y - from.y) * k), width: Math.round(from.width + (to.width - from.width) * k), height: Math.round(from.height + (to.height - from.height) * k) });
+        if (steps > 1) await new Promise((r) => setTimeout(r, 20));
+      }
+    };
+    if (on) {
+      savedBounds = w.getBounds();
+      savedMaximised = w.isMaximized();
+      if (savedMaximised) w.unmaximize();
+      w.setMinimumSize(320, 360);
+      const area = screen.getDisplayMatching(w.getBounds()).workArea;
+      const width = 360;
+      const height = 520;
+      w.setAlwaysOnTop(true, 'floating');
+      await tween({ x: area.x + area.width - width - 16, y: area.y + area.height - height - 16, width, height });
+    } else {
+      const back = savedBounds!;
+      savedBounds = null;
+      w.setAlwaysOnTop(false);
+      await tween(back);
+      w.setMinimumSize(1024, 640);
+      if (savedMaximised) w.maximize();
+    }
   }
 };
 
@@ -249,6 +283,7 @@ if (!app.requestSingleInstanceLock()) {
     registerSalesServices(dispatcher);
     registerMoneyServices(dispatcher);
     registerReportServices(dispatcher);
+    registerToolServices(dispatcher);
     blockNetwork();
     registerIpc(dispatcher);
     if (process.argv.includes('--smoke-test')) {

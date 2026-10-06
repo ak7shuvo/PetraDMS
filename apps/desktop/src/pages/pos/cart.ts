@@ -49,13 +49,25 @@ export function customerTier(c: CustomerDto | null): PriceTier {
 }
 
 export function totalsOf(cart: CartState, taxBp: number, roundOff: boolean): InvoiceResult {
-  return computeInvoice({
-    lines: cart.lines.map((l) => ({ kind: l.kind, qty: l.qty ?? 0, price: l.kind === 'bonus' ? 0 : l.price ?? 0, discKind: l.kind === 'bonus' ? null : l.discKind, discValue: l.discValue })),
-    discKind: cart.discKind,
-    discValue: cart.discValue,
-    taxBp,
-    roundOff
-  });
+  const run = (lines: CartLine[]) =>
+    computeInvoice({
+      lines: lines.map((l) => ({ kind: l.kind, qty: l.qty ?? 0, price: l.kind === 'bonus' ? 0 : l.price ?? 0, discKind: l.kind === 'bonus' ? null : l.discKind, discValue: l.discValue })),
+      discKind: cart.discKind,
+      discValue: cart.discValue,
+      taxBp,
+      roundOff
+    });
+  // A line whose quantity is empty or zero is shown as invalid and blocks saving; it must not stop the screen from drawing.
+  const counted = cart.lines.filter((l) => l.qty !== null && l.qty > 0);
+  try {
+    return run(counted);
+  } catch {
+    try {
+      return run([]);
+    } catch {
+      return computeInvoice({ lines: [], discKind: null, discValue: 0, taxBp: 0, roundOff: false });
+    }
+  }
 }
 
 /** Draft payload stored in `sale_drafts`; restored defensively because products may have changed since. */

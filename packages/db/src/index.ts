@@ -55,3 +55,4 @@ export function healthInfo(db: Db): HealthInfo {
     integrity: String(one('PRAGMA integrity_check').integrity_check)
   };
 }
+export * from './perfSeed';

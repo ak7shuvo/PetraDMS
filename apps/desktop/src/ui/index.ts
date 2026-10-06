@@ -18,3 +18,4 @@ export * from './CustomerPicker';
 export * from './ApprovalModal';
 export * from './PrintActions';
 export * from './ReceivePayment';
+export * from './ErrorBoundary';

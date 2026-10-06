@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@petra/core": "workspace:*",
+    "jsbarcode": "3.12.3",
     "zod": "4.6.5"
   }
 }

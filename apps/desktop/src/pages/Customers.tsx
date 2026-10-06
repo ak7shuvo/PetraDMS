@@ -22,7 +22,9 @@ export function CustomersPage({ embedded }: { embedded?: boolean }) {
   const [sel, setSel] = useState<number | 'new' | null>(null);
   const loc = useLocation();
   useEffect(() => {
-    if ((loc.state as { add?: boolean } | null)?.add) setSel('new');
+    const st = loc.state as { add?: boolean; open?: number } | null;
+    if (st?.add) setSel('new');
+    else if (typeof st?.open === 'number') setSel(st.open);
   }, [loc.state]);
   const rows = (list.data ?? []).filter((c) => {
     if (!archived && c.status === 'archived') return false;

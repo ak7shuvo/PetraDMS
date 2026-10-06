@@ -14,4 +14,7 @@ export * from './moneyApp';
 export * from './moneyServices';
 export * from './reportsApp';
 export * from './reportServices';
+export * from './toolServices';
+export * from './searchApp';
+export * from './labels';
 export * from './exportFiles';

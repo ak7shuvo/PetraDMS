@@ -215,6 +215,20 @@ export function Pos({ edit, onEditDone }: { edit?: SaleDetail | null; onEditDone
   };
 
   useEffect(() => {
+    const onScan = (e: Event) => {
+      const d = (e as CustomEvent<{ code: string; handled: boolean }>).detail;
+      if (done) return;
+      d.handled = true;
+      const code = d.code.trim().toLowerCase();
+      const p = products.find((x) => x.barcodes.some((b) => b.toLowerCase() === code) || x.sku.toLowerCase() === code);
+      if (p) addProduct(p);
+      else toast.error(t('pos.scanUnknown', { code: d.code }));
+    };
+    window.addEventListener('petra:barcode', onScan);
+    return () => window.removeEventListener('petra:barcode', onScan);
+  });
+
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (done) return;
       if (e.key === 'F3') { e.preventDefault(); setCustomerOpen(true); }

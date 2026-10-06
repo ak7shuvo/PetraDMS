@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { mulDiv, type ProductDto, type PurchaseDetail, type PurchaseListItem } from '@petra/core';
 import { call, errorText } from '../api';
 import { useI18n } from '../i18n';
@@ -13,6 +14,11 @@ export function PurchasesPage() {
   const [range, setRange] = useState<Range>({ from: monthStart(today), to: today });
   const [q, setQ] = useState('');
   const [detailId, setDetailId] = useState<number | null>(null);
+  const loc = useLocation();
+  useEffect(() => {
+    const st = loc.state as { open?: number } | null;
+    if (typeof st?.open === 'number') { setMode('list'); setDetailId(st.open); }
+  }, [loc.state, loc.key]);
   const list = useQuery('purchase:list', { from: range.from, to: range.to, ...(q.trim() ? { search: q.trim() } : {}) });
   const total = (list.data ?? []).filter((p) => p.status === 'posted').reduce((a, p) => a + p.total, 0);
 

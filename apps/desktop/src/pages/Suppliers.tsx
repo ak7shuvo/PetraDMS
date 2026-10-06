@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import type { SupplierDto } from '@petra/core';
 import { call, errorText } from '../api';
 import { useI18n } from '../i18n';
@@ -11,6 +12,16 @@ export function SuppliersPage() {
   const [q, setQ] = useState('');
   const [sel, setSel] = useState<SupplierDto | 'new' | null>(null);
   const suppliers = useQuery('catalog:suppliers', { includeArchived: showArchived });
+  const loc = useLocation();
+  const opened = useRef<unknown>(null);
+  useEffect(() => {
+    const st = loc.state as { open?: number } | null;
+    if (typeof st?.open === 'number' && opened.current !== loc.key && suppliers.data) {
+      opened.current = loc.key;
+      const s = suppliers.data.find((x) => x.id === st.open);
+      if (s) setSel(s);
+    }
+  }, [loc.state, loc.key, suppliers.data]);
   const rows = useMemo(() => {
     const s = q.trim().toLowerCase();
     return (suppliers.data ?? []).filter((x) => !s || x.name.toLowerCase().includes(s) || x.nameBn.includes(q.trim()) || x.phone.includes(s));

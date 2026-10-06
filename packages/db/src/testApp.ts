@@ -7,6 +7,7 @@ import { registerCatalogServices } from './app/catalogServices';
 import { registerSalesServices } from './app/salesServices';
 import { registerMoneyServices } from './app/moneyServices';
 import { registerReportServices } from './app/reportServices';
+import { registerToolServices } from './app/toolServices';
 import { machineHash } from './app/licence';
 import { checkIntegrity, formatViolations } from './integrity';
 
@@ -26,6 +27,7 @@ export const setupInput = {
 export function makeApp(nowRef: { t: number } = { t: T0 }) {
   const { db, close } = createBareDb();
   const printed: string[] = [];
+  const compact: boolean[] = [];
   const pdfs: string[] = [];
   const host: Host = {
     appVersion: '1.0.0',
@@ -38,7 +40,8 @@ export function makeApp(nowRef: { t: number } = { t: T0 }) {
     fontCss: () => '',
     printHtml: async (html) => { printed.push(html); },
     pdfHtml: async (html, o) => { printed.push(html); pdfs.push(o.file); },
-    reveal: () => undefined
+    reveal: () => undefined,
+    setCompact: async (on) => { compact.push(on); }
   };
   const d = new Dispatcher(db, { publicKeyPem: PUB, machine: MACHINE }, host, () => new Date(nowRef.t).toISOString());
   registerCoreServices(d);
@@ -46,7 +49,8 @@ export function makeApp(nowRef: { t: number } = { t: T0 }) {
   registerSalesServices(d);
   registerMoneyServices(d);
   registerReportServices(d);
-  return { d, db, close, nowRef, printed, pdfs };
+  registerToolServices(d);
+  return { d, db, close, nowRef, printed, pdfs, compact };
 }
 
 export type App = ReturnType<typeof makeApp>;

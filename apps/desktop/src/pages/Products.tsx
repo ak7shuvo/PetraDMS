@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import type { LookupDto, ProductDto } from '@petra/core';
 import { call, errorText } from '../api';
@@ -16,10 +16,17 @@ export function ProductsPage() {
   const [cat, setCat] = useState<number | 'all'>('all');
   const [editing, setEditing] = useState<ProductDto | 'new' | null>(null);
   const loc = useLocation();
-  useEffect(() => {
-    if (canEdit && (loc.state as { add?: boolean } | null)?.add) setEditing('new');
-  }, [loc.state, canEdit]);
   const products = useQuery('catalog:products', { includeArchived: showArchived });
+  const opened = useRef<unknown>(null);
+  useEffect(() => {
+    const st = loc.state as { add?: boolean; open?: number } | null;
+    if (canEdit && st?.add) setEditing('new');
+    else if (typeof st?.open === 'number' && opened.current !== loc.key && products.data) {
+      const p = products.data.find((x) => x.id === st.open);
+      opened.current = loc.key;
+      if (p) { if (canEdit) setEditing(p); else setQ(p.name); }
+    }
+  }, [loc.state, loc.key, canEdit, products.data]);
   const lookups = useQuery('catalog:lookups', undefined);
   const rows = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -100,6 +107,7 @@ function ProductEditor({ open, product, lookups, onLookupsChanged, onClose, onSa
   const [fieldErr, setFieldErr] = useState(false);
   const [addLookup, setAddLookup] = useState<'category' | 'brand' | null>(null);
   const [confirmArchive, setConfirmArchive] = useState(false);
+  const [labelsOpen, setLabelsOpen] = useState(false);
   const [lastKey, setLastKey] = useState<string>('');
 
   const key = open ? String(product?.id ?? 'new') : '';
@@ -146,6 +154,7 @@ function ProductEditor({ open, product, lookups, onLookupsChanged, onClose, onSa
       footer={
         <>
           {product && <Button variant={product.status === 'active' ? 'danger' : 'default'} onClick={() => setConfirmArchive(true)} data-testid="product-archive">{product.status === 'active' ? t('act.archive') : t('act.restore')}</Button>}
+          {product && <Button onClick={() => setLabelsOpen(true)} data-testid="product-labels">{t('prod.printLabels')}</Button>}
           <span className="spacer" />
           <Button onClick={onClose}>{t('act.cancel')}</Button>
           <Button variant="primary" kbd="Ctrl+S" onClick={() => void save()} disabled={fieldErr && !valid} data-testid="product-save">{t('act.save')}</Button>
@@ -233,6 +242,7 @@ function ProductEditor({ open, product, lookups, onLookupsChanged, onClose, onSa
         {error && <div className="p-error shake" role="alert" data-testid="product-error">{error}</div>}
       </div>
 
+      {product && <LabelsModal open={labelsOpen} productId={product.id} onClose={() => setLabelsOpen(false)} />}
       <LookupModal kind={addLookup} onClose={() => setAddLookup(null)} onSaved={(id) => { if (addLookup === 'category') set('categoryId', id); else set('brandId', id); setAddLookup(null); onLookupsChanged(); }} />
       <Modal
         open={confirmArchive}
@@ -254,6 +264,30 @@ function ProductEditor({ open, product, lookups, onLookupsChanged, onClose, onSa
         {t('prod.archiveBody')}
       </Modal>
     </Drawer>
+  );
+}
+
+function LabelsModal({ open, productId, onClose }: { open: boolean; productId: number; onClose: () => void }) {
+  const { t } = useI18n();
+  const [copies, setCopies] = useState('12');
+  const [busy, setBusy] = useState(false);
+  const n = Math.max(1, Math.min(200, Math.floor(Number(copies) || 0)));
+  const run = async (action: 'print' | 'pdf') => {
+    setBusy(true);
+    try {
+      const r = await call('print:run', { doc: { type: 'labels', items: [{ productId, copies: n }] }, action });
+      toast.ok(action === 'pdf' ? `${t('print.saved')}: ${r.path ?? ''}` : t('print.sent'));
+      onClose();
+    } catch (e) {
+      toast.error(errorText(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Modal open={open} title={t('prod.printLabels')} onClose={onClose} footer={<><Button onClick={onClose}>{t('act.cancel')}</Button><Button disabled={busy} onClick={() => void run('pdf')} data-testid="labels-pdf">{t('act.saveAsPdf')}</Button><Button variant="primary" disabled={busy} onClick={() => void run('print')} data-testid="labels-print">{t('act.print')}</Button></>}>
+      <Field label={t('prod.labelCopies')} hint={t('prod.labelHint')}>{(a) => <Input id={a.id} data-autofocus inputMode="numeric" value={copies} onChange={(e) => setCopies(e.target.value.replace(/\D/g, ''))} data-testid="labels-copies" />}</Field>
+    </Modal>
   );
 }
 

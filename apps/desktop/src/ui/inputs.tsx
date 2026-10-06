@@ -12,13 +12,20 @@ interface BaseProps {
   onKeyDown?: KeyboardEventHandler<HTMLInputElement>;
 }
 
+/** Amounts above ten billion taka are refused as typing mistakes; they would also overflow invoice arithmetic. */
+const MAX_POISHA = 1_000_000_000_000;
+const parseCapped = (s: string): Poisha | null => {
+  const p = parseMoney(s);
+  return p !== null && p > MAX_POISHA ? null : p;
+};
+
 /** Money entry in taka; reports integer poisha, or null while the text is not a valid amount. */
 export function MoneyInput({ value, onChange, inputRef, ...rest }: BaseProps & { value: Poisha | null; onChange: (p: Poisha | null) => void }) {
   const { lang } = useI18n();
   const show = (p: Poisha | null) => (p === null ? '' : lang === 'bn' ? toBnDigits((p / 100).toFixed(p % 100 === 0 ? 0 : 2)) : (p / 100).toFixed(p % 100 === 0 ? 0 : 2));
   const [text, setText] = useState(show(value));
   useEffect(() => {
-    if (parseMoney(text) !== value) setText(show(value));
+    if (parseCapped(text) !== value) setText(show(value));
   }, [value, lang]);
   return (
     <Input
@@ -27,10 +34,10 @@ export function MoneyInput({ value, onChange, inputRef, ...rest }: BaseProps & {
       numeric
       inputMode="decimal"
       value={text}
-      invalid={rest.invalid || (text !== '' && parseMoney(text) === null)}
+      invalid={rest.invalid || (text !== '' && parseCapped(text) === null)}
       onChange={(e) => {
         setText(e.target.value);
-        onChange(e.target.value.trim() === '' ? null : parseMoney(e.target.value));
+        onChange(e.target.value.trim() === '' ? null : parseCapped(e.target.value));
       }}
     />
   );
@@ -42,7 +49,7 @@ export function QtyInput({ value, onChange, inputRef, ...rest }: BaseProps & { v
   const show = (n: number | null) => (n === null ? '' : lang === 'bn' ? toBnDigits(String(n)) : String(n));
   const [text, setText] = useState(show(value));
   useEffect(() => {
-    const cur = /^\d+$/.test(fromBnDigits(text)) ? Number(fromBnDigits(text)) : null;
+    const cur = /^\d{1,9}$/.test(fromBnDigits(text)) ? Number(fromBnDigits(text)) : null;
     if (cur !== value) setText(show(value));
   }, [value, lang]);
   return (
@@ -52,11 +59,11 @@ export function QtyInput({ value, onChange, inputRef, ...rest }: BaseProps & { v
       numeric
       inputMode="numeric"
       value={text}
-      invalid={rest.invalid || (text !== '' && !/^\d+$/.test(fromBnDigits(text)))}
+      invalid={rest.invalid || (text !== '' && !/^\d{1,9}$/.test(fromBnDigits(text)))}
       onChange={(e) => {
         setText(e.target.value);
         const d = fromBnDigits(e.target.value.trim());
-        onChange(d === '' ? null : /^\d+$/.test(d) ? Number(d) : null);
+        onChange(d === '' ? null : /^\d{1,9}$/.test(d) ? Number(d) : null);
       }}
     />
   );

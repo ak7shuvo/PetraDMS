@@ -10,6 +10,7 @@ import { startLiteGuard } from './motion/lite';
 import { Skeleton, toast } from './ui';
 import { translate } from './i18n';
 import { call } from './api';
+import { GlobalTools } from './tools/GlobalTools';
 
 function Hotkeys() {
   const navigate = useNavigate();
@@ -57,6 +58,7 @@ function Authed() {
   return (
     <HashRouter>
       <Hotkeys />
+      <GlobalTools />
       <IdleLock />
       <Routes>
         <Route element={<Shell />}>

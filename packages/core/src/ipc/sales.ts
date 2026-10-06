@@ -194,6 +194,7 @@ export const printDoc = z.discriminatedUnion('type', [
   z.object({ type: z.literal('invoice'), id: z.number().int().positive() }),
   z.object({ type: z.literal('payment'), id: z.number().int().positive() }),
   reportPrintDoc,
+  z.object({ type: z.literal('labels'), items: z.array(z.object({ productId: z.number().int().positive(), copies: z.number().int().min(1).max(200) })).min(1).max(200) }),
   z.object({ type: z.literal('statement'), kind: z.enum(['customer', 'supplier']), id: z.number().int().positive(), from: dateStr.optional(), to: dateStr.optional() })
 ]);
 export type PrintDoc = z.infer<typeof printDoc>;
