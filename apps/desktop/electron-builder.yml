@@ -1,0 +1,34 @@
+appId: com.petra.dms
+productName: PetraDMS
+copyright: Copyright (c) PETRA
+directories:
+  output: release
+  buildResources: build
+asar: true
+# Everything the main process needs is bundled by esbuild into dist-electron,
+# and the renderer is bundled by Vite into dist. No node_modules are shipped.
+files:
+  - dist/**/*
+  - dist-electron/**/*
+  - package.json
+  - "!**/*.map"
+extraResources:
+  - from: ../../packages/db/migrations
+    to: migrations
+    filter: ["**/*.sql"]
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  artifactName: PetraDMS-Setup-${version}-x64.${ext}
+  signAndEditExecutable: true
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: PetraDMS
+  deleteAppDataOnUninstall: false
+  runAfterFinish: true
+  uninstallDisplayName: PetraDMS

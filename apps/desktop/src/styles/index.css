@@ -1,0 +1,10 @@
+@import 'tailwindcss';
+
+:root {
+  --red: #C8202F;
+  --black: #121212;
+  --cream: #F6F1E7;
+}
+
+html, body, #root { height: 100%; margin: 0; }
+body { background: var(--cream); color: var(--black); font-family: system-ui, sans-serif; }
