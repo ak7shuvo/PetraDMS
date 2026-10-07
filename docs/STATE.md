@@ -1,6 +1,8 @@
 # PetraDMS - Build state
 
 ## Current phase
+Post-Phase-12 production release work (D21): CI e2e fixed on GitHub, Windows e2e and installer pipeline, licensing hardening and docs. See `docs/RELEASING.md` and `docs/LICENSING.md`.
+
 Phase 12 complete (all 12 phases built; `pnpm verify:release` passes locally on Linux). The Windows installer and its install/upgrade/uninstall checks run only in GitHub Actions.
 
 ## Done

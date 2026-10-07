@@ -1,6 +1,6 @@
 appId: com.petra.dms
 productName: PetraDMS
-copyright: Copyright © ${year} Petra
+copyright: Copyright © 2026 Petra
 artifactName: ${productName}-${version}-${os}-${arch}.${ext}
 electronLanguages: [en-US]
 forceCodeSigning: false
