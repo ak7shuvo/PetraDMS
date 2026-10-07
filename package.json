@@ -20,7 +20,9 @@
     "test:e2e": "pnpm --filter @petra/desktop build && playwright test",
     "verify": "pnpm typecheck && pnpm lint && pnpm test:unit && pnpm check:integrity && pnpm test:e2e",
     "dist:win": "pnpm --filter @petra/desktop dist:win",
-    "verify:release": "pnpm verify && tsx tools/verify-release.ts",
+    "dist:dir": "pnpm --filter @petra/desktop dist:dir",
+    "verify:package": "tsx tools/verify-release.ts",
+    "verify:release": "pnpm verify && pnpm verify:package",
     "keygen": "tsx tools/keygen/index.ts"
   },
   "devDependencies": {

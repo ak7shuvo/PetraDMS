@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
 import {
-  Dispatcher, PRODUCT_PUBLIC_KEY_PEM, healthInfo, loadMigrations, machineHash, migrate, openDatabase, registerCoreServices, registerCatalogServices, registerSalesServices, registerMoneyServices, registerReportServices, registerToolServices, registerSafetyServices, registerDataServices, AutoBackup, createBackup, knownBackupDirs, latestVersion, makeCtx, recordRecovery, recoverIfCorrupt, swapInDatabase, closeDatabase, type Db, type Host
+  Dispatcher, PRODUCT_PUBLIC_KEY_PEM, healthInfo, loadMigrations, machineHash, migrate, openDatabase, registerCoreServices, registerCatalogServices, registerSalesServices, registerMoneyServices, registerReportServices, registerToolServices, registerSafetyServices, registerDataServices, AutoBackup, createBackup, currentVersion, knownBackupDirs, latestVersion, makeCtx, recordRecovery, recoverIfCorrupt, swapInDatabase, closeDatabase, type Db, type Host
 } from '@petra/db';
 import { ipcContract, PetraError, type PrintFormat } from '@petra/core';
 
@@ -266,6 +266,7 @@ function createWindow(): void {
     show: false,
     backgroundColor: '#F6F1E7',
     title: 'PetraDMS',
+    icon: app.isPackaged ? undefined : path.join(__dirname, '..', 'build', 'icon.png'),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -297,6 +298,7 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   void app.whenReady().then(() => {
+    app.setAppUserModelId('com.petra.dms');
     let recovered: ReturnType<typeof recoverIfCorrupt> = { state: 'ok' };
     try {
       recovered = checkAndRecover(dataRoot);
@@ -336,7 +338,14 @@ if (!app.requestSingleInstanceLock()) {
       const out = process.env.PETRA_SMOKE_OUT;
       const tables = (db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type = 'table'").get() as { n: number }).n;
       const ok = h.journalMode === 'wal' && h.integrity === 'ok' && app.isPackaged && tables > 20;
-      if (out) fs.writeFileSync(out, JSON.stringify({ ok, packaged: app.isPackaged, tables, ...h, version: app.getVersion() }));
+      const count = (t: string): number => (db?.prepare(`SELECT COUNT(*) AS n FROM ${t}`).get() as { n: number }).n;
+      if (out) {
+        fs.writeFileSync(out, JSON.stringify({
+          ok, packaged: app.isPackaged, tables, ...h, version: app.getVersion(), schema: currentVersion(db as Db),
+          counts: { products: count('products'), customers: count('customers'), suppliers: count('suppliers'), sales: count('sales'), purchases: count('purchases'), users: count('users') },
+          dataDir: dataRoot
+        }));
+      }
       closeDatabase(db);
       db = null;
       app.exit(ok ? 0 : 1);

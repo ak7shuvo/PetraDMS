@@ -2,6 +2,12 @@ import { z } from 'zod';
 import { ch } from './define';
 import { IMPORT_KINDS, IMPORT_LIMITS, type ImportKind, type Mapping, type RowIssue } from '../importer';
 
+export interface GameScore {
+  player: string;
+  score: number;
+  at: string;
+}
+
 export interface ImportRowReport {
   /** Line number in the file (the header is line 1). */
   line: number;
@@ -53,6 +59,8 @@ export const dataChannels = {
   'import:rejects': ch<{ path: string }>()(z.object({ ...body, problemHeader: z.string().max(60), messages: z.record(z.string().max(60), z.string().max(300)).default({}) }), { access: 'manager' }),
   'export:all': ch<ExportAllResult>()(z.undefined(), { access: 'owner' }),
   'demo:load': ch()(z.undefined(), { access: 'owner', write: true }),
+  'game:scores': ch<GameScore[]>()(z.undefined(), { access: 'user' }),
+  'game:submit': ch<GameScore[]>()(z.object({ score: z.number().int().min(0).max(1_000_000) }), { access: 'user' }),
   'demo:clear': ch<{ cleared: true }>()(z.object({ confirm: z.literal('DEMO') }), { access: 'owner' })
 };
 export type { ImportKind };

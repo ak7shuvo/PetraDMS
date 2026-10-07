@@ -1,6 +1,10 @@
 appId: com.petra.dms
 productName: PetraDMS
 copyright: Copyright (c) PETRA
+artifactName: ${productName}-${version}-${os}-${arch}.${ext}
+electronLanguages: [en-US]
+forceCodeSigning: false
+compression: normal
 directories:
   output: release
   buildResources: build
@@ -20,10 +24,17 @@ win:
   target:
     - target: nsis
       arch: [x64]
+  icon: build/icon.ico
   artifactName: PetraDMS-Setup-${version}-x64.${ext}
+  requestedExecutionLevel: asInvoker
+  # No certificate yet (plan 18): the installer is unsigned and Windows SmartScreen will warn. Signing is switched on by
+  # setting CSC_LINK and CSC_KEY_PASSWORD in the repository secrets; nothing here needs to change.
   signAndEditExecutable: true
 nsis:
   oneClick: false
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  installerHeaderIcon: build/icon.ico
   perMachine: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
@@ -32,3 +43,9 @@ nsis:
   deleteAppDataOnUninstall: false
   runAfterFinish: true
   uninstallDisplayName: PetraDMS
+linux:
+  # Linux builds exist only so CI and the release check can start the packaged app without Windows; they are not a product.
+  target: dir
+  icon: build/icon.png
+  category: Office
+  executableName: PetraDMS

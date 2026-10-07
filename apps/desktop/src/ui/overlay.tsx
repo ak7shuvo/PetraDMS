@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Button } from './controls';
 import { IconClose } from './icons';
@@ -8,7 +8,11 @@ import { useT } from '../i18n';
 const FOCUSABLE = 'a[href],button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])';
 
 function useDialogBehaviour(open: boolean, onClose: () => void, ref: React.RefObject<HTMLDivElement | null>) {
-  useEffect(() => {
+  // Always call the newest onClose, and attach the key handler in the layout phase: the dialog must already react to Escape
+  // and Tab on the very frame it becomes visible, not a moment later.
+  const close = useRef(onClose);
+  close.current = onClose;
+  useLayoutEffect(() => {
     if (!open) return;
     const previous = document.activeElement as HTMLElement | null;
     const el = ref.current;
@@ -17,7 +21,7 @@ function useDialogBehaviour(open: boolean, onClose: () => void, ref: React.RefOb
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.stopPropagation();
-        onClose();
+        close.current();
       } else if (e.key === 'Tab' && el) {
         const items = [...el.querySelectorAll<HTMLElement>(FOCUSABLE)];
         if (items.length === 0) return;

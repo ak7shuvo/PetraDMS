@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "PetraDMS - offline distribution management for FMCG distributors",
-  "author": "PETRA <support@petra.example>",
+  "author": "PETRA",
   "main": "dist-electron/main.cjs",
   "scripts": {
     "dev": "node scripts/dev.mjs",
@@ -13,7 +13,7 @@
     "build": "pnpm build:renderer && pnpm build:electron",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.electron.json",
     "dist:win": "pnpm build && electron-builder --config electron-builder.yml --win nsis --x64 --publish never",
-    "dist:dir": "pnpm build && electron-builder --config electron-builder.yml --dir"
+    "dist:dir": "pnpm build && electron-builder --config electron-builder.yml --dir --publish never"
   },
   "devDependencies": {
     "@fontsource/jetbrains-mono": "^5.3.0",

@@ -238,3 +238,19 @@ describe('demo mode', () => {
     expect(await fail(d, 'demo:clear', { confirm: 'nope' })).toBe('INVALID_INPUT');
   });
 });
+
+describe('Petra Break scores', () => {
+  it('keeps the ten best scores with the player name, ignores a zero score, rejects nonsense', async () => {
+    const { d } = await start();
+    await ok(d, 'auth:login', { userId: 1, secret: '4321' });
+    expect(await ok(d, 'game:scores')).toEqual([]);
+    for (const score of [120, 0, 50, 900, 10, 20, 30, 40, 60, 70, 80, 90]) await ok(d, 'game:submit', { score });
+    const top = await ok(d, 'game:scores');
+    expect(top.map((s) => s.score)).toEqual([900, 120, 90, 80, 70, 60, 50, 40, 30, 20]);
+    expect(top[0]?.player).toBeTruthy();
+    expect(await fail(d, 'game:submit', { score: -1 })).toBe('INVALID_INPUT');
+    expect(await fail(d, 'game:submit', { score: 1.5 })).toBe('INVALID_INPUT');
+    expect(await fail(d, 'game:submit', { score: 2_000_000 })).toBe('INVALID_INPUT');
+    expectIntegrity(app!);
+  });
+});

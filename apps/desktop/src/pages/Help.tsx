@@ -70,6 +70,10 @@ function About() {
           <dt>{t('bk.integrity')}</dt><dd>{h ? (h.integrity === 'ok' ? t('bk.integrityOk') : h.integrity) : '…'}</dd>
         </dl>
       </Card>
+      <Card title={t('about.game')}>
+        <p style={{ margin: '0 0 8px' }}>{t('about.gameBody')}</p>
+        <Button onClick={() => { window.location.hash = '#/break'; }} data-testid="open-break">Petra Break</Button>
+      </Card>
       <Card title={t('about.privacyTitle')}>
         <p style={{ margin: 0 }} data-testid="about-privacy">{t('about.privacy')}</p>
       </Card>

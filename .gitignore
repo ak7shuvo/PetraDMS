@@ -14,3 +14,6 @@ playwright-report/
 
 # the released-schema fixtures are real data files, kept on purpose
 !packages/db/fixtures/*.db
+
+# performance datasets made by pnpm seed:perf
+.perf-data/

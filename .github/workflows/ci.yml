@@ -1,5 +1,7 @@
 name: CI
 
+# Every push and pull request: typecheck, lint, unit tests, end-to-end tests on Linux, then the real Windows x64 installer
+# is built, installed silently, started, upgraded, uninstalled and uploaded as the artifact "PetraDMS-Windows-x64-Installer".
 on:
   push:
     branches: [main, master]
@@ -10,11 +12,18 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
+env:
+  CSC_IDENTITY_AUTO_DISCOVERY: 'false'   # the installer is unsigned unless signing secrets are added; never try to discover a certificate
+  ELECTRON_DISABLE_SECURITY_WARNINGS: '1'
+
 jobs:
   test:
-    name: Typecheck, lint, tests (Ubuntu)
+    name: Typecheck, lint, unit and e2e tests (Ubuntu)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -31,7 +40,7 @@ jobs:
       - run: pnpm check:integrity
       - name: Build app bundles
         run: pnpm build
-      - name: End-to-end tests (Playwright + Electron under xvfb)
+      - name: End-to-end tests (Playwright driving the real Electron app under xvfb)
         run: xvfb-run -a pnpm exec playwright test
       - name: Upload Playwright report on failure
         if: failure()
@@ -44,10 +53,10 @@ jobs:
           retention-days: 7
 
   windows-installer:
-    name: Build Windows x64 installer (NSIS)
+    name: Build and verify Windows x64 installer (NSIS)
     needs: test
     runs-on: windows-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -56,32 +65,22 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Build production installer
-        run: pnpm dist:win
-      - name: Verify installer exists and is a real production build
+      - name: Build the installer and verify it (install, first run, existing data, offline, upgrade, uninstall)
+        run: pnpm verify:package
+      - name: Checksum
         shell: pwsh
         run: |
-          $exe = Get-ChildItem apps/desktop/release -Filter 'PetraDMS-Setup-*-x64.exe' | Select-Object -First 1
+          $exe = Get-ChildItem apps/desktop/release -Filter 'PetraDMS-*-x64.exe' | Select-Object -First 1
           if (-not $exe) { throw 'Installer not produced' }
-          if ($exe.Length -lt 50MB) { throw "Installer suspiciously small: $($exe.Length) bytes" }
-          Write-Host "Installer: $($exe.Name) ($([math]::Round($exe.Length/1MB,1)) MB)"
-      - name: Smoke test - silent install and launch packaged app
-        shell: pwsh
-        run: |
-          $exe = Get-ChildItem apps/desktop/release -Filter 'PetraDMS-Setup-*-x64.exe' | Select-Object -First 1
-          $installDir = Join-Path $env:RUNNER_TEMP 'PetraDMS-installed'
-          Start-Process -FilePath $exe.FullName -ArgumentList '/S', "/D=$installDir" -Wait
-          $app = Join-Path $installDir 'PetraDMS.exe'
-          if (-not (Test-Path $app)) { throw "Installed app not found at $app" }
-          $env:PETRA_DATA_DIR = Join-Path $env:RUNNER_TEMP 'petra-smoke-data'
-          $env:PETRA_SMOKE_OUT = Join-Path $env:RUNNER_TEMP 'smoke.json'
-          $p = Start-Process -FilePath $app -ArgumentList '--smoke-test' -Wait -PassThru
-          Get-Content $env:PETRA_SMOKE_OUT
-          if ($p.ExitCode -ne 0) { throw "Smoke test failed with exit code $($p.ExitCode)" }
+          $hash = (Get-FileHash $exe.FullName -Algorithm SHA256).Hash.ToLower()
+          "$hash  $($exe.Name)" | Out-File -Encoding ascii (Join-Path $exe.DirectoryName 'SHA256SUMS.txt')
+          Write-Host "$($exe.Name)  $([math]::Round($exe.Length/1MB,1)) MB  sha256 $hash"
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
           name: PetraDMS-Windows-x64-Installer
-          path: apps/desktop/release/PetraDMS-Setup-*-x64.exe
+          path: |
+            apps/desktop/release/PetraDMS-*-x64.exe
+            apps/desktop/release/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 30

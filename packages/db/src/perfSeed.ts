@@ -17,7 +17,8 @@ export interface PerfSeedOptions {
   seed?: number;
 }
 
-export const PERF_FULL: Omit<PerfSeedOptions, 'endDate'> = { products: 3000, customers: 5000, suppliers: 200, sales: 6000, days: 90 };
+/** The dataset of plan section 14: 10,000 products, 5,000 customers, a quarter of trading. */
+export const PERF_FULL: Omit<PerfSeedOptions, 'endDate'> = { products: 10000, customers: 5000, suppliers: 200, sales: 6000, days: 90 };
 
 const BRANDS = ['Marks', 'Sylon', 'Pran', 'Fresh', 'Radhuni', 'Ispahani', 'Aci', 'Bashundhara', 'Square', 'Olympic', 'Danish', 'Meghna', 'Rupchanda', 'Teer', 'Akij', 'Kishwan'];
 const ITEMS: [string, string][] = [
@@ -97,4 +98,27 @@ export function seedPerf(ctx: Ctx, o: PerfSeedOptions): { products: number[]; cu
     }
   }
   return { products, customers, suppliers };
+}
+
+/**
+ * Adds `count` stock movement rows straight with SQL (about 10 s for a million) so reports can be timed over the history
+ * of a very busy shop. The rows are spread over `days` days, all products and five kinds, so every range and kind filter
+ * has real work to do. They are not matched to documents or batches, so use this on a throwaway database only: the
+ * integrity checks are expected to fail on it.
+ */
+export function bulkMovements(ctx: Ctx, count: number, endDate: string, days: number): void {
+  const products = all<{ n: number }>(ctx.db, 'SELECT COUNT(*) AS n FROM products')[0]?.n ?? 0;
+  if (products === 0) throw new Error('seed products first');
+  const step = 250_000;
+  for (let done = 0; done < count; done += step) {
+    const n = Math.min(step, count - done);
+    ctx.db.prepare(
+      `WITH RECURSIVE c(x) AS (SELECT ? UNION ALL SELECT x + 1 FROM c WHERE x < ?)
+       INSERT INTO stock_movements(product_id, batch_id, business_date, kind, base_qty, value, ref_type, ref_id, user_id, note, created_at)
+       SELECT 1 + (x * 7919) % ?, NULL, date(?, '-' || (x % ?) || ' day'),
+              CASE x % 6 WHEN 0 THEN 'purchase' WHEN 1 THEN 'sale' WHEN 2 THEN 'sale' WHEN 3 THEN 'damage' WHEN 4 THEN 'adjust_in' ELSE 'sale' END,
+              CASE x % 6 WHEN 0 THEN 12 WHEN 4 THEN 3 ELSE -1 - (x % 5) END, 100 * (1 + x % 50), NULL, NULL, NULL, '', ?
+       FROM c`
+    ).run(done + 1, done + n, products, endDate, days, ctx.now());
+  }
 }

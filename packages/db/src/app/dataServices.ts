@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { PetraError } from '@petra/core';
-import { scalar } from '../sql';
+import { all, scalar } from '../sql';
 import { audit } from '../audit';
 import { getRaw, loadSettings, setRaw } from '../settings';
 import { tx } from '../ctx';
@@ -19,6 +19,12 @@ export function registerDataServices(d: Dispatcher): void {
   d.register('import:preview', ({ ctx, input }) => previewImport(ctx, input.kind, input.text, input.mapping));
   d.register('import:run', ({ ctx, input }) => runImport(ctx, currentBusinessDate(ctx, loadSettings(ctx.db)), input));
   d.register('import:rejects', ({ ctx, host, input }) => rejectsFile(ctx, host, input));
+  const top = (db: Parameters<typeof all>[0]) => all<{ player: string; score: number; at: string }>(db, 'SELECT player, score, at FROM game_scores ORDER BY score DESC, id ASC LIMIT 10');
+  d.register('game:scores', ({ ctx }) => top(ctx.db));
+  d.register('game:submit', ({ ctx, session, input }) => {
+    if (input.score > 0) ctx.db.prepare('INSERT INTO game_scores(player, score, at) VALUES (?, ?, ?)').run(session?.displayName ?? 'Player', input.score, ctx.now());
+    return top(ctx.db);
+  });
   d.register('export:all', ({ ctx, host }) => exportEverything(ctx, host));
 
   d.register('demo:load', ({ ctx, host }) => {

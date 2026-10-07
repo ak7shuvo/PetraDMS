@@ -320,3 +320,11 @@
 .manual li { margin-bottom: 4px; }
 .manual code { background: var(--cream-2); padding: 0 4px; border-radius: 3px; }
 @media (max-width: 900px) { .manual-wrap { grid-template-columns: 1fr; } .manual-toc { position: static; } }
+
+/* Petra Break */
+.break-page { display: grid; gap: 12px; max-width: 720px; }
+.break-hud { display: flex; gap: 20px; align-items: baseline; margin-bottom: 8px; }
+.break-canvas { width: 100%; max-width: 640px; aspect-ratio: 8 / 5; border: 2px solid var(--ink); border-radius: 6px; background: var(--cream); display: block; }
+.break-top { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.break-top li { display: list-item; }
+.break-top li span { margin-right: 12px; }

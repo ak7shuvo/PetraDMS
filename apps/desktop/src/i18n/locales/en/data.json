@@ -153,5 +153,16 @@
   "tour.mode.t": "Simple and Full",
   "tour.mode.b": "Switch between the six big buttons of Simple mode and the complete menu.",
   "tour.help.t": "Help is always here",
-  "tour.help.b": "The manual, the shortcut list and this tour are in Help. Press ? anywhere for the shortcuts."
+  "tour.help.b": "The manual, the shortcut list and this tour are in Help. Press ? anywhere for the shortcuts.",
+  "break.exit": "Back to Help",
+  "break.score": "Score",
+  "break.lives": "Lives",
+  "break.ready": "Press Space or click to serve.",
+  "break.over": "Game over. Press Space to play again.",
+  "break.won": "You cleared the wall. Press Space to play again.",
+  "break.help": "Move the bat with the left and right arrow keys or the mouse. Space serves. Esc leaves.",
+  "break.best": "Best scores on this computer",
+  "break.none": "No scores yet. Be the first.",
+  "about.game": "Take a short break",
+  "about.gameBody": "A quick game of Petra Break. It stays on this computer."
 }

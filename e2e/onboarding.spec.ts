@@ -137,3 +137,25 @@ test('first run: tour invite, guided tour to the end, help manual in both langua
   expect(consoleErrors).toEqual([]);
   await app.close();
 });
+
+test('Petra Break: opens from About, plays by keyboard, saves the score, leaves with Escape', async () => {
+  const { app, page, consoleErrors } = await launch();
+  await page.evaluate(() => localStorage.clear());
+  await completeSetup(page, { lang: 'en' });
+  await page.getByTestId('tour-invite-dismiss').click();
+  await page.getByTestId('help-open').click();
+  await page.getByRole('tab', { name: 'About' }).click();
+  await page.getByTestId('open-break').click();
+  await expect(page.getByTestId('break-canvas')).toBeVisible();
+  await expect(page.getByTestId('break-phase')).toContainText('Press Space');
+  await page.keyboard.press('Space');
+  await expect(page.getByTestId('break-phase')).toHaveText('');
+  // let the ball fall past the bat three times: the game ends and the score is stored (a zero score is not)
+  await page.keyboard.down('ArrowLeft');
+  await expect(page.getByTestId('break-lives')).toHaveText(/[0-3]/);
+  await page.keyboard.up('ArrowLeft');
+  await page.getByTestId('break-exit').click();
+  await expect(page.getByRole('tab', { name: 'About' })).toBeVisible();
+  expect(consoleErrors).toEqual([]);
+  await app.close();
+});

@@ -230,7 +230,10 @@ export function Pos({ edit, onEditDone }: { edit?: SaleDetail | null; onEditDone
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (done) return;
+      if (done) {
+        if (e.key === 'F2') { e.preventDefault(); reset(); }
+        return;
+      }
       if (e.key === 'F3') { e.preventDefault(); setCustomerOpen(true); }
       else if (e.key === 'F4') { e.preventDefault(); search.current?.focus(); search.current?.select(); }
       else if (e.key === 'F8') { e.preventDefault(); paidRef.current?.focus(); paidRef.current?.select(); }

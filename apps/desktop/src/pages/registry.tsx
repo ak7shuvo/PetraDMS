@@ -1,3 +1,4 @@
+import { BreakPage } from './Break';
 import type { ReactElement } from 'react';
 import type { Role } from '@petra/core';
 import { StyleGuide } from './StyleGuide';
@@ -33,6 +34,10 @@ function HelpRoute() {
   return <HelpPage onTour={() => window.dispatchEvent(new Event('petra:tour'))} />;
 }
 
+function BreakRoute() {
+  return <BreakPage onExit={() => { window.location.hash = '#/help'; }} />;
+}
+
 export interface PageDef {
   path: string;
   element: ReactElement;
@@ -59,6 +64,7 @@ export const PAGES: PageDef[] = [
   { path: '/backup', element: <BackupPage />, nav: true, minRole: 'owner' },
   { path: '/settings', element: <SettingsPage />, nav: true, minRole: 'owner' },
   { path: '/data', element: <DataPage />, nav: false, minRole: 'manager' },
+  { path: '/break', element: <BreakRoute />, nav: false, minRole: 'staff' },
   { path: '/help', element: <HelpRoute />, nav: false, minRole: 'staff' },
   { path: '/style-guide', element: <StyleGuide />, nav: false, minRole: 'staff' }
 ];
