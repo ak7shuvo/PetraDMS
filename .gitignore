@@ -27,3 +27,4 @@ keys/
 licence.petra
 *.petra
 .env*
+release-upgrade/

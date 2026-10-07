@@ -1,6 +1,6 @@
 appId: com.petra.dms
 productName: PetraDMS
-copyright: Copyright (c) PETRA
+copyright: Copyright © ${year} Petra
 artifactName: ${productName}-${version}-${os}-${arch}.${ext}
 electronLanguages: [en-US]
 forceCodeSigning: false
@@ -25,7 +25,8 @@ win:
     - target: nsis
       arch: [x64]
   icon: build/icon.ico
-  artifactName: PetraDMS-Setup-${version}-x64.${ext}
+  # PetraDMS-Setup-<version>.exe (Windows 10/11 64-bit only, so the architecture is not repeated in the name)
+  artifactName: PetraDMS-Setup-${version}.${ext}
   requestedExecutionLevel: asInvoker
   # No certificate yet (plan 18): the installer is unsigned and Windows SmartScreen will warn. Signing is switched on by
   # setting CSC_LINK and CSC_KEY_PASSWORD in the repository secrets; nothing here needs to change.
@@ -43,6 +44,8 @@ nsis:
   deleteAppDataOnUninstall: false
   runAfterFinish: true
   uninstallDisplayName: PetraDMS
+  # Tells the person, when they uninstall by hand, that their business data is deliberately left in place.
+  include: build/installer.nsh
 linux:
   # Linux builds exist only so CI and the release check can start the packaged app without Windows; they are not a product.
   target: dir

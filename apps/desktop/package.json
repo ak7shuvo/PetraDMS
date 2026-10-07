@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "PetraDMS - offline distribution management for FMCG distributors",
-  "author": "PETRA",
+  "author": "Petra",
   "main": "dist-electron/main.cjs",
   "scripts": {
     "dev": "node scripts/dev.mjs",

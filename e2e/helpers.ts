@@ -13,7 +13,23 @@ export interface Launched {
 
 const desktopDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../apps/desktop');
 
+/** Apps started by launch() and not yet closed. A test that fails before its own app.close() would otherwise leave one running. */
+const running = new Set<ElectronApplication>();
+
+/** Stops any app a failed test left behind, so it cannot slow down or interfere with the next test. */
+async function reapLeftovers(): Promise<void> {
+  for (const a of [...running]) {
+    running.delete(a);
+    try {
+      a.process().kill('SIGKILL');
+    } catch {
+      /* already gone */
+    }
+  }
+}
+
 export async function launch(opts: { dataDir?: string; env?: Record<string, string> } = {}): Promise<Launched> {
+  await reapLeftovers();
   const dataDir = opts.dataDir ?? fs.mkdtempSync(path.join(os.tmpdir(), 'petra-e2e-'));
   const args = [desktopDir];
   // GitHub-hosted Ubuntu runners and containers need the sandbox flags off for Chromium.
@@ -22,6 +38,8 @@ export async function launch(opts: { dataDir?: string; env?: Record<string, stri
     args,
     env: { ...process.env, PETRA_DATA_DIR: dataDir, PETRA_NO_REVEAL: '1', ELECTRON_DISABLE_SECURITY_WARNINGS: '1', ...opts.env } as Record<string, string>
   });
+  running.add(app);
+  app.on('close', () => running.delete(app));
   const page = await app.firstWindow();
   const consoleErrors: string[] = [];
   page.on('console', (m) => {

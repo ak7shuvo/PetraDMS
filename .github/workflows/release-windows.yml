@@ -1,68 +1,57 @@
-name: Release Windows installer
+name: Windows Release
 
-# Publishes the installer as a GitHub Release when a version tag is pushed:
-#   git tag v1.0.0 && git push origin v1.0.0
-# The tag must match the version in apps/desktop/package.json. "Run workflow" (workflow_dispatch) builds and uploads the
-# artifact without publishing a release.
+# GitHub, Actions, Windows Release, Run workflow  ->  tests, builds and verifies the installer and uploads the artifact
+# "PetraDMS-Windows-x64" (PetraDMS-Setup-<version>.exe, SHA256SUMS.txt, VERSION.txt, RELEASE-NOTES.md).
+#
+# Pushing a version tag also publishes a GitHub Release with the same files:
+#   git tag vX.Y.Z && git push origin vX.Y.Z
+# The tag must equal the version in apps/desktop/package.json.
 on:
+  workflow_dispatch:
   push:
     tags: ['v*.*.*']
-  workflow_dispatch:
 
 permissions:
   contents: write
 
-env:
-  CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-  ELECTRON_DISABLE_SECURITY_WARNINGS: '1'
-
 jobs:
-  release:
-    name: Test, build, verify and publish
-    runs-on: windows-latest
-    timeout-minutes: 75
+  version:
+    name: Check version
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
       - name: Tag must equal the app version
         if: startsWith(github.ref, 'refs/tags/v')
-        shell: pwsh
         run: |
-          $version = (Get-Content apps/desktop/package.json -Raw | ConvertFrom-Json).version
-          $tag = '${{ github.ref_name }}'.TrimStart('v')
-          if ($tag -ne $version) { throw "Tag v$tag does not match apps/desktop/package.json version $version. Update the version, commit, and tag again." }
-      - run: pnpm typecheck
-      - run: pnpm lint
-      - run: pnpm test:unit
-      - run: pnpm check:integrity
-      - name: Build the installer and verify it (install, first run, existing data, offline, upgrade, uninstall)
-        run: pnpm verify:package
-      - name: Checksum
-        shell: pwsh
-        run: |
-          $exe = Get-ChildItem apps/desktop/release -Filter 'PetraDMS-*-x64.exe' | Select-Object -First 1
-          if (-not $exe) { throw 'Installer not produced' }
-          $hash = (Get-FileHash $exe.FullName -Algorithm SHA256).Hash.ToLower()
-          "$hash  $($exe.Name)" | Out-File -Encoding ascii (Join-Path $exe.DirectoryName 'SHA256SUMS.txt')
-      - name: Upload installer artifact
-        uses: actions/upload-artifact@v4
+          version=$(node -p "require('./apps/desktop/package.json').version")
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$tag" != "$version" ]; then
+            echo "::error::Tag v$tag does not match apps/desktop/package.json version $version. Change the version, commit, and tag again."
+            exit 1
+          fi
+          grep -q "^## \[$version\]" CHANGELOG.md || { echo "::error::CHANGELOG.md has no section for $version"; exit 1; }
+  checks:
+    name: Checks
+    needs: version
+    uses: ./.github/workflows/checks.yml
+  windows:
+    name: Windows
+    needs: checks
+    uses: ./.github/workflows/windows-build.yml
+    secrets: inherit
+  publish:
+    name: Publish GitHub Release
+    needs: windows
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
         with:
-          name: PetraDMS-Windows-x64-Installer
-          path: |
-            apps/desktop/release/PetraDMS-*-x64.exe
-            apps/desktop/release/SHA256SUMS.txt
-          if-no-files-found: error
-      - name: Publish GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: pwsh
+          name: PetraDMS-Windows-x64
+          path: out
+      - name: Create the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $exe = Get-ChildItem apps/desktop/release -Filter 'PetraDMS-*-x64.exe' | Select-Object -First 1
-          $notes = "Windows 10/11 64-bit installer. The installer is not code-signed, so Windows SmartScreen may warn: choose More info, then Run anyway. Verify the download against SHA256SUMS.txt. See docs/INSTALL.md."
-          gh release create "${{ github.ref_name }}" $exe.FullName apps/desktop/release/SHA256SUMS.txt --title "PetraDMS ${{ github.ref_name }}" --notes $notes --generate-notes
+          gh release create "$GITHUB_REF_NAME" out/PetraDMS-Setup-*.exe out/SHA256SUMS.txt out/VERSION.txt \
+            --repo "$GITHUB_REPOSITORY" --title "PetraDMS $GITHUB_REF_NAME" --notes-file out/RELEASE-NOTES.md
