@@ -41,10 +41,10 @@ jobs:
           echo "::notice title=probe::$(cat /tmp/probe.txt)"
       - name: Isolated failing tests with protocol log
         continue-on-error: true
-        timeout-minutes: 8
+        timeout-minutes: 18
         env:
-          DEBUG: pw:api,pw:browser
-        run: xvfb-run -a pnpm exec playwright test e2e/onboarding.spec.ts:24 e2e/backup.spec.ts:63 --reporter=line --retries=0 --timeout=40000 > /tmp/pw.log 2>&1
+          CI: '1'
+        run: xvfb-run -a pnpm exec playwright test --reporter=line --retries=0 > /tmp/pw.log 2>&1
       - name: Post log tail as annotations
         if: always()
         run: |
