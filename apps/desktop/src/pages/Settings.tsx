@@ -314,7 +314,8 @@ function LicenceTab() {
           <div className="row"><Badge tone={st.state === 'licensed' ? 'ok' : st.state === 'trial' ? 'warn' : 'red'}>{t(`lic.state.${st.state}`)}</Badge>{st.daysLeft !== null && st.state !== 'clock_rollback' && <span data-testid="lic-days">{t('lic.daysLeft', { n: n(st.daysLeft) })}</span>}</div>
           {st.state === 'licensed' && <div>{t('lic.customer')}: <strong>{st.customer}</strong> ({st.edition})</div>}
           {st.state === 'licensed' && <div>{st.expiresAt ? t('lic.expiresOn', { date: n(st.expiresAt.split('-').reverse().join('/')) }) : t('lic.noExpiry')}</div>}
-          <div><strong>{t('lic.machine')}</strong><div className="num" style={{ textAlign: 'left', fontSize: 'var(--fs-xl)' }} data-testid="machine-code">{st.machineCode}</div><div className="p-hint">{t('lic.machineHelp')}</div></div>
+          <div><strong>{t('lic.machine')}</strong><div className="num" style={{ textAlign: 'left', fontSize: 'var(--fs-xl)' }} data-testid="machine-code">{st.machineCode}</div><div className="p-hint">{t('lic.machineHelp')}</div>
+            <div style={{ marginTop: 8 }}><Button size="sm" onClick={() => void navigator.clipboard.writeText(st.machineCode).then(() => toast.ok(t('lic.copied')), () => toast.error(t('lic.copyFailed')))} data-testid="machine-copy">{t('lic.copyMachine')}</Button></div></div>
         </div>
       </Card>
       <Card title={t('lic.install')}>

@@ -29,8 +29,15 @@ export interface LicencePayload {
 const b64u = (b: Buffer): string => b.toString('base64url');
 const fromB64u = (s: string): Buffer => Buffer.from(s, 'base64url');
 
-/** Machine fingerprint: sha256 of stable host facts. The 16-character machine code shown to users is its prefix. */
-export function machineHash(facts: { hostname: string; cpuModel: string; platform: string; arch: string }): string {
+/**
+ * Machine fingerprint: sha256 of stable host facts. The 16-character machine code shown to users is its prefix.
+ * When the operating system provides a machine identifier (on Windows, the MachineGuid that Windows writes at install
+ * time) the fingerprint is built from that alone, so renaming the PC or swapping its CPU does not invalidate a licence.
+ * Without one it falls back to host name, CPU model, platform and architecture.
+ */
+export function machineHash(facts: { hostname: string; cpuModel: string; platform: string; arch: string; machineId?: string | null }): string {
+  const id = facts.machineId?.trim().toLowerCase();
+  if (id && /^[0-9a-f-]{16,64}$/.test(id)) return createHash('sha256').update(`petra|id|${id}`).digest('hex');
   return createHash('sha256').update(`petra|${facts.hostname}|${facts.cpuModel}|${facts.platform}|${facts.arch}`).digest('hex');
 }
 

@@ -127,6 +127,13 @@ describe('licence', () => {
   });
 
   it('machine code is a stable, readable prefix of the fingerprint', () => {
+    // with an OS machine id the code ignores the PC name and CPU; without one it is the old host-based code
+    const a = machineHash({ hostname: 'A', cpuModel: 'x', platform: 'win32', arch: 'x64', machineId: '3F2A9C1E-5B7D-4E8A-9C0B-1D2E3F4A5B6C' });
+    const b = machineHash({ hostname: 'RENAMED', cpuModel: 'another cpu', platform: 'win32', arch: 'x64', machineId: '3f2a9c1e-5b7d-4e8a-9c0b-1d2e3f4a5b6c' });
+    expect(a).toBe(b);
+    expect(a).not.toBe(machineHash({ hostname: 'A', cpuModel: 'x', platform: 'win32', arch: 'x64', machineId: '00000000-0000-4000-8000-000000000001' }));
+    expect(machineHash({ hostname: 'A', cpuModel: 'x', platform: 'win32', arch: 'x64', machineId: null })).toBe(machineHash({ hostname: 'A', cpuModel: 'x', platform: 'win32', arch: 'x64' }));
+    expect(machineHash({ hostname: 'A', cpuModel: 'x', platform: 'win32', arch: 'x64', machineId: 'not a guid' })).toBe(machineHash({ hostname: 'A', cpuModel: 'x', platform: 'win32', arch: 'x64' }));
     expect(machineCodeOf(MACHINE)).toMatch(/^[0-9A-F]{4}(-[0-9A-F]{4}){3}$/);
     expect(createPublicKey(PUB).asymmetricKeyType).toBe('ed25519');
   });

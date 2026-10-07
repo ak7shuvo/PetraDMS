@@ -118,6 +118,9 @@ test('licence: trial banner, tampered key, key for another machine, valid key; e
   await run.page.locator('nav').getByRole('link', { name: 'Settings', exact: true }).click();
   await run.page.getByRole('tab', { name: 'Licence' }).click();
   await expect(run.page.getByTestId('machine-code')).toHaveText(`${machine.slice(0, 16).toUpperCase().match(/.{4}/g)!.join('-')}`);
+  // the customer can copy the code to send it to the vendor
+  await run.page.getByTestId('machine-copy').click();
+  await expect.poll(() => run.app.evaluate(({ clipboard }) => clipboard.readText())).toBe(machine.slice(0, 16).toUpperCase().match(/.{4}/g)!.join('-'));
   await expect(run.page.getByTestId('lic-days')).toContainText('30');
 
   const good = issue(machine.slice(0, 16), null);

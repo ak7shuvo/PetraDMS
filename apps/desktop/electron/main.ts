@@ -2,6 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain, screen, session, shell } from 'ele
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
+import { execFileSync } from 'node:child_process';
 import {
   Dispatcher, PRODUCT_PUBLIC_KEY_PEM, healthInfo, loadMigrations, machineHash, migrate, openDatabase, registerCoreServices, registerCatalogServices, registerSalesServices, registerMoneyServices, registerReportServices, registerToolServices, registerSafetyServices, registerDataServices, AutoBackup, createBackup, currentVersion, knownBackupDirs, latestVersion, makeCtx, recordRecovery, recoverIfCorrupt, swapInDatabase, closeDatabase, type Db, type Host
 } from '@petra/db';
@@ -61,8 +62,19 @@ function checkAndRecover(root: string): ReturnType<typeof recoverIfCorrupt> {
   return recoverIfCorrupt(root, knownBackupDirs(root), latestVersion(loadMigrations(migrationsDir())), new Date());
 }
 
+/** The Windows MachineGuid, written when Windows was installed. Null elsewhere or if it cannot be read. */
+function windowsMachineGuid(): string | null {
+  if (process.platform !== 'win32') return null;
+  try {
+    const out = execFileSync('reg', ['query', 'HKLM\\SOFTWARE\\Microsoft\\Cryptography', '/v', 'MachineGuid'], { encoding: 'utf8', timeout: 5000, windowsHide: true });
+    return /MachineGuid\s+REG_SZ\s+([0-9a-fA-F-]{16,64})/.exec(out)?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function machineFacts() {
-  return { hostname: os.hostname(), cpuModel: os.cpus()[0]?.model ?? 'cpu', platform: process.platform, arch: process.arch };
+  return { hostname: os.hostname(), cpuModel: os.cpus()[0]?.model ?? 'cpu', platform: process.platform, arch: process.arch, machineId: windowsMachineGuid() };
 }
 
 function recommendedDataDir(): string {

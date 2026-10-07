@@ -17,3 +17,13 @@ playwright-report/
 
 # performance datasets made by pnpm seed:perf
 .perf-data/
+
+# secrets: never commit signing keys, certificates or issued licences
+*.pem
+*.pfx
+*.p12
+*.key
+keys/
+licence.petra
+*.petra
+.env*
