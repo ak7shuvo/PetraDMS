@@ -70,20 +70,25 @@ test('keyboard only: a whole sale without the mouse, and every page reachable by
   await expect(page.getByTestId('pos-done')).toBeHidden();
   await expect(page.getByTestId('pos-search')).toBeFocused();
 
-  // every sidebar entry can be reached and opened with Tab and Enter, and shows a visible focus ring
+  // every sidebar entry is reached with the Tab key, shows a visible focus ring, and opens with Enter
   const links = page.locator('nav a');
   const n = await links.count();
   expect(n).toBeGreaterThanOrEqual(10);
+  await links.first().focus();
   for (let i = 0; i < n; i++) {
-    const link = links.nth(i);
-    await link.focus();
+    await expect(links.nth(i), `Tab order: nav item ${i} has focus`).toBeFocused();
     // the ring may fade in over a few frames, so wait for it rather than read it the instant focus lands
-    await expect.poll(() => link.evaluate((el) => {
+    await expect.poll(() => links.nth(i).evaluate((el) => {
       const st = getComputedStyle(el);
       return st.outlineStyle !== 'none' || st.boxShadow !== 'none';
     }), { message: `focus ring on nav item ${i}`, timeout: 2000 }).toBe(true);
     await page.keyboard.press('Enter');
     await expect(page.locator('main h1, main h2').first()).toBeVisible();
+    if (i < n - 1) {
+      // routing may move focus into the page; real users Tab back, so return to the item the way a user would
+      await links.nth(i).focus();
+      await page.keyboard.press('Tab');
+    }
   }
   expect(consoleErrors).toEqual([]);
   await app.close();

@@ -150,7 +150,14 @@ const printHost = {
     fs.writeFileSync(o.file, pdf);
   },
   reveal(file: string): void {
-    shell.showItemInFolder(file);
+    // Automated runs set PETRA_NO_REVEAL: on a headless Linux machine this hands the folder to xdg-open, and the child it
+    // starts can keep the program from exiting. A failure to open a folder window must never affect saving the file.
+    if (process.env.PETRA_NO_REVEAL === '1') return;
+    try {
+      shell.showItemInFolder(file);
+    } catch {
+      /* the file is saved; showing it is a courtesy */
+    }
   },
   async pickBackupFile(): Promise<string | null> {
     const r = await dialog.showOpenDialog(mainWindow ?? undefined!, { properties: ['openFile'], filters: [{ name: 'PetraDMS backup', extensions: ['petrabak'] }] });

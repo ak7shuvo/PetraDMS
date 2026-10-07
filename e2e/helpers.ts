@@ -20,7 +20,7 @@ export async function launch(opts: { dataDir?: string; env?: Record<string, stri
   if (process.platform === 'linux') args.push('--no-sandbox', '--disable-gpu');
   const app = await electron.launch({
     args,
-    env: { ...process.env, PETRA_DATA_DIR: dataDir, ELECTRON_DISABLE_SECURITY_WARNINGS: '1', ...opts.env } as Record<string, string>
+    env: { ...process.env, PETRA_DATA_DIR: dataDir, PETRA_NO_REVEAL: '1', ELECTRON_DISABLE_SECURITY_WARNINGS: '1', ...opts.env } as Record<string, string>
   });
   const page = await app.firstWindow();
   const consoleErrors: string[] = [];
