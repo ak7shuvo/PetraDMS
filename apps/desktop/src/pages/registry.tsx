@@ -14,6 +14,8 @@ import { PeoplePage } from './People';
 import { DashboardPage } from './Dashboard';
 import { ReportsPage } from './Reports';
 import { BackupPage } from './Backup';
+import { DataPage } from './Data';
+import { HelpPage } from './Help';
 import { useI18n } from '../i18n';
 
 function ExpensesRoute() {
@@ -24,6 +26,11 @@ function ExpensesRoute() {
 function MoneyRoute() {
   const { t } = useI18n();
   return <MoneyPage title={t('nav.money')} />;
+}
+
+/** The help page can start the tour, which lives in the shell; it asks through an event. */
+function HelpRoute() {
+  return <HelpPage onTour={() => window.dispatchEvent(new Event('petra:tour'))} />;
 }
 
 export interface PageDef {
@@ -51,6 +58,8 @@ export const PAGES: PageDef[] = [
   { path: '/reports', element: <ReportsPage />, nav: true, minRole: 'staff' },
   { path: '/backup', element: <BackupPage />, nav: true, minRole: 'owner' },
   { path: '/settings', element: <SettingsPage />, nav: true, minRole: 'owner' },
+  { path: '/data', element: <DataPage />, nav: false, minRole: 'manager' },
+  { path: '/help', element: <HelpRoute />, nav: false, minRole: 'staff' },
   { path: '/style-guide', element: <StyleGuide />, nav: false, minRole: 'staff' }
 ];
 

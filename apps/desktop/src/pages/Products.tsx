@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { LookupDto, ProductDto } from '@petra/core';
 import { call, errorText } from '../api';
 import { useI18n } from '../i18n';
@@ -9,6 +9,7 @@ import { Badge, Button, Checkbox, Drawer, EmptyState, Field, Input, Modal, Money
 export function ProductsPage() {
   const i18n = useI18n();
   const { t } = i18n;
+  const navigate = useNavigate();
   const role = useApp((s) => s.status?.session?.role ?? 'staff');
   const canEdit = role !== 'staff';
   const [showArchived, setShowArchived] = useState(false);
@@ -54,7 +55,7 @@ export function ProductsPage() {
     <div>
       <div className="page-h">
         <h2>{t('nav.products')}</h2>
-        {canEdit && <Button variant="primary" onClick={() => setEditing('new')} data-testid="add-product">{t('prod.add')}</Button>}
+        {canEdit && <div className="row" style={{ gap: 8 }}><Button onClick={() => navigate('/data', { state: { kind: 'products' } })} data-testid="import-products">{t('imp.fromCsv')}</Button><Button variant="primary" onClick={() => setEditing('new')} data-testid="add-product">{t('prod.add')}</Button></div>}
       </div>
       <div className="p-toolbar" style={{ marginBottom: 12 }}>
         <Input placeholder={t('prod.searchHint')} value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 320 }} aria-label={t('act.search')} data-testid="product-search" />

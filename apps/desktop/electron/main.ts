@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
 import {
-  Dispatcher, PRODUCT_PUBLIC_KEY_PEM, healthInfo, loadMigrations, machineHash, migrate, openDatabase, registerCoreServices, registerCatalogServices, registerSalesServices, registerMoneyServices, registerReportServices, registerToolServices, registerSafetyServices, AutoBackup, createBackup, knownBackupDirs, latestVersion, makeCtx, recordRecovery, recoverIfCorrupt, swapInDatabase, closeDatabase, type Db, type Host
+  Dispatcher, PRODUCT_PUBLIC_KEY_PEM, healthInfo, loadMigrations, machineHash, migrate, openDatabase, registerCoreServices, registerCatalogServices, registerSalesServices, registerMoneyServices, registerReportServices, registerToolServices, registerSafetyServices, registerDataServices, AutoBackup, createBackup, knownBackupDirs, latestVersion, makeCtx, recordRecovery, recoverIfCorrupt, swapInDatabase, closeDatabase, type Db, type Host
 } from '@petra/db';
 import { ipcContract, PetraError, type PrintFormat } from '@petra/core';
 
@@ -322,6 +322,7 @@ if (!app.requestSingleInstanceLock()) {
     registerReportServices(dispatcher);
     registerToolServices(dispatcher);
     registerSafetyServices(dispatcher, () => autoBackup);
+    registerDataServices(dispatcher);
     autoBackup = new AutoBackup(dispatcher);
     if (recovered.state === 'recovered') {
       const c = makeCtx(db, null, () => new Date().toISOString());

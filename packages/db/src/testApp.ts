@@ -8,6 +8,7 @@ import { closeDatabase, openDatabase } from './index';
 import { loadMigrations, migrate } from './migrate';
 import { swapInDatabase } from './app/backup';
 import { registerSafetyServices } from './app/safetyServices';
+import { registerDataServices } from './app/dataServices';
 import { Dispatcher, type Host } from './app/dispatcher';
 import { registerCoreServices } from './app/coreServices';
 import { registerCatalogServices } from './app/catalogServices';
@@ -81,6 +82,7 @@ export function makeApp(nowRef: { t: number } = { t: T0 }, opts: { dataDir?: str
   registerReportServices(d);
   registerToolServices(d);
   registerSafetyServices(d);
+  registerDataServices(d);
   Object.defineProperty(dRef, 'db', { get: () => d.db });
   return { d, db, close, nowRef, printed, pdfs, compact, pick };
 }

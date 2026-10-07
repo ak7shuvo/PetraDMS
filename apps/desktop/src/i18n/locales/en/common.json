@@ -178,5 +178,8 @@
   "word.nameBn": "Name in Bangla",
   "err.DB_CORRUPT": "The data file is damaged and no backup could be used. Contact support before doing anything else.",
   "err.BACKUP_FAILED": "The backup could not be made. Check that the backup folder exists and the disk has space.",
-  "err.BACKUP_INVALID": "This file is not a usable PetraDMS backup. It may be damaged or incomplete."
+  "err.BACKUP_INVALID": "This file is not a usable PetraDMS backup. It may be damaged or incomplete.",
+  "err.IMPORT_INVALID": "This file cannot be imported. Check that it is a CSV with a heading row and no more than 20,000 rows, and that the columns are matched.",
+  "err.IMPORT_HAS_ERRORS": "Some rows have problems, so nothing was imported.",
+  "err.DEMO_UNAVAILABLE": "Demo data can only be loaded into an empty shop, and can only be cleared while demo mode is on."
 }

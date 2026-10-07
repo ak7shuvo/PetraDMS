@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { BrandMark, Button, Badge, ChangeSecretModal, ErrorBoundary, Modal, Segmented, Toasts } from '../ui';
 import { call } from '../api';
@@ -7,6 +7,7 @@ import { effectiveMotion, useUi } from '../store/ui';
 import { rememberMode, useApp } from '../store/app';
 import { visibleNav } from './nav';
 import { registeredPaths } from '../pages/registry';
+import { Tour, markTour, tourSeen } from '../tour/Tour';
 
 function LicenceBanner() {
   const { t, n } = useI18n();
@@ -52,10 +53,39 @@ function RecoveryBanner() {
   );
 }
 
-function Banners() {
+/** While demo mode is on, every screen says so, and the Owner can clear it. */
+function DemoBanner() {
+  const { t } = useI18n();
+  const demo = useApp((s) => s.status?.demo);
+  const role = useApp((s) => s.status?.session?.role);
+  const navigate = useNavigate();
+  if (!demo) return null;
+  return (
+    <div className="banner warn" role="status" data-testid="demo-banner">
+      <span style={{ flex: 1 }}>{t('demo.banner')}</span>
+      {role === 'owner' && <Button size="sm" onClick={() => navigate('/data', { state: { tab: 'demo' } })}>{t('demo.clear')}</Button>}
+    </div>
+  );
+}
+
+/** Offered once to each person after sign-in; "Not now" is remembered too. */
+function TourInvite({ onStart, onDismiss }: { onStart: () => void; onDismiss: () => void }) {
+  const { t } = useI18n();
+  return (
+    <div className="banner tour-invite" role="status" data-testid="tour-invite">
+      <span style={{ flex: 1 }}>{t('tour.invite')}</span>
+      <Button size="sm" onClick={onStart} data-testid="tour-invite-start">{t('tour.start')}</Button>
+      <Button size="sm" onClick={onDismiss} data-testid="tour-invite-dismiss">{t('tour.notNow')}</Button>
+    </div>
+  );
+}
+
+function Banners({ invite }: { invite: ReactNode }) {
   return (
     <div className="banners" style={{ gridColumn: 2 }}>
       <RecoveryBanner />
+      <DemoBanner />
+      {invite}
       <LicenceBanner />
     </div>
   );
@@ -71,6 +101,7 @@ export function Shell() {
   const session = useApp((s) => s.status?.session);
   const refresh = useApp((s) => s.refresh);
   const loc = useLocation();
+  const navigate = useNavigate();
   const [account, setAccount] = useState(false);
   const [changeOpen, setChangeOpen] = useState(false);
   const role = session?.role ?? 'staff';
@@ -78,7 +109,22 @@ export function Shell() {
   const [launching, setLaunching] = useState(() => effectiveMotion({ animations, liteActive }) === 'full' && !sessionStorageFlag());
   const licence = useApp((s) => s.status?.licence);
   const recovery = useApp((s) => s.status?.recovery);
-  const hasBanner = !!recovery || (!!licence && (licence.state !== 'licensed' || (licence.daysLeft !== null && licence.daysLeft <= 30)));
+  const demo = useApp((s) => s.status?.demo);
+  const [touring, setTouring] = useState(false);
+  const [inviteGone, setInviteGone] = useState(false);
+  const showInvite = !!session && !inviteGone && !touring && !tourSeen(session.userId);
+  const endTour = (finished: boolean) => {
+    setTouring(false);
+    setInviteGone(true);
+    if (session) markTour(session.userId, finished ? 'done' : 'skipped');
+  };
+  const hasBanner = showInvite || !!demo || !!recovery || (!!licence && (licence.state !== 'licensed' || (licence.daysLeft !== null && licence.daysLeft <= 30)));
+
+  useEffect(() => {
+    const start = () => setTouring(true);
+    window.addEventListener('petra:tour', start);
+    return () => window.removeEventListener('petra:tour', start);
+  }, []);
 
   useEffect(() => {
     if (!launching) return;
@@ -122,9 +168,10 @@ export function Shell() {
           </Button>
         </div>
       </aside>
-      {hasBanner && <Banners />}
+      {hasBanner && <Banners invite={showInvite ? <TourInvite onStart={() => setTouring(true)} onDismiss={() => endTour(false)} /> : null} />}
       <header className="topbar">
         <h1>{title ? t(title.labelKey) : t('app.name')}</h1>
+        <Button size="sm" onClick={() => navigate('/help')} aria-label={t('help.title')} data-testid="help-open">{t('help.short')}</Button>
         <Segmented label={t('sg.language')} value={lang} options={[{ value: 'bn', label: 'বাংলা' }, { value: 'en', label: 'EN' }]} onChange={(v) => setUi({ lang: v })} />
         {session && (
           <Button size="sm" onClick={() => setAccount(true)} data-testid="account">
@@ -144,6 +191,7 @@ export function Shell() {
         </div>
       </Modal>
       <ChangeSecretModal open={changeOpen} onClose={() => setChangeOpen(false)} />
+      {touring && <Tour onEnd={endTour} />}
       <Toasts />
     </div>
   );

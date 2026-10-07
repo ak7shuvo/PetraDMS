@@ -3,7 +3,7 @@ import { PetraError, businessDateFor, SETTING_DEFAULTS, type AppStatus, type Bus
 import { get, run } from '../sql';
 import { tx, lastClosedDate, type Ctx } from '../ctx';
 import { audit } from '../audit';
-import { loadSettings, saveSetting } from '../settings';
+import { getRaw, loadSettings, saveSetting } from '../settings';
 import { seedDefaults } from '../masters';
 import { addUser, approve, changeSecret, countUsers, createOwner, listLoginUsers, listUsers, login, recoverOwner, sessionFor, updateUser } from './auth';
 import { installLicence, licenceStatus } from './licence';
@@ -43,7 +43,8 @@ export function appStatus(d: Dispatcher): AppStatus {
     profile: loadProfile(ctx),
     businessDate: currentBusinessDate(ctx, settings),
     dataDir: d.host.dataDir,
-    recovery: recoveryNotice(ctx)
+    recovery: recoveryNotice(ctx),
+    demo: getRaw(ctx.db, 'demo_mode') === '1'
   };
 }
 

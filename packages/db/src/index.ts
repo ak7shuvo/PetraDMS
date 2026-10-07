@@ -57,3 +57,4 @@ export function healthInfo(db: Db): HealthInfo {
 }
 export * from './perfSeed';
 export * from './applog';
+export * from './demo';

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { isBdMobile, type BusinessProfile, type LicenceStatus, type Settings, type UserRow, type Role } from '@petra/core';
 import { call, errorText } from '../api';
 import { useI18n } from '../i18n';
@@ -11,9 +12,10 @@ type Tab = 'business' | 'appearance' | 'rules' | 'users' | 'licence';
 export function SettingsPage() {
   const { t } = useI18n();
   const [tab, setTab] = useState<Tab>('business');
+  const navigate = useNavigate();
   return (
     <div>
-      <div className="page-h"><h2>{t('set.title')}</h2></div>
+      <div className="page-h"><h2>{t('set.title')}</h2><Button onClick={() => navigate('/data')} data-testid="open-data">{t('data.title')}</Button></div>
       <Tabs
         label={t('set.title')}
         value={tab}

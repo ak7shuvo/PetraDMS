@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { CustomerDto, PriceTier } from '@petra/core';
 import { call, errorText } from '../api';
 import { useI18n } from '../i18n';
@@ -10,6 +10,7 @@ const TIERS: PriceTier[] = ['retail', 'wholesale', 'dealer'];
 
 export function CustomersPage({ embedded }: { embedded?: boolean }) {
   const { t, money, int } = useI18n();
+  const navigate = useNavigate();
   const role = useApp((s) => s.status?.session?.role ?? 'staff');
   const canEdit = role !== 'staff';
   const date = useDisplayDate();
@@ -36,7 +37,7 @@ export function CustomersPage({ embedded }: { embedded?: boolean }) {
   const totalDue = (list.data ?? []).filter((c) => c.status === 'active' && c.balance > 0).reduce((a, c) => a + c.balance, 0);
   return (
     <div>
-      {!embedded && <div className="page-h"><h2>{t('nav.customers')}</h2>{canEdit && <Button variant="primary" onClick={() => setSel('new')} data-testid="add-customer">{t('cust.new')}</Button>}</div>}
+      {!embedded && <div className="page-h"><h2>{t('nav.customers')}</h2>{canEdit && <div className="row" style={{ gap: 8 }}><Button onClick={() => navigate('/data', { state: { kind: 'customers' } })} data-testid="import-customers">{t('imp.fromCsv')}</Button><Button variant="primary" onClick={() => setSel('new')} data-testid="add-customer">{t('cust.new')}</Button></div>}</div>}
       {embedded && canEdit && <div className="row" style={{ marginBottom: 8 }}><Button variant="primary" onClick={() => setSel('new')} data-testid="add-customer">{t('cust.new')}</Button></div>}
       <div className="row wrap" style={{ gap: 12, marginBottom: 12 }}>
         <Stat label={t('cust.totalDue')} value={money(totalDue)} accent={totalDue > 0} />

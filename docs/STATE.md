@@ -1,7 +1,7 @@
 # PetraDMS - Build state
 
 ## Current phase
-Phase 10 complete (gate passes locally). Next: Phase 11 (CSV import, export everything, demo mode, tour, help, manuals).
+Phase 11 complete (gate passes locally). Next: Phase 12 (hardening, perf seed, installer pipeline, release verification).
 
 ## Done
 - Phase 1: pnpm monorepo, Electron 44 + Vite + React 19 shell, `node:sqlite` WAL opened in main, typed IPC (zod), network blocking, `ci.yml` + `release-windows.yml`, Playwright spike test.
@@ -14,6 +14,7 @@ Phase 10 complete (gate passes locally). Next: Phase 11 (CSV import, export ever
 - Phase 8: dashboard (today, month, cash, dues, stock value, alerts, 14-day trend, top products, recent invoices, six quick actions) and 17 reports (summary and profit, sales by date/product/customer/area, profit by product and customer, purchases, due aging, collection sheet by area, statement, supplier payable, stock valuation, low stock, expiring, stock ledger, cash book, day closing, expenses, salary). Print, PDF (Bangla fonts embedded), CSV (UTF-8 with BOM) and XLSX (own writer, no dependency) from every report. Staff get the safe reports for today only.
 - Phase 9: Ctrl+K search (own in-memory index: prefix, typo-tolerant, inside-word, Bangla digits; rebuilt after writes; staff see products and customers only), keyboard shortcuts (F2 new sale, F5 receive payment, F7 calculator, Ctrl+P print, `?` cheat-sheet), pocket calculator (M+/M-/MR/MC, history, puts the result into the field you were in), barcode scanner support (fast burst plus Enter; adds the product in a sale, opens search elsewhere), compact always-on-top panel (Ctrl+Shift+M), A4 barcode label sheets (Code 128) from the product editor, a screen error boundary, and input caps for quantity and money.
 - Phase 10: backup (single `.petrabak` file: manifest + database from `VACUUM INTO`, SHA-256, integrity-checked copy), automatic backups (every N minutes while data changed, and on close), second folder (USB or synced cloud folder), retention 14 daily / 8 weekly / 12 monthly plus the six newest and five safety copies, restore (validate, safety copy, swap, sign in again, typed confirmation), start-up recovery from the newest good backup when `integrity_check` fails, automatic backup before a migration, `/backup` page (Backups, Activity log, Support), audit log viewer with filters, diagnostics ZIP without business data.
+- Phase 11: CSV import for products (with opening stock), customers and opening dues (column mapping with automatic matching in English and Bangla, per-row problems, check-only dry run that rolls back, save the bad rows as CSV, downloadable templates), export everything (spreadsheets in taka, every table raw, a full backup; no secrets), demo mode (75 products from the supplied SKU list, 8 shops, bills and payments, cleared by restoring the pre-demo copy), guided tour, Help (manual in both languages, shortcuts, About), `docs/USER-MANUAL.{en,bn}.md` bundled into the app.
 
 ## Gate status
 - Phase 10: `safety.test.ts` (retention, tamper/truncate/newer-schema refusal, restore, second folder, auto-backup timing, audit filters, diagnostics privacy, recovery with and without a backup, and a SIGKILL-during-posting test run five times with `integrity_check` and I1-I10 after each), `migrate.fixture.test.ts` (the committed schema-v1 database `packages/db/fixtures/petra-v1.db` upgrades with a pre-migration backup, a failing migration rolls back, a failing backup stops the upgrade, a newer database is refused), `backup.spec.ts` e2e (backup, restore, activity log, support file, close backup, automatic recovery of a damaged file, opening the v1 database). 132 unit tests, 25 e2e.
@@ -26,6 +27,7 @@ Phase 10 complete (gate passes locally). Next: Phase 11 (CSV import, export ever
 - Phase 2: `pnpm test:core` and `pnpm check:integrity` pass.
 - Phase 4: unit tests for licence (valid, tampered, expired, wrong machine, clock rollback, trial length), secrets, lockout, recovery, roles, read-only; 8 Playwright e2e (fresh install, lockout, recovery, staff restrictions, licence flow, expiry, data-folder move, no network) pass.
 - Phase 3: `pnpm test:unit` (55 tests) passes; Playwright renders every component in bn and en at 1366x768 with no console errors, no horizontal overflow and no external requests (4 e2e tests, repeatable).
+- Phase 11: `importer.test.ts` (CSV round trip property test, parsers, mapping, row rules, template imports cleanly), `data.test.ts` (bad rows, dry run rolls back, duplicates, opening stock and dues, rejects file, roles, export ZIP contents and secrets, demo load/clear with integrity), `manual.test.ts`, `onboarding.spec.ts` e2e (import with bad rows, export + demo, tour + help). 163 unit tests, 28 e2e.
 
 ## Resume commands
 ```

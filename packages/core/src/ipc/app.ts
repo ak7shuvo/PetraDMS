@@ -49,6 +49,8 @@ export interface AppStatus {
   dataDir: string;
   /** Set when the app restored a backup by itself at start-up (the data file was damaged). */
   recovery: import('./safety').RecoveryNotice | null;
+  /** True while the shop holds sample data from demo mode. */
+  demo: boolean;
 }
 
 export interface LoginUser {
