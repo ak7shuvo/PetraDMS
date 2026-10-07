@@ -67,8 +67,8 @@ test('backup page: activity log filters, support file contains no business data,
   await inv(page, 'settings:save', { taxBp: 500 });
   await navTo(page, 'Backup');
   await page.getByRole('tab', { name: 'Activity log' }).click();
-  const total = await page.getByTestId('audit-row').count();
-  expect(total).toBeGreaterThan(1);
+  // the log loads after the tab opens, so wait for it instead of reading the count the instant the tab is clicked
+  await expect.poll(() => page.getByTestId('audit-row').count(), { message: 'audit log rows' }).toBeGreaterThan(1);
   await page.getByTestId('audit-action').selectOption('settings.save');
   await expect(page.getByTestId('audit-row')).toHaveCount(1);
   await page.getByTestId('audit-action').selectOption('');
