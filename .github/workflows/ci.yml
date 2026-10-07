@@ -40,8 +40,17 @@ jobs:
       - run: pnpm check:integrity
       - name: Build app bundles
         run: pnpm build
+      - name: Environment probe
+        run: |
+          {
+            echo "kernel: $(uname -r)"; echo "os: $(. /etc/os-release; echo $PRETTY_NAME)"
+            echo "userns restrict: $(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>&1)"
+            echo "electron dist: $(find node_modules/.pnpm -maxdepth 4 -type d -path '*electron/dist' | head -2 | tr '\n' ' ')"
+            echo "cpus: $(nproc) mem: $(free -m | awk 'NR==2{print $2}')MB"
+          } | while read -r l; do echo "::notice title=probe::$l"; done
       - name: End-to-end tests (Playwright driving the real Electron app under xvfb)
-        run: xvfb-run -a pnpm exec playwright test
+        timeout-minutes: 12
+        run: xvfb-run -a pnpm exec playwright test --reporter=github,line --max-failures=2
       - name: Upload Playwright report on failure
         if: failure()
         uses: actions/upload-artifact@v4
