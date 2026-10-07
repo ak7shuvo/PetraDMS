@@ -45,10 +45,19 @@ jobs:
         env:
           DEBUG: pw:api,pw:browser
         run: xvfb-run -a pnpm exec playwright test e2e/onboarding.spec.ts:24 e2e/backup.spec.ts:63 --reporter=line --retries=0 --timeout=40000 > /tmp/pw.log 2>&1
-      - name: Post log tail as annotation
+      - name: Post log tail as annotations
         if: always()
         run: |
-          grep -vE "ExperimentalWarning|trace-warnings" /tmp/pw.log | tail -c 14000 | python3 -c "import sys; t=sys.stdin.read(); print('::notice title=pwlog::'+t.replace('%','%25').replace('\r','%0D').replace('\n','%0A'))"
+          python3 - <<'PY'
+          import re
+          t=open('/tmp/pw.log',errors='replace').read().splitlines()
+          noise=re.compile(r'scrolling into view|done scrolling|navigations have finished|waiting for scheduled|performing click|element is visible, enabled|retrying click|attempting click|ExperimentalWarning|trace-warnings|waiting for element to be visible|locator resolved|=> locator\.|<= locator\.')
+          t=[l[:220] for l in t if l.strip() and not noise.search(l)]
+          text='\n'.join(t)[-34000:]
+          chunks=[text[i:i+3700] for i in range(0,len(text),3700)]
+          for n,c in enumerate(chunks):
+              print('::notice title=pwlog %d/%d::'%(n+1,len(chunks))+c.replace('%','%25').replace('\r','%0D').replace('\n','%0A'))
+          PY
 
   windows-installer:
     name: Build and verify Windows x64 installer (NSIS)
