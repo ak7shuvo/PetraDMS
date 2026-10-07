@@ -4,8 +4,8 @@ For Windows 10 and 11, 64-bit. No internet is needed after the file is downloade
 
 ## Install
 
-1. Download `PetraDMS-Setup-<version>-x64.exe` (from the GitHub **Releases** page, or from the **PetraDMS-Windows-x64-Installer** artifact of a CI run on the **Actions** page).
-2. Optional check: open PowerShell and run `Get-FileHash .\PetraDMS-Setup-<version>-x64.exe -Algorithm SHA256`. The value must equal the one in `SHA256SUMS.txt`.
+1. Download `PetraDMS-Setup-<version>.exe` (from the GitHub **Releases** page, or from the **PetraDMS-Windows-x64** artifact of a **Windows Release** or **CI** run on the **Actions** page; unzip the artifact first).
+2. Optional check: open PowerShell and run `Get-FileHash .\PetraDMS-Setup-<version>.exe -Algorithm SHA256`. The value must equal the one in `SHA256SUMS.txt`.
 3. Double-click the installer. It installs for your Windows user only and does not ask for administrator rights. You can choose the folder.
 4. **Windows protected your PC** (SmartScreen) appears because the installer is not code-signed. Click **More info**, then **Run anyway**.
 5. Finish. A Desktop and Start-menu shortcut named PetraDMS are made.
@@ -26,7 +26,7 @@ A 30-day free trial starts now. Then enter the licence key from **Settings, Lice
 
 - Data: the folder chosen in step 4, `data\petra.db`. Backups, invoices (PDF) and exports are next to it. See **Backup** inside the app.
 - Updating: run the newer installer over the old one. Data is kept, and a safety backup is made before any database upgrade.
-- Removing: Windows Settings, Apps, PetraDMS. The data folder is never deleted by the uninstaller.
+- Removing: Windows Settings, Apps, PetraDMS. The data folder is never deleted by the uninstaller, and it tells you where your data stayed.
 
 ## Moving to another computer
 

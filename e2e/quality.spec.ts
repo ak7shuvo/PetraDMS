@@ -105,9 +105,9 @@ test('start-up time and memory: window ready in under 4 s, resident memory under
   await page.reload();
   await page.evaluate(() => { window.location.hash = '#/reports'; });
   await page.waitForTimeout(3000); // idle
-  const procs = await app.evaluate(({ app: a }) => a.getAppMetrics().map((m) => ({ pid: m.pid, type: m.type, ws: m.memory.workingSetSize / 1024 })));
+  const procs = await app.evaluate(({ app: a }) => a.getAppMetrics().map((m) => ({ pid: m.pid, type: m.type, ws: m.memory.workingSetSize / 1024, priv: (m.memory.privateBytes ?? 0) / 1024 })));
   // Resident sizes count Electron's shared libraries once per process. Proportional set size (PSS) counts every page once,
-  // which is what the machine really spends; on Windows the private working set plays the same role, so use ws there.
+  // which is what the machine really spends. On Windows the same role is played by private bytes (what Task Manager calls memory); the working set there also counts shared pages in every process.
   const pss = (pid: number): number | null => {
     try {
       const m = /^Pss:\s+(\d+) kB/m.exec(fs.readFileSync(`/proc/${pid}/smaps_rollup`, 'utf8'));
@@ -116,8 +116,8 @@ test('start-up time and memory: window ready in under 4 s, resident memory under
   };
   const parts = procs.map((p) => ({ ...p, pss: pss(p.pid) }));
   const rss = parts.reduce((x, p) => x + p.ws, 0);
-  const mb = parts.reduce((x, p) => x + (p.pss ?? p.ws), 0);
-  console.log(`cold start ${startMs} ms; memory ${Math.round(mb)} MB proportional (${Math.round(rss)} MB summed resident); ${parts.map((p) => `${p.type} ${Math.round(p.pss ?? p.ws)}`).join(', ')}`);
+  const mb = parts.reduce((x, p) => x + (p.pss ?? (p.priv > 0 ? p.priv : p.ws)), 0);
+  console.log(`cold start ${startMs} ms; memory ${Math.round(mb)} MB proportional (${Math.round(rss)} MB summed resident); ${parts.map((p) => `${p.type} ${Math.round(p.pss ?? (p.priv > 0 ? p.priv : p.ws))}`).join(', ')}`);
   expect(startMs).toBeLessThan(4000);
   expect(mb).toBeLessThan(350);
   await app.close();
