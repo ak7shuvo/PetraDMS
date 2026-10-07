@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>PetraDMS — Visual Prototype</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--red:#C8102E;--red2:#9E0B23;--blk:#141211;--blk2:#211E1C;--cream:#F6F0E4;--card:#FBF7EE;--line:#DDD3BF;--ink:#1D1A17;--mut:#7A7063;--ok:#2F6B3A;--warn:#B5651D;
+--f:"JetBrains Mono","Cascadia Mono",Consolas,"Noto Sans Bengali","Kalpurush","Nirmala UI",monospace}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}body{font:12.5px/1.45 var(--f);background:var(--blk);color:var(--ink);overflow:hidden}
+button{font:inherit;cursor:pointer;color:inherit}
+.app{display:flex;height:100vh}
+aside{width:210px;background:var(--blk);color:#E9E1D1;display:flex;flex-direction:column;flex:none;border-right:1px solid #000}
+.logo{padding:16px 16px 14px;border-bottom:1px solid #2c2825}
+.logo b{display:block;font-size:20px;letter-spacing:.18em;color:#fff}.logo b i{color:var(--red);font-style:normal}
+.logo small{color:#948a7a;font-size:9.5px}
+nav{padding:8px 0;flex:1;overflow:auto}
+nav a{display:flex;gap:10px;align-items:center;padding:8px 16px;color:#B9AF9D;text-decoration:none;border-left:3px solid transparent;cursor:pointer}
+nav a:hover{background:var(--blk2);color:#fff}
+nav a.on{background:var(--blk2);color:#fff;border-left-color:var(--red)}
+nav a span{width:14px;text-align:center;color:var(--red)}
+.sf{padding:12px 16px;border-top:1px solid #2c2825;font-size:11px;color:#948a7a;display:grid;gap:6px}
+.dot{display:inline-block;width:7px;height:7px;background:#4CAF63;border-radius:50%;margin-right:6px}
+.user{color:#E9E1D1;display:flex;gap:8px;align-items:center}.av{width:24px;height:24px;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:700;border-radius:2px}
+.stage{flex:1;display:flex;min-width:0;background:var(--blk);position:relative;overflow:hidden}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--cream);transition:transform .45s cubic-bezier(.2,.8,.2,1),border-radius .45s;transform-origin:left center}
+.compact .main{transform:scale(.9);border-radius:6px;box-shadow:0 0 0 1px var(--red),0 20px 40px #0008}
+.top{height:52px;background:var(--blk);display:flex;align-items:center;gap:10px;padding:0 18px;flex:none;border-bottom:2px solid var(--red)}
+.search{position:relative;flex:1;max-width:520px}
+.search input{width:100%;height:32px;background:var(--blk2);border:1px solid #3a3531;color:#fff;padding:0 12px 0 34px;font:inherit;border-radius:2px;outline:0}
+.search input:focus{border-color:var(--red)}.search:before{content:"⌕";position:absolute;left:11px;top:5px;color:#948a7a;font-size:15px}
+.kbd{position:absolute;right:8px;top:7px;font-size:10px;color:#7d7466;border:1px solid #3a3531;padding:0 5px;border-radius:2px}
+#res{position:absolute;top:38px;left:0;right:0;background:var(--card);border:1px solid var(--line);box-shadow:0 14px 30px #0006;z-index:20;display:none;max-height:380px;overflow:auto}
+.ri{display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);cursor:pointer}.ri:hover{background:#F0E7D3}
+.ri b{flex:1}.ri em{font-style:normal;color:var(--mut);font-size:11px}
+.tag{font-size:10px;padding:1px 6px;border:1px solid var(--line);border-radius:2px;color:var(--mut);background:#fff6}
+.btn{height:32px;padding:0 13px;border:1px solid #3a3531;background:transparent;color:#E9E1D1;border-radius:2px;transition:.15s}
+.btn:hover{border-color:#8a8070}.btn.p{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}.btn.p:hover{background:var(--red2)}
+.btn.on{border-color:var(--red);color:#fff}
+.nb{position:relative}.nb i{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;font-style:normal;padding:0 4px;border-radius:8px}
+.content{flex:1;overflow:auto;padding:18px 22px 30px}
+h1{font-size:20px}.sub{color:var(--mut);margin:2px 0 14px}
+.hd{display:flex;justify-content:space-between;align-items:flex-end}.date{color:var(--mut);font-size:11px;text-align:right}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.k{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--blk);padding:10px 12px;box-shadow:0 1px 2px #0001}
+.k.r{border-top-color:var(--red)}.k small{color:var(--mut);font-size:10.5px}.k b{display:block;font-size:19px;margin-top:2px}.k span{font-size:10.5px;color:var(--ok)}.k span.d{color:var(--red)}
+.qa{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:12px 0}
+.qa button{background:var(--blk);color:#fff;border:0;padding:10px;text-align:left;border-radius:2px;border-bottom:3px solid transparent;transition:.15s}
+.qa button:hover{border-bottom-color:var(--red);transform:translateY(-1px)}.qa button.f{background:var(--red)}.qa button.f:hover{background:var(--red2)}
+.qa b{display:block;font-size:12px}.qa small{opacity:.65;font-size:10px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(12,1fr)}
+.c{background:var(--card);border:1px solid var(--line);box-shadow:0 1px 2px #0001;min-width:0}
+.c>h3{font-size:12px;padding:9px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;background:#F1E9D8}
+.c>h3 a{color:var(--red);font-weight:400;font-size:11px}
+.s8{grid-column:span 8}.s7{grid-column:span 7}.s5{grid-column:span 5}.s4{grid-column:span 4}.s6{grid-column:span 6}
+table{width:100%;border-collapse:collapse}th{text-align:left;font-size:10.5px;color:var(--mut);font-weight:500;padding:6px 12px;border-bottom:1px solid var(--line)}
+td{padding:6px 12px;border-bottom:1px solid #E8DFCB;white-space:nowrap}tr:last-child td{border:0}tr:hover td{background:#F3EBDA}
+.n{text-align:right}.red{color:var(--red)}
+.st{font-size:10px;padding:1px 7px;border-radius:2px;font-weight:700}.st.Paid,.st.Healthy{background:#DCE9DA;color:var(--ok)}.st.Due,.st.Low{background:#F7DCD8;color:var(--red2)}.st.Partial{background:#F4E3C6;color:var(--warn)}
+.bar{height:5px;background:#E4DAC5;margin-top:3px}.bar i{display:block;height:100%;background:var(--red)}
+.pad{padding:10px 12px}.row{display:flex;justify-content:space-between;padding:3px 0}
+.tot{border-top:1px dashed var(--mut);margin-top:4px;padding-top:5px;font-weight:700}
+.pk{display:grid;gap:4px;margin-top:8px;font-size:11.5px}.pk div{background:#EFE6D2;padding:4px 8px;border-left:3px solid var(--red)}
+.brk{background:var(--blk);color:#E9E1D1;padding:12px;display:flex;align-items:center;gap:12px;border-left:3px solid var(--red)}
+.brk b{color:#fff}.brk small{color:#948a7a;display:block}
+.panel{width:0;overflow:hidden;background:var(--blk);color:#E9E1D1;transition:width .45s cubic-bezier(.2,.8,.2,1);flex:none}
+.compact .panel{width:290px}.pin{width:290px;padding:16px;display:grid;gap:14px;align-content:start;height:100%;overflow:auto}
+.pin h4{font-size:11px;color:#948a7a;font-weight:500;margin-bottom:6px}
+.disp{background:#0B0A09;border:1px solid #3a3531;padding:8px 10px;text-align:right;font-size:22px;min-height:48px}.disp small{display:block;color:#7d7466;font-size:10px;min-height:14px}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:6px}
+.keys button{height:34px;background:var(--blk2);border:1px solid #3a3531;color:#fff;border-radius:2px}.keys button:hover{border-color:var(--red)}.keys .o{color:var(--red);font-weight:700}.keys .e{background:var(--red);border-color:var(--red)}
+.tl div{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #2c2825}
+.ov{position:fixed;inset:0;background:#000a;display:none;place-items:center;z-index:50}.ov.show{display:grid}
+.md{width:430px;background:var(--card);border-top:4px solid var(--red);box-shadow:0 30px 60px #000a;animation:pop .2s}
+@keyframes pop{from{transform:translateY(8px);opacity:0}}
+.md h2{padding:12px 16px;font-size:14px;border-bottom:1px solid var(--line)}.md .bd{padding:14px 16px;display:grid;gap:9px}
+.md label{font-size:11px;color:var(--mut);display:grid;gap:3px}.md input,.md select{height:30px;border:1px solid var(--line);background:#fff;padding:0 8px;font:inherit}
+.md .ft{padding:10px 16px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--line)}.md .btn{color:var(--ink);border-color:var(--line)}.md .btn.p{color:#fff;border-color:var(--red)}
+@media(max-width:1250px){.kpis,.qa{grid-template-columns:repeat(3,1fr)}.s8,.s7,.s5,.s4{grid-column:span 12}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.st.Out,.st.Overdue,.st.Inactive{background:#F7DCD8;color:var(--red2)}.st.Active{background:#DCE9DA;color:var(--ok)}
+.tb{display:flex;gap:8px;margin:12px 0}.tb input,.tb select,.set input,.set select{height:30px;border:1px solid var(--line);background:#fff;padding:0 9px;font:inherit}.tb input{flex:1;max-width:340px}
+.mini{height:22px;padding:0 7px;border:1px solid var(--line);background:#fff;font-size:10.5px;margin-right:3px}.mini:hover{border-color:var(--red);color:var(--red)}
+#toast{position:fixed;bottom:22px;right:22px;background:var(--blk);color:#fff;padding:10px 16px;border-left:3px solid var(--red);opacity:0;transition:.25s;z-index:99;pointer-events:none}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}.tabs button{height:26px;padding:0 10px;border:1px solid var(--line);background:#fff}.tabs button.on{background:var(--red);color:#fff;border-color:var(--red)}
+.set .row{align-items:center;border-bottom:1px solid #E8DFCB;padding:6px 0}.set input,.set select{width:210px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.ks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}.ks div{background:#EFE6D2;padding:6px 8px;border-left:3px solid var(--red)}.ks small{display:block;color:var(--mut);font-size:10px}
+</style></head><body>
+<div class="app">
+<aside>
+ <div class="logo"><b>PET<i>R</i>A</b><small>Distribution Management System</small></div>
+ <nav id="nav"></nav>
+ <div class="sf"><div><span class="dot"></span>Backup: today 09:15</div><div class="user"><div class="av">S</div><div>Shuvo<br><small>Owner</small></div></div><div>Petra DMS v0.1.0</div></div>
+</aside>
+<div class="stage" id="stage">
+<div class="main">
+ <div class="top">
+  <div class="search"><input id="q" placeholder="Search customer, product, invoice..." autocomplete="off"><span class="kbd">Ctrl K</span><div id="res"></div></div>
+  <div style="flex:1"></div>
+  <button class="btn p" onclick="openM('New Sale')">+ New Sale</button>
+  <button class="btn" onclick="openM('Calculator')">▦ Calculator</button>
+  <button class="btn" id="cb" onclick="toggleC()">◧ Compact Mode</button>
+  <button class="btn nb">🔔<i>3</i></button>
+  <button class="btn">Shuvo ▾</button>
+ </div>
+ <div class="content" id="dash">
+  <div class="hd"><div><h1>Good Morning, Shuvo</h1><div class="sub">Here's today's business overview.</div></div><div class="date">Monday, 05 Oct 2026<br>Cash in hand ৳18,900</div></div>
+  <div class="kpis">
+   <div class="k r"><small>Today's Sales</small><b>৳48,400</b><span>▲ 12% vs yesterday</span></div>
+   <div class="k"><small>Collection</small><b>৳28,850</b><span>▲ 8%</span></div>
+   <div class="k"><small>Customer Due</small><b class="red">৳19,550</b><span class="d">▲ 4 customers</span></div>
+   <div class="k"><small>Purchase</small><b>৳27,800</b><span>2 supplier bills</span></div>
+   <div class="k"><small>Expenses</small><b>৳4,250</b><span class="d">Transport ৳1,800</span></div>
+   <div class="k r"><small>Gross Profit</small><b>৳11,680</b><span>Margin 23.9%</span></div>
+  </div>
+  <div class="qa" id="qa"></div>
+  <div class="grid">
+   <div class="c s8"><h3>Sales Trend · last 7 days <a>View report</a></h3><div class="pad"><svg id="chart" viewBox="0 0 600 170" width="100%"></svg></div></div>
+   <div class="c s4"><h3>Invoice preview</h3><div class="pad">
+     <b>Marks Milk Powder 500g</b>
+     <div class="row"><span>Purchase / Selling</span><span>৳480 / ৳520</span></div><div class="row"><span>Stock</span><span>128 pcs</span></div>
+     <div class="pk"><div>1 Big Box = 24 Pieces</div><div>1 Small Box = 12 Pieces</div><div>Stock: 5 Big · 0 Small · 8 Pcs</div></div>
+     <div style="margin-top:10px;font-size:11.5px"><div class="row"><span>Subtotal</span><span>৳7,450</span></div><div class="row"><span>Discount 5%</span><span class="red">-৳372.50</span></div><div class="row tot"><span>Total</span><span>৳7,077.50</span></div><div class="row"><span>Paid</span><span>৳5,000</span></div><div class="row red"><span>Due</span><b>৳2,077.50</b></div></div>
+   </div></div>
+   <div class="c s8"><h3>Recent Sales <a>All invoices</a></h3><table id="rs"></table></div>
+   <div class="c s4"><h3>Low Stock <a>Inventory</a></h3><table id="ls"></table></div>
+   <div class="c s4"><h3>Top Customers</h3><table id="tc"></table></div>
+   <div class="c s4"><h3>Recent Payments</h3><table id="rp"></table></div>
+   <div class="c s4"><h3>Expense Summary</h3><div class="pad" id="ex"></div></div>
+   <div class="c s12" style="grid-column:span 12"><div class="brk"><div style="font-size:24px">◉</div><div style="flex:1"><b>Petra Break</b><small>Need a short break? · 30 sec mini game</small></div><button class="btn p" onclick="openM('Petra Break')">Play</button></div></div>
+  </div>
+ </div>
+ <div class="content" id="pg" style="display:none"></div>
+</div>
+<div class="panel"><div class="pin">
+ <div><h4>Calculator</h4><div class="disp"><small id="ex2"></small><span id="dp">0</span></div><div class="keys" id="keys"></div></div>
+ <div><h4>Today</h4><div class="tl"><div><span>Sales</span><b>৳48,400</b></div><div><span>Collection</span><b>৳28,850</b></div><div><span>Due</span><b class="red">৳19,550</b></div></div></div>
+ <div><h4>Quick Actions</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><button class="btn p" onclick="openM('Quick Sale')">Quick Sale</button><button class="btn" onclick="openM('Quick Payment')">Quick Payment</button></div></div>
+ <button class="btn" onclick="toggleC()">Exit compact mode</button>
+</div></div>
+</div></div>
+<div id="toast"></div>
+<div class="ov" id="ov" onclick="if(event.target===this)closeM()"><div class="md" id="md"></div></div>
+<script>
+const $=s=>document.querySelector(s),tk=x=>'৳'+x.toLocaleString('en-IN');
+const nav=[['▣','Dashboard'],['⊕','Sales'],['⇩','Purchases'],['▤','Inventory'],['◈','Products'],['☺','Customers'],['⚑','Suppliers'],['⊖','Expenses'],['♟','Employees'],['▥','Reports'],['⚙','Settings']];
+$('#nav').innerHTML=nav.map((n,i)=>`<a data-n="${n[1]}" class="${i?'':'on'}"><span>${n[0]}</span>${n[1]}</a>`).join('');
+$('#nav').onclick=e=>{const a=e.target.closest('a');if(a)go(a.dataset.n)};
+$('#qa').innerHTML=[['New Sale','Ctrl N',1],['Receive Payment','Ctrl P'],['Add Product',''],['Add Customer',''],['Add Expense',''],['Stock Entry','']].map(a=>`<button class="${a[2]?'f':''}" onclick="openM('${a[0]}')"><b>+ ${a[0]}</b><small>${a[1]||'Quick entry'}</small></button>`).join('');
+const rows=(id,h,d,f)=>$(id).innerHTML=(h?`<tr>${h.map((x,i)=>`<th class="${i>0&&/Total|Paid|Due|Stock|Sales|Amount/.test(x)?'n':''}">${x}</th>`).join('')}</tr>`:'')+d.map(f).join('');
+const sales=[['INV-1024','Rahman Store',8,7450,5000],['INV-1023','Karim Enterprise',14,12450,0],['INV-1022','Noor Traders',6,5200,5200],['INV-1021','Al-Amin Store',11,9800,8000],['INV-1020','Karim Store',4,3200,0],['INV-1019','Sylhet Mart',9,10650,10650]];
+rows('#rs',['Invoice','Customer','Items','Total','Paid','Due','Status'],sales,s=>{const d=s[3]-s[4],st=d==0?'Paid':s[4]?'Partial':'Due';return`<tr><td><b>${s[0]}</b></td><td>${s[1]}</td><td>${s[2]} items</td><td class="n">${tk(s[3])}</td><td class="n">${tk(s[4])}</td><td class="n ${d?'red':''}">${tk(d)}</td><td><span class="st ${d?(s[4]?'Partial':'Due'):'Paid'}">${st}</span></td></tr>`});
+rows('#ls',['Product','Stock','Unit','Status'],[['Marks Milk Powder 500g',128,'pcs','Healthy'],['Sylon Tea 200g',18,'box','Low'],['Fresh Noodles',94,'carton','Healthy'],['Marks Milk Powder 1kg',9,'pcs','Low']],r=>`<tr><td>${r[0]}</td><td class="n">${r[1]}</td><td>${r[2]}</td><td><span class="st ${r[3]}">${r[3]}</span></td></tr>`);
+const tcs=[['Rahman Store',84200,2450],['Karim Enterprise',71500,12450],['Noor Traders',58900,0],['Al-Amin Store',44300,1450]];
+rows('#tc',['Customer','Sales','Due'],tcs,r=>`<tr><td>${r[0]}</td><td class="n">${tk(r[1])}</td><td class="n ${r[2]?'red':''}">${tk(r[2])}</td></tr>`);
+rows('#rp',0,[['Rahman Store',5000,'Cash','10:42'],['Noor Traders',5200,'bKash','10:05'],['Al-Amin Store',8000,'Bank','09:30'],['Sylhet Mart',10650,'Cash','09:12']],r=>`<tr><td>${r[0]}<br><small style="color:var(--mut)">${r[2]} · ${r[3]}</small></td><td class="n"><b>${tk(r[1])}</b></td></tr>`);
+$('#ex').innerHTML=[['Transport',1800],['Salary advance',1200],['Electricity',750],['Misc',500]].map(e=>`<div style="margin-bottom:8px"><div class="row" style="padding:0"><span>${e[0]}</span><b>${tk(e[1])}</b></div><div class="bar"><i style="width:${e[1]/18}%"></i></div></div>`).join('');
+(()=>{const v=[31,42,38,55,47,52,48.4],l=['Tue','Wed','Thu','Fri','Sat','Sun','Mon'],w=600/7;let s='',p='';
+[0,1,2,3].forEach(i=>s+=`<line x1="0" x2="600" y1="${20+i*38}" y2="${20+i*38}" stroke="#DDD3BF"/>`);
+v.forEach((x,i)=>{const h=x*2.1,X=i*w+14;s+=`<rect x="${X}" y="${150-h}" width="${w-28}" height="${h}" fill="${i==6?'#C8102E':'#141211'}"/><text x="${X+(w-28)/2}" y="${144-h}" font-size="10" text-anchor="middle" fill="#7A7063">${x}k</text><text x="${X+(w-28)/2}" y="165" font-size="10" text-anchor="middle" fill="#7A7063">${l[i]}</text>`;});$('#chart').innerHTML=s})();
+// search
+const db=[['Karim Enterprise','Customer','Due ৳12,450','01711-234567'],['Karim Store','Customer','Due ৳3,200','01819-554433'],['Rahman Store','Customer','Due ৳2,450','01912-889900'],['Noor Traders','Customer','Due ৳0','01555-120034'],['Al-Amin Store','Customer','Due ৳1,450','01611-778899'],
+['Marks Milk Powder 500g','Product','Stock 128','SKU MLK-500'],['Marks Milk Powder 1kg','Product','Stock 9','SKU MLK-1000'],['Sylon Tea 200g','Product','Stock 18 box','SKU TEA-200'],['Sylon Tea 500g','Product','Stock 42 box','SKU TEA-500'],['Fresh Noodles','Product','Stock 94 carton','SKU NDL-001'],
+['INV-1024','Invoice','Rahman Store · ৳7,450','05 Oct'],['INV-1023','Invoice','Karim Enterprise · ৳12,450','05 Oct']];
+$('#q').oninput=e=>{const t=e.target.value.trim().toLowerCase(),r=$('#res');if(!t){r.style.display='none';return}
+const m=db.filter(d=>d.join(' ').toLowerCase().includes(t)||(t.length>3&&d[0].toLowerCase().includes(t.slice(0,-1))));
+r.style.display='block';r.innerHTML=m.length?m.map(d=>`<div class="ri"><span class="tag">${d[1]}</span><b>${d[0]}</b><em>${d[3]}</em><span class="${d[2].startsWith('Due ৳0')?'':'red'}">${d[2]}</span></div>`).join(''):'<div class="ri"><em>No match. Try a name, phone, SKU or invoice number.</em></div>'};
+document.addEventListener('click',e=>{if(!e.target.closest('.search'))$('#res').style.display='none'});
+document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key=='k'){e.preventDefault();$('#q').focus()}if(e.key=='Escape')closeM()});
+// compact
+function toggleC(){const on=$('#stage').classList.toggle('compact');$('#cb').classList.toggle('on',on)}
+// calc
+let cur='0',ex='';const K=['C','%','÷','×','7','8','9','-','4','5','6','+','1','2','3','=','0','.','⌫','←'];
+$('#keys').innerHTML=K.slice(0,19).map(k=>`<button class="${'÷×-+%'.includes(k)?'o':k=='='?'e':''}" onclick="key('${k}')">${k}</button>`).join('');
+function key(k){const sh=()=>{$('#dp').textContent=cur;$('#ex2').textContent=ex};
+if(k=='C'){cur='0';ex=''}else if(k=='⌫')cur=cur.length>1?cur.slice(0,-1):'0';
+else if(k=='='){try{const r=eval((ex+cur).replace(/×/g,'*').replace(/÷/g,'/').replace(/%/g,'/100*1'));ex='';cur=String(+(+r).toFixed(4))}catch(e){cur='Error'}}
+else if('+-×÷%'.includes(k)){ex+=cur+k;cur='0'}else cur=cur=='0'&&k!='.'?k:cur+k;sh()}
+// modals
+const forms={'New Sale':['Customer','Search product','Quantity','Discount %'],'Quick Sale':['Customer','Product','Quantity'],'Receive Payment':['Customer','Amount','Method'],'Quick Payment':['Customer','Amount','Method'],'Add Product':['Product name','SKU','Purchase price','Selling price'],'Add Customer':['Shop / name','Phone','Opening due'],'Add Expense':['Category','Amount','Note'],'Stock Entry':['Product','Quantity','Reason']};
+function openM(t){$('#md').style.width='';let b;if(t=='Petra Break')b='<div style="text-align:center;padding:16px"><div style="font-size:40px">◉</div><b>30 sec mini game</b><p style="color:var(--mut);margin-top:6px">Demo only. The game arrives in a later phase.</p></div>';
+else if(t=='Calculator')b='<p style="color:var(--mut)">Use Compact Mode for the working calculator.</p>';
+else b=(forms[t]||[]).map(f=>`<label>${f}<input placeholder="${f}"></label>`).join('');
+$('#md').innerHTML=`<h2>${t}</h2><div class="bd">${b}</div><div class="ft"><button class="btn" onclick="closeM()">Cancel</button><button class="btn p" onclick="closeM(${forms[t]?1:0})">${forms[t]?'Save':'Close'}</button></div>`;$('#ov').classList.add('show')}
+function closeM(v){$('#ov').classList.remove('show');if(v)toast('Saved (demo — not persisted)')}
+const toast=m=>{const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(t.h);t.h=setTimeout(()=>t.style.opacity=0,2200)};
+const B=s=>`<span class="st ${s}">${s}</span>`,stat=(t,p)=>t-p<=0?'Paid':p?'Partial':'Due',sum=(a,f)=>a.reduce((s,x)=>s+f(x),0),rd=v=>v?`<span class="red">${tk(v)}</span>`:tk(v),T=tk;
+const SA=[['INV-1024','05 Oct','Rahman Store',8,7450,0,5000],['INV-1023','05 Oct','Karim Enterprise',14,12450,0,0],['INV-1022','05 Oct','Noor Traders',6,5200,0,5200],['INV-1021','05 Oct','Al-Amin Store',11,9800,350,8000],['INV-1020','05 Oct','Karim Store',4,3200,0,0],['INV-1019','05 Oct','Sylhet Mart',9,10650,0,10650],['INV-1018','04 Oct','Rahman Store',7,6900,0,6900],['INV-1017','04 Oct','Noor Traders',10,8350,200,8150]];
+const tot=s=>s[4]-s[5],today=SA.filter(s=>s[1]=='05 Oct');
+const CU=[['Rahman Store','Zindabazar','01912-889900',84200,81750,'05 Oct','Active',1200],['Karim Enterprise','Amberkhana','01711-234567',71500,59050,'05 Oct','Active',4500],['Karim Store','Bondor','01819-554433',36400,33200,'05 Oct','Active',0],['Noor Traders','Subid Bazar','01555-120034',58900,58900,'04 Oct','Active',0],['Al-Amin Store','Upashahar','01611-778899',44300,42850,'05 Oct','Active',800],['Sylhet Mart','Ambarkhana','01722-310045',52300,52300,'05 Oct','Active',0],['Jalalabad Grocery','Kumarpara','01844-660011',9800,9800,'12 Aug','Inactive',0]];
+const PU=[['PUR-3308','05 Oct','Bengal Distribution Ltd.',18,17300,10000],['PUR-3307','05 Oct','Metro Trading',9,10500,10500],['PUR-3306','03 Oct','National FMCG Supply',15,24600,15000],['PUR-3305','02 Oct','Sylhet Wholesale Mart',11,13400,13400],['PUR-3304','30 Sep','Bengal Distribution Ltd.',22,31200,20000],['PUR-3303','28 Sep','National FMCG Supply',8,9800,9800]];
+const SU=[['Bengal Distribution Ltd.','Bengal Group','01711-908070'],['National FMCG Supply','National Trading Co.','01819-445566'],['Sylhet Wholesale Mart','SWM Pvt. Ltd.','01912-330022'],['Metro Trading','Metro Group','01555-778811']].map(s=>{const p=PU.filter(x=>x[2]==s[0]);return[...s,sum(p,x=>x[4]),sum(p,x=>x[5]),p[0][1]]});
+const PR=[['Marks Milk Powder 500g','Marks','Dairy','MLK-500','8901234500011',480,520,505,128,'pcs',30,24,12],['Marks Milk Powder 1kg','Marks','Dairy','MLK-1000','8901234500012',940,1020,985,9,'pcs',20,12,6],['Sylon Tea 200g','Sylon','Beverage','TEA-200','8901234500021',205,230,220,18,'box',25,20,10],['Sylon Tea 500g','Sylon','Beverage','TEA-500','8901234500022',480,530,510,42,'box',20,12,6],['Fresh Noodles','Fresh','Food','NDL-001','8901234500031',560,620,595,94,'carton',30,10,5],['Sunrise Soybean Oil 5L','Sunrise','Edible Oil','OIL-5L','8901234500041',790,845,820,36,'pcs',15,4,2],['Golden Harvest Rice 25kg','Golden Harvest','Staples','RIC-25','8901234500051',1650,1780,1730,22,'bag',10,1,1],['Crystal Sugar 1kg','Crystal','Staples','SUG-1K','8901234500061',128,138,134,0,'pcs',50,20,10],['Star Detergent 500g','Star','Household','DET-500','8901234500071',72,85,80,210,'pcs',60,24,12]];
+const ps=p=>p[8]==0?'Out':p[8]<=p[10]?'Low':'Healthy';
+const EX=[['05 Oct','Transport','Delivery van trip – Zindabazar','Cash',1800,'Shuvo'],['05 Oct','Salary','Salary advance – Hasan','Cash',1200,'Shuvo'],['05 Oct','Electricity','Godown electricity bill','bKash',750,'Nayeem'],['05 Oct','Miscellaneous','Packing tape & markers','Cash',500,'Imran'],['04 Oct','Loading/Unloading','Truck unloading – Bengal Dist.','Cash',1500,'Imran'],['04 Oct','Fuel','Octane – delivery van','Cash',2200,'Rahim'],['03 Oct','Mobile/Internet','Broadband + SIM recharge','bKash',1350,'Nayeem'],['02 Oct','Food','Staff lunch','Cash',650,'Imran'],['01 Oct','Rent','Godown rent – October','Bank',25000,'Shuvo'],['01 Oct','Salary','Salary advance – Imran','Cash',500,'Shuvo'],['30 Sep','Repair','Van tyre repair','Cash',3200,'Rahim'],['30 Sep','Office','Invoice paper rolls','Cash',900,'Nayeem']];
+const EM=[['Hasan','Sales Executive',22000,22000,1200,'01711-100200'],['Rahim','Delivery Staff',15000,10000,0,'01819-100201'],['Imran','Store Assistant',14000,14000,500,'01912-100202'],['Nayeem','Accounts Assistant',18000,9000,0,'01555-100203']];
+const MV=[['10:42','Marks Milk Powder 500g','Out','-24 pcs','INV-1024'],['10:20','Sylon Tea 200g','Out','-12 box','INV-1023'],['09:55','Sunrise Soybean Oil 5L','In','+36 pcs','PUR-3308'],['09:40','Fresh Noodles','In','+40 carton','PUR-3307'],['09:15','Star Detergent 500g','Out','-48 pcs','INV-1021'],['09:02','Crystal Sugar 1kg','Out','-60 pcs','INV-1019'],['08:50','Marks Milk Powder 1kg','Adjust','-2 pcs','Damaged']];
+const wk=['05 Oct','04 Oct','03 Oct','02 Oct'],ec={};EX.forEach(e=>ec[e[1]]=(ec[e[1]]||0)+e[4]);const topC=Object.entries(ec).sort((a,b)=>b[1]-a[1])[0];
+const det=(t,h)=>{$('#md').style.width='600px';$('#md').innerHTML=`<h2>${t}</h2><div class="bd" style="max-height:70vh;overflow:auto">${h}</div><div class="ft"><button class="btn" onclick="toast('Print preview (demo)')">Print</button><button class="btn p" onclick="closeM()">Close</button></div>`;$('#ov').classList.add('show')};
+const ks=a=>`<div class="ks">${a.map(x=>`<div><small>${x[0]}</small><b>${x[1]}</b></div>`).join('')}</div>`;
+const mt=(h,d)=>`<table><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>${d.map(r=>`<tr>${r.map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')}</table>`;
+function inv(s){const t=tot(s),o=s[4]-2080;det('Invoice '+s[0],ks([['Customer',s[2]],['Date',s[1]+' 2026'],['Items',s[3]],['Status',B(stat(t,s[6]))]])+mt(['Item','Qty','Rate','Amount'],[['Marks Milk Powder 500g',2,T(520),T(1040)],['Sylon Tea 200g',4,T(260),T(1040)],['Other FMCG items ('+(s[3]-2)+' lines)','—','—',T(o)]])+`<div class="row"><span>Subtotal</span><span>${T(s[4])}</span></div><div class="row"><span>Discount</span><span>-${T(s[5])}</span></div><div class="row tot"><span>Total</span><span>${T(t)}</span></div><div class="row"><span>Paid</span><span>${T(s[6])}</span></div><div class="row red"><b>Due</b><b>${T(t-s[6])}</b></div>`)}
+function cust(c){const i=SA.filter(s=>s[2]==c[0]);det('Customer Ledger · '+c[0],ks([['Opening due',T(c[7])],['Total sales',T(c[3])],['Payments',T(c[4])],['Current due',rd(c[3]-c[4])]])+`<div class="row"><span>Shop</span><span>${c[1]}, Sylhet</span></div><div class="row"><span>Phone</span><span>${c[2]}</span></div><h4 style="margin:10px 0 4px">Last transactions</h4>`+mt(['Date','Reference','Type','Amount'],i.flatMap(s=>[[s[1],s[0],'Sale',T(tot(s))],...(s[6]?[[s[1],'RCV-'+s[0].slice(4),'Payment','-'+T(s[6])]]:[])]).concat([['18 Sep','RCV-0988','Payment','-'+T(5000)]])))}
+function supp(s){const p=PU.filter(x=>x[2]==s[0]);det('Supplier Ledger · '+s[0],ks([['Company',s[1]],['Purchases',T(s[3])],['Paid',T(s[4])],['Due',rd(s[3]-s[4])]])+mt(['Invoice','Date','Total','Paid','Due'],p.map(x=>[x[0],x[1],T(x[4]),T(x[5]),rd(x[4]-x[5])])))}
+function prod(p){const b=Math.floor(p[8]/p[11]),r=p[8]-b*p[11],sm=Math.floor(r/p[12]);det(p[0],ks([['Purchase',T(p[5])],['Sale',T(p[6])],['Wholesale',T(p[7])],['Stock',p[8]+' '+p[9]]])+`<div class="row"><span>SKU / Barcode</span><span>${p[3]} · ${p[4]}</span></div><div class="row"><span>Brand / Category</span><span>${p[1]} · ${p[2]}</span></div><div class="pk"><div>1 Big Box = ${p[11]} Pieces</div><div>1 Small Box = ${p[12]} Pieces</div><div>1 Piece = 1 unit</div><div>Stock: ${b} Big · ${sm} Small · ${r-sm*p[12]} Pcs</div></div>`)}
+function emp(e){det('Salary History · '+e[0],ks([['Position',e[1]],['Monthly salary',T(e[2])],['Advance',T(e[4])],['Due',rd(e[2]-e[3])]])+mt(['Month','Salary','Paid','Method','Status'],[['Oct 2026',T(e[2]),T(e[3]),'Cash',B(stat(e[2],e[3]))],['Sep 2026',T(e[2]),T(e[2]),'Bank',B('Paid')],['Aug 2026',T(e[2]),T(e[2]),'Cash',B('Paid')]]))}
+const bars=a=>{const m=Math.max(...a.map(x=>x[1])),w=600/a.length;return`<svg viewBox="0 0 600 160" width="100%">${a.map((x,i)=>{const h=x[1]/m*110;return`<rect x="${i*w+10}" y="${130-h}" width="${w-20}" height="${h}" fill="${i==a.length-1?'#C8102E':'#141211'}"/><text x="${i*w+w/2}" y="150" font-size="9" text-anchor="middle" fill="#7A7063">${String(x[0]).slice(0,11)}</text>`}).join('')}</svg>`};
+const PG={
+Sales:()=>({s:'Today, 05 Oct 2026',title:'Invoices',add:'New Sale',k:[["Today's Sales",T(sum(today,tot))],['Total Invoices',SA.length],['Paid',today.filter(s=>stat(tot(s),s[6])=='Paid').length],['Partial',today.filter(s=>stat(tot(s),s[6])=='Partial').length],['Due',today.filter(s=>stat(tot(s),s[6])=='Due').length]],h:['Invoice','Date','Customer','Items','Subtotal','Discount','Total','Paid','Due','Status'],d:SA,st:s=>stat(tot(s),s[6]),r:s=>[`<b>${s[0]}</b>`,s[1],s[2],s[3],T(s[4]),s[5]?'-'+T(s[5]):'—',T(tot(s)),T(s[6]),rd(tot(s)-s[6]),B(stat(tot(s),s[6]))],c:inv}),
+Purchases:()=>({s:'Supplier bills',title:'Purchase invoices',add:'New Purchase',k:[['Purchase total',T(sum(PU,x=>x[4]))],['Paid to suppliers',T(sum(PU,x=>x[5]))],['Supplier due',T(sum(PU,x=>x[4]-x[5])),'red'],['Invoices',PU.length]],h:['Invoice','Date','Supplier','Items','Total','Paid','Due','Status'],d:PU,st:s=>stat(s[4],s[5]),r:s=>[`<b>${s[0]}</b>`,s[1],s[2],s[3],T(s[4]),T(s[5]),rd(s[4]-s[5]),B(stat(s[4],s[5]))],c:s=>det('Purchase '+s[0],ks([['Supplier',s[2]],['Date',s[1]],['Total',T(s[4])],['Due',rd(s[4]-s[5])]])+mt(['Item','Qty','Amount'],[['Marks Milk Powder 500g',48,T(23040)],['Other FMCG items','—',T(s[4]-23040>0?s[4]-23040:s[4])]]))}),
+Inventory:()=>({s:'Stock position',title:'Stock',add:'Stock Entry',k:[['Total Products',PR.length],['Stock Value',T(sum(PR,p=>p[5]*p[8]))],['Low Stock',PR.filter(p=>ps(p)=='Low').length,'red'],['Out of Stock',PR.filter(p=>ps(p)=='Out').length,'red'],['Stock In Today','412 pcs'],['Stock Out Today','286 pcs']],h:['Product','SKU','Stock','Unit','Purchase Price','Sale Price','Stock Value','Status'],d:PR,st:ps,r:p=>[`<b>${p[0]}</b>`,p[3],p[8],p[9],T(p[5]),T(p[6]),T(p[5]*p[8]),B(ps(p))],c:prod,x:`<div class="c" style="margin-top:12px"><h3>Stock Movement · today</h3>${mt(['Time','Product','Movement','Quantity','Reference'],MV)}</div>`}),
+Products:()=>({s:'Product catalogue',title:'Products',add:'Add Product',k:[['Products',PR.length],['Brands',new Set(PR.map(p=>p[1])).size],['Categories',new Set(PR.map(p=>p[2])).size],['Active',PR.length]],h:['Product','Brand','Category','SKU','Barcode','Purchase','Sale','Wholesale','Stock','Status','Actions'],d:PR,st:ps,r:(p,i)=>[`<b>${p[0]}</b>`,p[1],p[2],p[3],p[4],T(p[5]),T(p[6]),T(p[7]),p[8],B(ps(p)),`<button class="mini" onclick="openM('Edit Product')">Edit</button><button class="mini" onclick="PV(${i})">View</button><button class="mini" onclick="openM('Stock Entry')">Stock</button>`]}),
+Customers:()=>({s:'Retail & wholesale buyers',title:'Customers',add:'Add Customer',k:[['Total Customers',CU.length],['Active',CU.filter(c=>c[6]=='Active').length],['With Due',CU.filter(c=>c[3]>c[4]).length],['Total Due',T(sum(CU,c=>c[3]-c[4])),'red']],h:['Customer','Shop','Phone','Total Sales','Paid','Due','Last Sale','Status'],d:CU,st:c=>c[6],r:c=>[`<b>${c[0]}</b>`,c[1],c[2],T(c[3]),T(c[4]),rd(c[3]-c[4]),c[5],B(c[6])],c:cust}),
+Suppliers:()=>({s:'Procurement partners',title:'Suppliers',add:'Add Supplier',k:[['Suppliers',SU.length],['Purchase Amount',T(sum(SU,s=>s[3]))],['Paid',T(sum(SU,s=>s[4]))],['Supplier Due',T(sum(SU,s=>s[3]-s[4])),'red']],h:['Supplier','Company','Phone','Purchases','Paid','Due','Last Purchase'],d:SU,st:s=>s[3]>s[4]?'Due':'Paid',r:s=>[`<b>${s[0]}</b>`,s[1],s[2],T(s[3]),T(s[4]),rd(s[3]-s[4]),s[5]],c:supp}),
+Expenses:()=>({s:'Operating costs',title:'Expense log',add:'Add Expense',k:[["Today's Expense",T(sum(EX.filter(e=>e[0]=='05 Oct'),e=>e[4]))],['This Week',T(sum(EX.filter(e=>wk.includes(e[0])),e=>e[4]))],['This Month',T(sum(EX.filter(e=>e[0].endsWith('Oct')),e=>e[4]))],['Largest Category',topC[0]+' '+T(topC[1])]],h:['Date','Category','Description','Payment Method','Amount','Added By'],d:EX,st:e=>e[1],r:e=>[e[0],e[1],e[2],e[3],T(e[4]),e[5]],c:e=>toast(e[1]+' · '+T(e[4]))}),
+Employees:()=>({s:'Staff & payroll',title:'Employees',add:'Add Employee',k:[['Employees',EM.length],['Monthly Payroll',T(sum(EM,e=>e[2]))],['Paid Salary',T(sum(EM,e=>e[3]))],['Salary Due',T(sum(EM,e=>e[2]-e[3])),'red'],['Advances',T(sum(EM,e=>e[4]))]],h:['Employee','Position','Monthly Salary','Paid','Due','Advance','Status'],d:EM,st:e=>stat(e[2],e[3]),r:e=>[`<b>${e[0]}</b>`,e[1],T(e[2]),T(e[3]),rd(e[2]-e[3]),T(e[4]),B(stat(e[2],e[3]))],c:emp})};
+let CUR='Dashboard',Q='',F='',RK='Daily Sales';
+const PV=i=>prod(PR[i]),CL=i=>{const p=PG[CUR]();p.c&&p.c(p.d[i])};
+function fill(){const p=PG[CUR](),rg=/Total|Paid|Due|Price|Value|Stock$|Amount|Salary|Advance|Discount|Subtotal|Purchases|Purchase$|Sale$|Wholesale/;$('#tt').innerHTML=`<tr>${p.h.map(x=>`<th class="${rg.test(x)&&x!='Payment Method'?'n':''}">${x}</th>`).join('')}</tr>`+p.d.map((d,i)=>[d,i]).filter(([d])=>(!Q||JSON.stringify(d).toLowerCase().includes(Q))&&(!F||p.st(d)==F)).map(([d,i])=>`<tr ${p.c?`style="cursor:pointer" onclick="CL(${i})"`:''}>${p.r(d,i).map((x,j)=>`<td class="${rg.test(p.h[j])&&p.h[j]!='Payment Method'?'n':''}">${x}</td>`).join('')}</tr>`).join('')||'<tr><td>No records match.</td></tr>'}
+const REPG={Sales:['Daily Sales','Weekly Sales','Monthly Sales','Customer Sales'],Inventory:['Stock Valuation','Stock Movement','Low Stock'],Financial:['Profit & Margin','Expense','Customer Due','Supplier Due','Cash Flow']};
+const REP={'Daily Sales':()=>['৳',[['Tue 29',31000],['Wed 30',42000],['Thu 01',38000],['Fri 02',55000],['Sat 03',47000],['Sun 04',52000],['Mon 05',sum(today,tot)]]],'Weekly Sales':()=>['৳',[['Week 1',241000],['Week 2',268000],['Week 3',252000],['Week 4',289000]]],'Monthly Sales':()=>['৳',[['May',812000],['Jun',846000],['Jul',905000],['Aug',871000],['Sep',1012000],['Oct',48400+265000]]],'Customer Sales':()=>['৳',CU.map(c=>[c[0],c[3]])],'Stock Valuation':()=>['৳',PR.map(p=>[p[0],p[5]*p[8]])],'Stock Movement':()=>['',[['Stock In',412],['Stock Out',286],['Adjust',2]]],'Low Stock':()=>['',PR.filter(p=>ps(p)!='Healthy').map(p=>[p[0],p[8]])],'Profit & Margin':()=>['৳',[['Sales',48400],['Cost',36720],['Gross Profit',11680],['Expenses',4250],['Net',7430]]],'Expense':()=>['৳',Object.entries(ec)],'Customer Due':()=>['৳',CU.filter(c=>c[3]>c[4]).map(c=>[c[0],c[3]-c[4]])],'Supplier Due':()=>['৳',SU.map(s=>[s[0],s[3]-s[4]])],'Cash Flow':()=>['৳',[['Opening',12500],['Collection',28850],['Supplier paid',-20500],['Expenses',-4250],['Closing',18900]]]};
+function rep(k){RK=k;const[u,r]=REP[k]();$('#rb').innerHTML=`<div class="c"><h3>${k}</h3><div class="pad">${bars(r.map(x=>[x[0],Math.abs(x[1])]))}</div>${mt(['Item','Value'],r.map(x=>[x[0],u?T(x[1]):x[1]]))}</div>`;document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.textContent==k))}
+const SET={Business:[['Business Name','Shuvo Trading & Distribution'],['Owner','Shuvo'],['Phone','01700-123456'],['Address','Zindabazar, Sylhet 3100'],['Currency','BDT (৳)']],Invoice:[['Invoice Prefix','INV-'],['Default Payment Method','Cash'],['Default Discount','0%']],Backup:[['Last Backup','Today, 09:15'],['Backup Location','D:\\PetraDMS\\Backups'],['Auto Backup','Daily at 09:00']],Security:[['Admin','Shuvo · full access'],['Manager','Hasan · sales, reports'],['Staff','Imran, Rahim · limited']],Appearance:[['Theme','Red / Black / Cream'],['Compact Mode','Off'],['Font Size','12.5px (Medium)']]};
+function go(n){CUR=n;Q=F='';document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.n==n));$('#dash').style.display=n=='Dashboard'?'':'none';const g=$('#pg');g.style.display=n=='Dashboard'?'none':'';if(n=='Dashboard')return;
+if(n=='Reports'){g.innerHTML=`<div class="hd"><div><h1>Reports</h1><div class="sub">Sales, inventory and financial reports</div></div></div><div class="tb"><input type="text" value="01 Oct 2026" style="max-width:130px" aria-label="Date From"><input type="text" value="05 Oct 2026" style="max-width:130px" aria-label="Date To"><button class="btn p" onclick="rep(RK);toast('Report generated (demo)')">Generate Report</button><button class="btn" style="color:var(--ink);border-color:var(--line)" onclick="toast('Printing… (demo)')">Print</button><button class="btn" style="color:var(--ink);border-color:var(--line)" onclick="toast('Exported to CSV (demo)')">Export</button></div>`+Object.entries(REPG).map(([g,a])=>`<h4 style="margin:8px 0 2px">${g} Reports</h4><div class="tabs">${a.map(x=>`<button onclick="rep('${x}')">${x}</button>`).join('')}</div>`).join('')+'<div id="rb"></div>';rep(RK);return}
+if(n=='Settings'){g.innerHTML=`<div class="hd"><div><h1>Settings</h1><div class="sub">Business configuration</div></div><button class="btn p" onclick="toast('Settings saved (demo)')">Save Changes</button></div><div class="g2 set">${Object.entries(SET).map(([t,a])=>`<div class="c"><h3>${t}</h3><div class="pad">${a.map(x=>`<div class="row"><span>${x[0]}</span><input value="${x[1]}"></div>`).join('')}${t=='Appearance'?'<button class="btn p" style="margin-top:8px" onclick="toggleC()">Toggle Compact Mode</button>':''}</div></div>`).join('')}</div>`;return}
+const p=PG[n](),st=[...new Set(p.d.map(p.st))];g.innerHTML=`<div class="hd"><div><h1>${n}</h1><div class="sub">${p.s}</div></div>${p.add?`<button class="btn p" onclick="openM('${p.add}')">+ ${p.add}</button>`:''}</div><div class="kpis" style="grid-template-columns:repeat(${p.k.length},1fr)">${p.k.map((k,i)=>`<div class="k ${i%5==0?'r':''}"><small>${k[0]}</small><b class="${k[2]||''}">${k[1]}</b></div>`).join('')}</div><div class="tb"><input placeholder="Search ${n.toLowerCase()}..." oninput="Q=this.value.toLowerCase();fill()"><select onchange="F=this.value;fill()"><option value="">All</option>${st.map(x=>`<option>${x}</option>`).join('')}</select></div><div class="c"><h3>${p.title}</h3><table id="tt"></table></div>${p.x||''}`;fill()}
+Object.assign(forms,{'Edit Product':['Product name','Purchase price','Selling price','Wholesale price'],'New Purchase':['Supplier','Product','Quantity','Paid'],'Add Supplier':['Supplier name','Company','Phone'],'Add Employee':['Name','Position','Monthly salary']});
+
+</script></body></html>

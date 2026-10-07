@@ -1,0 +1,61 @@
+/* Shared Petra product UI language, taken from the supplied PetraDMS prototype (tokens, sidebar, topbar, KPI cards, tables, badges). */
+:root{--red:#C8102E;--red2:#9E0B23;--blk:#141211;--blk2:#211E1C;--cream:#F6F0E4;--card:#FBF7EE;--line:#DDD3BF;--ink:#1D1A17;--mut:#7A7063;--ok:#2F6B3A;--warn:#B5651D;
+--f:"JetBrains Mono","Cascadia Mono",Consolas,"Noto Sans Bengali","Kalpurush","Nirmala UI",monospace}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}body{font:12.5px/1.45 var(--f);background:var(--blk);color:var(--ink);overflow:hidden}
+button{font:inherit;cursor:pointer;color:inherit}
+.app{display:flex;height:100vh}
+aside{width:210px;background:var(--blk);color:#E9E1D1;display:flex;flex-direction:column;flex:none;border-right:1px solid #000}
+.logo{padding:16px 16px 14px;border-bottom:1px solid #2c2825}
+.logo b{display:block;font-size:20px;letter-spacing:.18em;color:#fff}.logo b i{color:var(--red);font-style:normal}
+.logo small{color:#948a7a;font-size:9.5px}
+nav{padding:8px 0;flex:1;overflow:auto}
+nav a{display:flex;gap:10px;align-items:center;padding:8px 16px;color:#B9AF9D;text-decoration:none;border-left:3px solid transparent;cursor:pointer}
+nav a:hover{background:var(--blk2);color:#fff}
+nav a.on{background:var(--blk2);color:#fff;border-left-color:var(--red)}
+nav a span{width:14px;text-align:center;color:var(--red)}
+nav a em{margin-left:auto;font-style:normal;background:var(--red);color:#fff;font-size:9px;padding:0 5px;border-radius:8px}
+.sf{padding:12px 16px;border-top:1px solid #2c2825;font-size:11px;color:#948a7a;display:grid;gap:6px}
+.dot{display:inline-block;width:7px;height:7px;background:#4CAF63;border-radius:50%;margin-right:6px}
+.user{color:#E9E1D1;display:flex;gap:8px;align-items:center}.av{width:24px;height:24px;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:700;border-radius:2px}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--cream)}
+.top{height:52px;background:var(--blk);display:flex;align-items:center;gap:10px;padding:0 18px;flex:none;border-bottom:2px solid var(--red)}
+.search{position:relative;flex:1;max-width:420px}
+.search div{height:32px;background:var(--blk2);border:1px solid #3a3531;color:#948a7a;padding:6px 12px 0 34px;border-radius:2px}
+.search:before{content:"⌕";position:absolute;left:11px;top:5px;color:#948a7a;font-size:15px}
+.kbd{position:absolute;right:8px;top:7px;font-size:10px;color:#7d7466;border:1px solid #3a3531;padding:0 5px;border-radius:2px}
+.btn{height:32px;padding:0 13px;border:1px solid #3a3531;background:transparent;color:#E9E1D1;border-radius:2px;display:inline-flex;align-items:center}
+.btn.p{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
+.btn.on{border-color:var(--red);color:#fff}
+.nb{position:relative}.nb i{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;font-style:normal;padding:0 4px;border-radius:8px}
+.seg{display:flex;border:1px solid #3a3531;border-radius:2px;overflow:hidden}.seg span{padding:7px 12px;color:#B9AF9D}.seg span.on{background:var(--red);color:#fff;font-weight:700}
+.content{flex:1;overflow:hidden;padding:18px 22px 0}
+.view{display:none}.view.on{display:block}
+h1{font-size:20px}.sub{color:var(--mut);margin:2px 0 14px}
+.hd{display:flex;justify-content:space-between;align-items:flex-end}.date{color:var(--mut);font-size:11px;text-align:right}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.k{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--blk);padding:10px 12px;box-shadow:0 1px 2px #0001}
+.k.r{border-top-color:var(--red)}.k small{color:var(--mut);font-size:10.5px}.k b{display:block;font-size:19px;margin-top:2px}.k span{font-size:10.5px;color:var(--ok)}.k span.d{color:var(--red)}
+.qa{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:12px 0}
+.qa div{background:var(--blk);color:#fff;padding:10px;border-radius:2px}.qa div.f{background:var(--red)}
+.qa b{display:block;font-size:12px}.qa small{opacity:.65;font-size:10px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(12,1fr)}
+.c{background:var(--card);border:1px solid var(--line);box-shadow:0 1px 2px #0001;min-width:0}
+.c>h3{font-size:12px;padding:9px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;background:#F1E9D8}
+.c>h3 a{color:var(--red);font-weight:400;font-size:11px}
+.s12{grid-column:span 12}.s8{grid-column:span 8}.s7{grid-column:span 7}.s5{grid-column:span 5}.s4{grid-column:span 4}.s6{grid-column:span 6}.s3{grid-column:span 3}
+table{width:100%;border-collapse:collapse}th{text-align:left;font-size:10.5px;color:var(--mut);font-weight:500;padding:6px 12px;border-bottom:1px solid var(--line)}
+td{padding:6px 12px;border-bottom:1px solid #E8DFCB;white-space:nowrap}tr:last-child td{border:0}
+.n{text-align:right}.red{color:var(--red)}
+.st{font-size:10px;padding:1px 7px;border-radius:2px;font-weight:700}
+.st.Paid,.st.Healthy,.st.Active,.st.Clean,.st.Arrived,.st.Ready,.st.Open,.st.Inspected{background:#DCE9DA;color:var(--ok)}
+.st.Due,.st.Low,.st.Late,.st.OOO,.st.Overdue,.st.Dirty{background:#F7DCD8;color:var(--red2)}
+.st.Partial,.st.Pending,.st.Preparing,.st.Cleaning,.st.Confirmed{background:#F4E3C6;color:var(--warn)}
+.st.New{background:#141211;color:#fff}
+.bar{height:5px;background:#E4DAC5;margin-top:3px}.bar i{display:block;height:100%;background:var(--red)}
+.pad{padding:10px 12px}.row{display:flex;justify-content:space-between;padding:3px 0}
+.tot{border-top:1px dashed var(--mut);margin-top:4px;padding-top:5px;font-weight:700}
+.pk{display:grid;gap:4px;margin-top:8px;font-size:11.5px}.pk div{background:#EFE6D2;padding:4px 8px;border-left:3px solid var(--red)}
+.ks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}.ks div{background:#EFE6D2;padding:6px 8px;border-left:3px solid var(--red)}.ks small{display:block;color:var(--mut);font-size:10px}
+.tb{display:flex;gap:8px;margin:12px 0}.tb div{height:30px;border:1px solid var(--line);background:#fff;padding:5px 9px;min-width:150px;color:var(--mut)}
+svg text{font-family:var(--f)}

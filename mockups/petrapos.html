@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>PetraPOS — Visual Prototype</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="base.css">
+<style>
+.pos{display:grid;grid-template-columns:1fr 340px;gap:14px;height:calc(100vh - 52px - 18px)}
+.cats{display:flex;gap:6px;margin-bottom:10px}.cats span{padding:6px 12px;border:1px solid var(--line);background:#fff}.cats span.on{background:var(--red);color:#fff;border-color:var(--red);font-weight:700}
+.items{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.it{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--blk);padding:12px 14px;min-height:150px;display:flex;flex-direction:column;justify-content:space-between}
+.it.hot{border-top-color:var(--red)}.it b{font-size:12.5px}.it small{color:var(--mut);font-size:10.5px}.it .pr{display:flex;justify-content:space-between;align-items:flex-end}.it .pr i{font-style:normal;font-size:15px;font-weight:700}.it .pr u{text-decoration:none;font-size:10px;background:var(--blk);color:#fff;padding:0 6px;border-radius:8px}
+.tk{background:var(--blk);color:#E9E1D1;display:flex;flex-direction:column;border-top:3px solid var(--red)}
+.tk h3{padding:12px 14px;border-bottom:1px solid #2c2825;font-size:13px;display:flex;justify-content:space-between;color:#fff}.tk h3 small{color:#948a7a;font-weight:400}
+.tl{padding:6px 14px;flex:1;overflow:hidden}.tl div{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid #2c2825}.tl b{color:#fff;flex:1}.tl em{font-style:normal;color:#948a7a;width:26px}.tl span{width:64px;text-align:right}
+.sm{padding:10px 14px;border-top:1px dashed #3a3531}.sm .row{padding:2px 0;color:#B9AF9D}.sm .row.t{color:#fff;font-size:17px;font-weight:700;padding-top:6px}
+.pay{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:0 14px 10px}.pay span{border:1px solid #3a3531;padding:7px 0;text-align:center;font-size:11px}.pay span.on{border-color:var(--red);color:#fff}
+.go{display:grid;grid-template-columns:1fr 1.4fr;gap:6px;padding:0 14px 14px}.go span{padding:11px;text-align:center;border:1px solid #3a3531}.go span.p{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
+.tbls{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.tbl{height:92px;border:1px solid var(--line);background:var(--card);padding:10px;border-top:3px solid #4CAF63}.tbl b{font-size:16px;display:block}.tbl small{color:var(--mut)}
+.tbl.occ{background:var(--blk);color:#fff;border-top-color:var(--red)}.tbl.occ small{color:#B9AF9D}.tbl.res{border-top-color:var(--warn)}.tbl.bill{background:var(--red);color:#fff;border-color:var(--red)}.tbl.bill small{color:#fff9}
+.kds{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.col>h4{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:8px;display:flex;justify-content:space-between}
+.tkt{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--blk);margin-bottom:10px}.tkt.late{border-top-color:var(--red)}.tkt header{display:flex;justify-content:space-between;padding:8px 12px;background:#F1E9D8;border-bottom:1px solid var(--line)}.tkt ul{list-style:none;padding:8px 12px}.tkt li{padding:2px 0}.tkt li b{color:var(--red)}
+</style></head><body>
+<div class="app">
+<aside>
+ <div class="logo"><b>PET<i>R</i>A</b><small>Point of Sale System</small></div>
+ <nav id="nav"></nav>
+ <div class="sf"><div><span class="dot"></span>Printer · KDS · PMS linked</div><div class="user"><div class="av">N</div><div>Nabila<br><small>Server · Shift 2</small></div></div><div>Petra POS</div></div>
+</aside>
+<div class="main">
+ <div class="top">
+  <div class="seg"><span class="on">Dine-in</span><span>Takeaway</span><span>Room Service</span></div>
+  <div class="search"><div>Search menu item...</div><span class="kbd">Ctrl K</span></div>
+  <div style="flex:1"></div>
+  <span class="btn p">+ New Order</span><span class="btn">Open Drawer</span><span class="btn nb">🔔<i>2</i></span><span class="btn">Nabila ▾</span>
+ </div>
+ <div class="content">
+
+ <div class="view on" id="v-terminal">
+  <div class="pos">
+   <div>
+    <div class="cats"><span class="on">Popular</span><span>Mains</span><span>Starters</span><span>Breads &amp; Sides</span><span>Beverages</span><span>Desserts</span></div>
+    <div class="items" id="items"></div>
+   </div>
+   <div class="tk">
+    <h3><span>Table 7 · Dine-in</span><small>4 guests · Order A-219</small></h3>
+    <div class="tl" id="tl"></div>
+    <div class="sm" style="border-top:0;padding-bottom:0"><div class="row" style="color:#948a7a"><span>Note · Seat 3</span><span>Less spicy</span></div></div><div class="sm"><div class="row"><span>Subtotal</span><span>৳2,890</span></div><div class="row"><span>Service charge 10%</span><span>৳289</span></div><div class="row"><span>VAT 5%</span><span>৳144.50</span></div><div class="row t"><span>Total</span><span>৳3,323.50</span></div></div>
+    <div class="pay"><span class="on">Cash</span><span>Card</span><span>bKash</span><span>Room Charge</span></div>
+    <div class="go"><span>Send to Kitchen</span><span class="p">Take Payment</span></div>
+   </div>
+  </div>
+ </div>
+
+ <div class="view" id="v-tables">
+  <div class="hd"><div><h1>Tables &amp; Orders</h1><div class="sub">Main dining · Terrace · Room service</div></div><div class="date">Monday, 05 Oct 2026<br>Lunch service</div></div>
+  <div class="kpis" style="grid-template-columns:repeat(5,1fr)"><div class="k r"><small>Open tables</small><b>7 / 16</b></div><div class="k"><small>Reserved</small><b>3</b></div><div class="k"><small>Bill requested</small><b class="red">2</b></div><div class="k"><small>Room service orders</small><b>4</b></div><div class="k"><small>Avg. table time</small><b>48 min</b></div></div>
+  <div class="tb"><div>Main dining</div><div>Terrace</div><div>Bar</div></div>
+  <div class="tbls" id="tbls"></div>
+ </div>
+
+ <div class="view" id="v-kitchen">
+  <div class="hd"><div><h1>Kitchen Display</h1><div class="sub">Live tickets · average prep 11 min</div></div><div class="date">Station: Main kitchen<br>8 tickets open</div></div>
+  <div class="kds" id="kds" style="margin-top:12px"></div>
+ </div>
+
+ <div class="view" id="v-analytics">
+  <div class="hd"><div><h1>Sales Analytics</h1><div class="sub">Restaurant, café and room service · today</div></div><div class="date">Monday, 05 Oct 2026<br>Updated 2 min ago</div></div>
+  <div class="kpis">
+   <div class="k r"><small>Today's sales</small><b>৳1,86,400</b><span>▲ 9% vs last Monday</span></div>
+   <div class="k"><small>Orders</small><b>142</b><span>▲ 11</span></div>
+   <div class="k"><small>Avg. ticket</small><b>৳1,313</b><span>▲ 3%</span></div>
+   <div class="k"><small>Covers</small><b>318</b><span>Peak 13:00</span></div>
+   <div class="k"><small>Room charges</small><b>৳42,600</b><span>posted to PMS</span></div>
+   <div class="k r"><small>Voids</small><b>৳1,240</b><span class="d">3 items</span></div>
+  </div>
+  <div class="grid" style="margin-top:12px">
+   <div class="c s7"><h3>Hourly sales · ৳ thousands <a>View report</a></h3><div class="pad"><svg id="hr" viewBox="0 0 600 170" width="100%"></svg></div></div>
+   <div class="c s5"><h3>Sales mix</h3><div class="pad" id="mix"></div></div>
+   <div class="c s7"><h3>Top items today <a>Menu</a></h3><table id="top"></table></div>
+   <div class="c s5"><h3>Payment methods</h3><div class="pad" id="pm"></div></div>
+   <div class="c s12"><h3>Room service orders · posted to PetraPMS <a>Room service</a></h3><table id="rso"></table></div>
+  </div>
+ </div>
+
+ </div>
+</div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const nav=[['terminal','▣','Terminal'],['tables','▤','Tables',7],['kitchen','♨','Kitchen',8],['orders','⊕','Orders'],['roomservice','⌂','Room Service'],['menu','◈','Menu'],['analytics','▥','Analytics'],['settings','⚙','Settings']];
+$('#nav').innerHTML=nav.map((n,i)=>`<a data-view="${n[0]}" class="${i?'':'on'}"><span>${n[1]}</span>${n[2]}${n[3]?`<em>${n[3]}</em>`:''}</a>`).join('');
+$('#nav').onclick=e=>{const a=e.target.closest('a');if(!a)return;const v=document.getElementById('v-'+a.dataset.view);if(!v)return;document.querySelectorAll('nav a').forEach(x=>x.classList.toggle('on',x===a));document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x===v))};
+const M=[['Chicken Biryani','Basmati · raita',380,1],['Beef Kala Bhuna','Slow-cooked · 250g',520,1],['Grilled Fish Fillet','Lemon butter',650,0],['Club Sandwich','Fries · salad',350,0],['Butter Naan','Tandoor',60,0],['Prawn Malai Curry','Coconut · rice',720,0],['Mutton Rezala','Sylheti style',680,0],['Hilsa Bhapa','Mustard · steamed',780,0],['Chicken Tikka Masala','Naan or rice',450,0],['Beef Tehari','Sylheti style',420,0],['Vegetable Fried Rice','Chinese style',280,0],['Chicken Caesar Salad','Parmesan',320,0],['Seven-Layer Tea','Sylhet signature',180,1],['Mango Lassi','Chilled',180,0],['Cappuccino','Double shot',220,0],['Chocolate Brownie','Vanilla scoop',240,0]];
+$('#items').innerHTML=M.map(m=>`<div class="it ${m[3]?'hot':''}"><div><b>${m[0]}</b><br><small>${m[1]}</small></div><div class="pr"><i>৳${m[2]}</i>${m[3]?'<u>Popular</u>':'<span></span>'}</div></div>`).join('');
+$('#tl').innerHTML=[['Chicken Biryani',2,760],['Beef Kala Bhuna',1,520],['Butter Naan',4,240],['Grilled Fish Fillet',1,650],['Seven-Layer Tea',2,360],['Mango Lassi',2,360]].map(r=>`<div><em>${r[1]}×</em><b>${r[0]}</b><span>৳${r[2]}</span></div>`).join('');
+const S=['occ','occ','free','res','occ','bill','free','occ','occ','free','bill','res','free','occ','free','res','occ','free'];
+const lab={occ:['Occupied','04 guests · 32 min'],free:['Available','4 seats'],res:['Reserved','19:30 · Ahmed'],bill:['Bill requested','৳4,120']};
+$('#tbls').innerHTML=S.map((s,i)=>`<div class="tbl ${s=='free'?'':s}"><b>T${i+1}</b><small>${lab[s][0]}<br>${lab[s][1]}</small></div>`).join('');
+const T=(id,t,time,items,late)=>`<div class="tkt ${late?'late':''}"><header><b>${id} · ${t}</b><span class="${late?'red':''}">${time}</span></header><ul>${items.map(i=>`<li><b>${i[0]}×</b> ${i[1]}</li>`).join('')}</ul></div>`;
+$('#kds').innerHTML=`<div class="col"><h4><span>New</span><span>3</span></h4>${T('A-221','Table 3','00:42',[[2,'Club Sandwich'],[1,'Cappuccino']])}${T('A-222','Room 204','00:20',[[1,'Chicken Biryani'],[1,'Mango Lassi']])}${T('A-223','Takeaway','00:08',[[3,'Butter Naan'],[1,'Beef Kala Bhuna']])}</div>
+<div class="col"><h4><span>Preparing</span><span>3</span></h4>${T('A-219','Table 7','06:10',[[2,'Chicken Biryani'],[1,'Beef Kala Bhuna'],[1,'Grilled Fish Fillet']])}${T('A-218','Table 12','14:35',[[1,'Prawn Malai Curry'],[2,'Mutton Rezala']],1)}${T('A-217','Room 401','09:02',[[2,'Chicken Caesar Salad']])}</div>
+<div class="col"><h4><span>Ready to serve</span><span>2</span></h4>${T('A-216','Table 5','Ready',[[2,'Seven-Layer Tea'],[2,'Chocolate Brownie']])}${T('A-215','Room 311','Ready',[[1,'Club Sandwich'],[1,'Cappuccino']])}</div>`;
+(()=>{const v=[4,6,10,15,26,18,7,5,8,14,22,28,16,7],l=['9','10','11','12','13','14','15','16','17','18','19','20','21','22'],w=600/14;let s='';[0,1,2,3].forEach(i=>s+=`<line x1="0" x2="600" y1="${20+i*38}" y2="${20+i*38}" stroke="#DDD3BF"/>`);
+v.forEach((x,i)=>{const h=x*3.6,X=i*w+6;s+=`<rect x="${X}" y="${150-h}" width="${w-12}" height="${h}" fill="${i==4||i==11?'#C8102E':'#141211'}"/><text x="${X+(w-12)/2}" y="${144-h}" font-size="10" text-anchor="middle" fill="#7A7063">${x}</text><text x="${X+(w-12)/2}" y="165" font-size="10" text-anchor="middle" fill="#7A7063">${l[i]}h</text>`});$('#hr').innerHTML=s})();
+const bars=(a)=>a.map(r=>`<div style="margin-bottom:9px"><div class="row" style="padding:0"><span>${r[0]}</span><b>${r[1]}%</b></div><div class="bar"><i style="width:${r[1]}%"></i></div></div>`).join('');
+$('#mix').innerHTML=bars([['Mains',38],['Beverages',24],['Breads & sides',15],['Starters',14],['Desserts',9]]);
+$('#pm').innerHTML=bars([['Cash',41],['Card',28],['bKash',17],['Room charge',14]]);
+$('#rso').innerHTML='<tr><th>Order</th><th>Room</th><th>Guest</th><th>Items</th><th class="n">Amount</th><th>Folio</th></tr>'+[['A-222','204','Farhana Akter','Chicken Biryani, Mango Lassi','৳560','Posted'],['A-217','401','David Clarke','2× Chicken Caesar Salad','৳640','Posted'],['A-215','311','Laura Bennett','Club Sandwich, Cappuccino','৳570','Pending']].map(r=>`<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td class="n">${r[4]}</td><td><span class="st ${r[5]=='Posted'?'Paid':'Pending'}">${r[5]}</span></td></tr>`).join('');
+$('#top').innerHTML='<tr><th>Item</th><th class="n">Sold</th><th class="n">Revenue</th><th>Trend</th></tr>'+[['Chicken Biryani',58,'৳22,040','Healthy'],['Beef Kala Bhuna',34,'৳17,680','Healthy'],['Seven-Layer Tea',71,'৳12,780','Healthy'],['Grilled Fish Fillet',19,'৳12,350','Pending'],['Club Sandwich',27,'৳9,450','Healthy']].map(r=>`<tr><td><b>${r[0]}</b></td><td class="n">${r[1]}</td><td class="n">${r[2]}</td><td><span class="st ${r[3]=='Pending'?'Pending':'Healthy'}">${r[3]=='Pending'?'Steady':'Rising'}</span></td></tr>`).join('');
+</script></body></html>
