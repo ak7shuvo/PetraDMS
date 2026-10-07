@@ -283,8 +283,10 @@ if (win) {
   const un = path.join(installDir, 'Uninstall PetraDMS.exe');
   check(fs.existsSync(un), 'uninstaller missing');
   const u = sh(un, ['/S', `_?=${installDir}`]);
-  check(u.status === 0, 'silent uninstall failed');
-  check(!fs.existsSync(appExe), 'uninstall left the program behind');
+  check(u.status === 0, `silent uninstall failed (exit ${u.status}) ${String(u.stdout ?? '')}${String(u.stderr ?? '')}`);
+  // the uninstaller can finish its clean-up a moment after it returns
+  for (let i = 0; i < 60 && fs.existsSync(appExe); i++) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500);
+  check(!fs.existsSync(appExe), `uninstall left the program behind (exit ${u.status}; folder now holds: ${fs.existsSync(installDir) ? fs.readdirSync(installDir).join(', ') : 'nothing'})`);
   check(fs.existsSync(path.join(shopDir, 'data', 'petra.db')), 'uninstall removed the shop data');
   pass('uninstall removes the program and keeps the shop data', shopDir);
 } else {
