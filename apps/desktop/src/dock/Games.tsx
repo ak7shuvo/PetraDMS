@@ -4,7 +4,7 @@ import { Button, Segmented } from '../ui';
 import {
   flipCard, hideMismatch, memoryDone, new2048, newMemory, newSnake, readBest, recordBest, snakeDelay, step2048, stepSnake, turnSnake,
   type Dir, type GameId, type MemoryState, type SnakeState, type State2048
-} from './games';
+} from './gamesLogic';
 
 const store = (): Storage | null => {
   try {

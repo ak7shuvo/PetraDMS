@@ -3,7 +3,7 @@ import { calcKeyOf, evaluate, formatDec, parseDec, pushHistory } from './calcEng
 import {
   canMove, flipCard, hideMismatch, memoryDone, move2048, new2048, newMemory, newSnake, readBest, recordBest, seeded, slideRow, spawn, step2048,
   stepSnake, turnSnake, type Board, type MemoryState, type SnakeState
-} from './games';
+} from './gamesLogic';
 
 const val = (s: string) => {
   const r = evaluate(s);
