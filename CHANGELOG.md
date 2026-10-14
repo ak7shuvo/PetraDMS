@@ -3,6 +3,42 @@
 All notable changes to PetraDMS. The newest version is first. The installer's release notes are taken from the section
 for its version, so every release needs a section here.
 
+## [1.2.0] - 2026-10-14
+
+Bulk product actions, DSR funds, a new colour palette and sign-in screen, licensing removed, and protection against posting any document twice.
+
+### Changed (sign-in screen and branding)
+- New PETRA midnight-glass sign-in: navy flowing-ribbon backdrop (inline SVG/CSS, offline), frosted centred panel, the official PETRA logo (bundled locally), cyan-to-turquoise primary button. All sign-in behaviour is unchanged (user choice, PIN keypad and keyboard, password, lockout, owner recovery, language switch).
+- The product footer now shows two lines, `PetraDMS` and `Made by Petra`, with no version. The real version stays in package.json, the installer, About and Support.
+
+### Fixed (double posting, stage 3)
+- **A double click, a double Enter or a retry can no longer post a sale, a purchase, a return or a stock adjustment twice.** Until now only expenses and payments had this protection. The sale (Save), purchase (Save / F9 / Ctrl+S), sale return, purchase return and stock adjustment screens now send a request id that stays the same until the document is saved, and the database posts at most once per id: sending it again returns the first record and moves no stock, due or cash. The screens also ignore a second click while the first save is still running. This matters most for returns and adjustments, where a second click used to give back or write off the goods twice. No database migration (the table from 0003 is reused).
+
+### Added
+- **Bulk actions on the Products page.** Managers and the owner can tick many products (or all products in the current search and category, with the header box; Shift-click ticks a range) and then **Archive**, **Restore** or **Delete permanently** them in one go, up to 2,000 at a time. Everything is one transaction, all or nothing, with one audit entry per action. The shared table gained optional row selection; other pages are unchanged.
+- **Permanent delete, with safeguards.** Only a product that nothing refers to can be deleted (no sales, purchases, returns, stock or opening stock, batches or adjustments); its packs, barcodes and company links go with it and its SKU and barcodes become free again. A product with history is archived instead, and the confirmation shows beforehand how many can and cannot be deleted, and why. DELETE must be typed.
+- No database migration and no change to the single-product Archive button.
+
+### Added (DSR, stage 2)
+- **Funds.** A new **Funds** tab on the Money page lets the Owner add a fund such as DSR. A fund is a label on cash movements, not a second ledger: the money stays in the accounts and is counted once. An expense can be classified to a fund (`fundId` on `exp:save`; the picker on the expense form comes with the DSR expense stage), a void reverses inside the same fund, and a movement can never change fund afterwards (a database trigger). The cash book shows a Fund column once a movement has one. Existing movements are untouched (no fund). Migration 0004 is additive.
+- **Integrity check I13:** a reversal sits in the same fund as the row it reverses, and only expenses may carry a fund.
+
+### Fixed
+- **Side panels (Add product, Add customer, Add supplier and the other editors) now start their text on the left.** The panel's outer layer carries the class `right` (it sits on the right edge), and a global rule `.right { text-align: right }` leaked into every label, hint and paragraph inside. The panel now sets `text-align: start`.
+- **Panels and dialogs now open above the top bar and the calculator/games handle.** They were drawn inside the page, so the top bar (Help, language, account) showed on top of the panel's title row. Modal and Drawer are now rendered on the page body.
+- **A double click or a retry can no longer post an expense or a payment twice.** Expense, customer receipt, supplier payment and employee salary/advance forms now send a request id that stays the same until the form is saved; sending it again returns the first record and posts nothing new. The employee pay form was also missing its "busy" guard against double clicks. Voids were already applied once; the database now refuses a second reversal of any stock, ledger or cash row. Migration 0003 is additive (a small table and three indexes).
+
+### Changed
+- **New colour palette across the whole app.** Deep Navy `#0F172A` is the primary colour (buttons, sidebar, headings), Teal `#14B8A6` marks what you can use or have selected (tabs, switches, selected rows, charts, focus), Gold `#D4AF37` is the highlight (current menu item, stat cards, demo banner, logo), and Light Gray `#F1F5F9` is the page background. Cards and fields are white. Red now means danger only: errors, delete, and money that is owed.
+- Invoices, receipts and printed reports follow the palette (navy text and table header, teal rule under the shop name). The app icon, window background and the games in the dock use it too.
+- **Animated 3D sign-in screen.** The PIN/password screen now has a moving 3D backdrop: a perspective grid running toward you, slowly turning glass cubes in teal and gold, and soft glows. The mouse tilts the scene slightly. It follows the Animations setting (Reduced and Off keep a still picture), is thinner on a slow GPU (Lite) and is hidden in High contrast mode.
+- Text on teal or gold is always navy, and teal used as text is a darker teal, because white on teal is only 2.5:1. A new test (`palette.test.ts`) keeps every text and border pair at WCAG AA.
+
+### Removed
+- Licensing. There is no trial, licence key, machine code or read-only lock any more, and the Licence tab and banner are gone. Settings now has a **Security** tab that holds Change PIN/password.
+- The vendor tool `pnpm keygen` and `docs/LICENSING.md`.
+- No database migration. Existing data opens unchanged; an old shop that was read-only because its trial ended is writable again.
+
 ## [1.1.1] - 2026-10-08
 
 A look-and-feel release: lighter type, a softer 3D design, the right names, and a utility dock. No change to how sales, purchases, stock or money are recorded, and no database change.

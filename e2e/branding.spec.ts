@@ -36,9 +36,9 @@ for (const lang of ['en', 'bn'] as const) {
     const brand = page.locator('.sidebar').getByTestId('trader-name');
     await expect(brand).toHaveText(lang === 'bn' ? 'রহিম ট্রেডার্স' : 'Rahim Traders');
     await expect(page.locator('.sidebar').getByTestId('trader-mono')).toHaveText(lang === 'bn' ? 'র' : 'R');
-    // the footer names the product (one word) with its version, and the maker under it; the old wording is gone
+    // the footer names the product (one word) and the maker under it, with no version; the old wording is gone
     const foot = page.locator('.sidebar').getByTestId('product-footer');
-    await expect(foot.getByTestId('footer-product')).toHaveText(/^PetraDMS · v[\d০-৯.]+$/);
+    await expect(foot.getByTestId('footer-product')).toHaveText('PetraDMS');
     await expect(foot.getByTestId('made-by')).toHaveText(lang === 'bn' ? 'প্রস্তুতকারক: Petra' : 'Made by Petra');
     await expect(page.locator('body')).not.toContainText('Powered by');
     await expect(page.locator('body')).not.toContainText('Petra DMS');
@@ -51,8 +51,8 @@ for (const lang of ['en', 'bn'] as const) {
     await page.getByTestId('account').click();
     await page.getByTestId('signout').click();
     await expect(page.getByTestId('login-brand')).toContainText(lang === 'bn' ? 'রহিম ট্রেডার্স' : 'Rahim Traders');
-    await expect(page.getByTestId('product-footer')).toContainText('PetraDMS');
-    await expect(page.getByTestId('made-by')).toContainText('Petra');
+    await expect(page.getByTestId('footer-product')).toHaveText('PetraDMS');
+    await expect(page.getByTestId('made-by')).toHaveText(lang === 'bn' ? 'প্রস্তুতকারক: Petra' : 'Made by Petra');
     // Help > About names the builder
     expect(consoleErrors).toEqual([]);
     await app.close();

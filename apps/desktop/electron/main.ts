@@ -2,9 +2,8 @@ import { app, BrowserWindow, dialog, ipcMain, screen, session, shell } from 'ele
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
-import { execFileSync } from 'node:child_process';
 import {
-  Dispatcher, PRODUCT_PUBLIC_KEY_PEM, healthInfo, loadMigrations, machineHash, migrate, openDatabase, registerCoreServices, registerCatalogServices, registerSalesServices, registerMoneyServices, registerReportServices, registerToolServices, registerSafetyServices, registerDataServices, AutoBackup, createBackup, currentVersion, knownBackupDirs, latestVersion, makeCtx, recordRecovery, recoverIfCorrupt, swapInDatabase, closeDatabase, type Db, type Host
+  Dispatcher, healthInfo, loadMigrations, migrate, openDatabase, registerCoreServices, registerCatalogServices, registerSalesServices, registerMoneyServices, registerReportServices, registerToolServices, registerSafetyServices, registerDataServices, AutoBackup, createBackup, currentVersion, knownBackupDirs, latestVersion, makeCtx, recordRecovery, recoverIfCorrupt, swapInDatabase, closeDatabase, type Db, type Host
 } from '@petra/db';
 import { ipcContract, PetraError, type PrintFormat } from '@petra/core';
 
@@ -62,21 +61,6 @@ function checkAndRecover(root: string): ReturnType<typeof recoverIfCorrupt> {
   return recoverIfCorrupt(root, knownBackupDirs(root), latestVersion(loadMigrations(migrationsDir())), new Date());
 }
 
-/** The Windows MachineGuid, written when Windows was installed. Null elsewhere or if it cannot be read. */
-function windowsMachineGuid(): string | null {
-  if (process.platform !== 'win32') return null;
-  try {
-    const out = execFileSync('reg', ['query', 'HKLM\\SOFTWARE\\Microsoft\\Cryptography', '/v', 'MachineGuid'], { encoding: 'utf8', timeout: 5000, windowsHide: true });
-    return /MachineGuid\s+REG_SZ\s+([0-9a-fA-F-]{16,64})/.exec(out)?.[1] ?? null;
-  } catch {
-    return null;
-  }
-}
-
-function machineFacts() {
-  return { hostname: os.hostname(), cpuModel: os.cpus()[0]?.model ?? 'cpu', platform: process.platform, arch: process.arch, machineId: windowsMachineGuid() };
-}
-
 function recommendedDataDir(): string {
   if (process.platform === 'win32') {
     for (const letter of 'DEFGH') {
@@ -90,7 +74,6 @@ function recommendedDataDir(): string {
   }
   return defaultRoot;
 }
-
 
 // ===== Printing (plan 11.1): HTML templates rendered in a hidden window, printed or saved as PDF =====
 let cachedFontCss: string | null = null;
@@ -254,11 +237,6 @@ const host: Host = {
     dataRoot = root;
     db = openAndMigrate(root);
     dispatcher?.swapDb(db);
-  },
-  async pickLicenceFile() {
-    const r = await dialog.showOpenDialog(mainWindow ?? undefined!, { properties: ['openFile'], filters: [{ name: 'Petra licence', extensions: ['petra', 'txt'] }] });
-    const f = r.canceled ? null : (r.filePaths[0] ?? null);
-    return f ? fs.readFileSync(f, 'utf8').trim() : null;
   }
 };
 
@@ -289,7 +267,7 @@ function createWindow(): void {
     minWidth: 1024,
     minHeight: 640,
     show: false,
-    backgroundColor: '#F6F1E7',
+    backgroundColor: '#F1F5F9',
     title: 'PetraDMS',
     icon: app.isPackaged ? undefined : path.join(__dirname, '..', 'build', 'icon.png'),
     autoHideMenuBar: true,
@@ -339,9 +317,7 @@ if (!app.requestSingleInstanceLock()) {
       app.exit(1);
       return;
     }
-    // Tests may substitute the licence key; a packaged build always uses the embedded vendor key.
-    const publicKeyPem = !app.isPackaged && process.env.PETRA_LICENCE_PUBLIC_KEY ? process.env.PETRA_LICENCE_PUBLIC_KEY.replace(/\\n/g, '\n') : PRODUCT_PUBLIC_KEY_PEM;
-    dispatcher = new Dispatcher(db, { publicKeyPem, machine: process.env.PETRA_MACHINE_HASH && !app.isPackaged ? process.env.PETRA_MACHINE_HASH : machineHash(machineFacts()) }, host);
+    dispatcher = new Dispatcher(db, host);
     registerCoreServices(dispatcher);
     registerCatalogServices(dispatcher);
     registerSalesServices(dispatcher);

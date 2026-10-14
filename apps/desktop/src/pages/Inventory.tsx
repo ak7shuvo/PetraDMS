@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useRequest } from '../ui/requestId';
 import type { AdjustmentListItem, BatchDto, ProductDto, StockMovementRow } from '@petra/core';
 import { call, errorText } from '../api';
 import { useI18n } from '../i18n';
@@ -191,17 +192,23 @@ function AdjustModal({ open, onClose, onDone }: { open: boolean; onClose: () => 
   const [expiry, setExpiry] = useState<string | null>(null);
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const req = useRequest();
   const incoming = kind === 'opening' || kind === 'adjust_in';
   const needsExpiry = incoming && product?.trackExpiry === true;
   const valid = product !== null && qty !== null && qty > 0 && date !== null && (!needsExpiry || expiry !== null) && reason.trim() !== '';
-  const save = async () => {
-    if (!valid || !product) return;
+  const save = (): Promise<void> => {
+    if (!valid || !product) return Promise.resolve();
+    return req.guard(saveOnce).then(() => undefined);
+  };
+  const saveOnce = async () => {
+    if (!product) return;
     try {
       await call('stock:adjust', {
-        productId: product.id, kind, baseQty: qty!, date: date!, reason,
+        productId: product.id, kind, baseQty: qty!, date: date!, reason, requestId: req.id(),
         ...(incoming && value !== null ? { value } : {}),
         ...(needsExpiry ? { batch: { batchNo, expiry } } : {})
       });
+      req.renew();
       toast.ok(t('inv.adjusted'));
       setProduct(null); setQty(null); setValue(null); setReason(''); setError(null);
       onDone();

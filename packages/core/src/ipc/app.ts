@@ -24,25 +24,10 @@ export interface SessionDto {
   role: Role;
 }
 
-export type LicenceState = 'trial' | 'licensed' | 'expired' | 'clock_rollback';
-export interface LicenceStatus {
-  state: LicenceState;
-  readOnly: boolean;
-  /** Days left in the trial or until the licence expires (null = no expiry). */
-  daysLeft: number | null;
-  customer: string;
-  edition: string;
-  expiresAt: string | null;
-  /** Set when an installed licence file was rejected (bad signature, wrong machine). */
-  problem: 'none' | 'tampered' | 'wrong_machine' | 'malformed';
-  machineCode: string;
-}
-
 export interface AppStatus {
   appVersion: string;
   needsSetup: boolean;
   session: SessionDto | null;
-  licence: LicenceStatus;
   settings: Settings;
   profile: BusinessProfile;
   businessDate: string;
@@ -115,9 +100,5 @@ export const appChannels = {
   'settings:get': ch<Settings>()(none),
   'settings:save': ch<Settings>()(settingsSchema.partial(), { access: 'owner', write: true }),
   'profile:get': ch<BusinessProfile>()(none),
-  'profile:save': ch<BusinessProfile>()(businessProfileSchema, { access: 'owner', write: true }),
-
-  'licence:status': ch<LicenceStatus>()(none, { access: 'public' }),
-  'licence:install': ch<LicenceStatus>()(z.object({ blob: z.string().min(20).max(4000) }), { access: 'owner' }),
-  'licence:pickFile': ch<{ blob: string | null }>()(none, { access: 'owner' })
+  'profile:save': ch<BusinessProfile>()(businessProfileSchema, { access: 'owner', write: true })
 };

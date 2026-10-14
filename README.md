@@ -17,7 +17,7 @@ The full design is in [`docs/PetraDMS_Product_Architecture_Plan_v2.md`](docs/Pet
 2. When the run is green, open it and download the artifact **PetraDMS-Windows-x64** (a ZIP). Inside are `PetraDMS-Setup-<version>.exe`, `SHA256SUMS.txt`, `VERSION.txt` and `RELEASE-NOTES.md`.
 3. Every push to `main` also builds the same artifact (Actions, **CI**). For a public download page, publish a release with `git tag vX.Y.Z && git push origin vX.Y.Z`; the installer then appears on the **Releases** page.
 
-Full steps, what the pipeline checks, and code signing: [`docs/RELEASING.md`](docs/RELEASING.md). Installing and first use: [`docs/INSTALL.md`](docs/INSTALL.md). Licensing: [`docs/LICENSING.md`](docs/LICENSING.md). The installer is not code-signed, so Windows SmartScreen shows a warning the first time: choose **More info**, then **Run anyway**.
+Full steps, what the pipeline checks, and code signing: [`docs/RELEASING.md`](docs/RELEASING.md). Installing and first use: [`docs/INSTALL.md`](docs/INSTALL.md). The installer is not code-signed, so Windows SmartScreen shows a warning the first time: choose **More info**, then **Run anyway**.
 
 ## Build and run it yourself
 
@@ -36,7 +36,6 @@ pnpm dist:win            # Windows only: builds apps/desktop/release/PetraDMS-Se
 pnpm dist:dir            # any OS: the unpacked app, same configuration, no installer
 pnpm verify:release      # verify + build the package + install, first run, upgrade, offline and uninstall checks
 pnpm seed:perf           # a big sample shop in ./.perf-data (10,000 products, 5,000 customers)
-pnpm keygen --help       # vendor tool that issues licence files
 ```
 
 On Linux the end-to-end tests need a display: `xvfb-run -a pnpm exec playwright test`.
@@ -55,10 +54,6 @@ git tag vX.Y.Z && git push origin vX.Y.Z
 
 The **Windows Release** workflow runs the tests, builds and verifies the installer, uploads the artifact `PetraDMS-Windows-x64` and creates the GitHub Release. The tag must equal the version in `apps/desktop/package.json` or the workflow stops. **Run workflow** on that workflow builds the installer without publishing a release. Code signing: add the secrets `WINDOWS_CSC_LINK` and `WINDOWS_CSC_PASSWORD` (see `docs/RELEASING.md`).
 
-## Licensing
-
-A new install is a 30-day trial. After that PetraDMS turns read-only (viewing, printing, export and backup still work) until a licence file (`.petra`) tied to the computer's Machine Code is installed under Settings, Licence. Licences are Ed25519-signed and checked offline. The vendor private key (`.pem`) is never in this repository; only the public key is built in. How it works and how to issue licences: [`docs/LICENSING.md`](docs/LICENSING.md).
-
 ## Push to GitHub
 
 ```bash
@@ -75,9 +70,8 @@ git push -u origin main
 apps/desktop/    electron/ (main, preload, services)   src/ (React screens, i18n, styles)   build/ (icons)   electron-builder.yml
 packages/core/   money, units, costing, invoice, aging, importer, IPC contract (zod)
 packages/db/     migrations/, posting engine, integrity checker, services, fixtures/ (released-schema databases)
-tools/           keygen/, seed/, check-integrity/, icons/, verify-release.ts
+tools/           seed/, check-integrity/, icons/, verify-release.ts
 e2e/             Playwright tests that drive the real app
 docs/            plan, state, decisions, user manuals (English and Bangla), install guide
 .github/workflows/  ci.yml, release-windows.yml
 ```
-# PetraDMS

@@ -36,6 +36,8 @@ export function CashbookTab() {
           { key: 'd', header: t('word.date'), render: (r) => date(r.date) },
           { key: 's', header: t('word.type'), render: (r) => <span>{t(`cash.source.${r.source}`)} {r.reversal && <Badge tone="warn">{t('state.void')}</Badge>} {r.reversed && <Badge tone="default">{t('cash.cancelled')}</Badge>} <small className="muted">{r.refNo}</small></span> },
           { key: 'a', header: t('pay.account'), render: (r) => r.accountName },
+          // the fund column only appears once some movement in view belongs to a fund
+          ...((b?.rows ?? []).some((r) => r.fundCode) ? [{ key: 'f', header: t('fund.col'), render: (r: { fundCode: string | null }) => (r.fundCode ? <Badge>{r.fundCode}</Badge> : '') }] : []),
           { key: 'n', header: t('word.note'), render: (r) => <small className="muted">{r.note}</small> },
           { key: 'i', header: t('cash.in'), right: true, render: (r) => (r.amount > 0 ? money(r.amount, { fixed: true }) : '') },
           { key: 'o', header: t('cash.out'), right: true, render: (r) => (r.amount < 0 ? money(-r.amount, { fixed: true }) : '') },

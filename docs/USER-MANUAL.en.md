@@ -13,13 +13,11 @@ The first time you open PetraDMS a short wizard asks for the language, your busi
 
 Your business name is shown at the top of every screen and on every printout; the bottom of the menu shows the product name, PetraDMS, with its version, and "Made by Petra" under it. The Owner can add a shop **logo** in **Settings** (a PNG, JPEG or WebP picture under 256 KB); it then appears on invoices and receipts.
 
-You get a free trial. After it ends the app becomes read-only until a licence file is installed (see section 14). You never lose data.
-
 ## 2. Signing in, roles and modes
 
 Each person signs in with their own name and PIN. There are three roles.
 
-- **Owner**: everything, including Settings, Backup, the activity log and licence.
+- **Owner**: everything, including Settings, Backup and the activity log.
 - **Manager**: everything about money and stock, but not Settings, Backup or the activity log.
 - **Staff**: selling, customers, stock look-up and small tasks. Staff do not see costs, profit or cash.
 
@@ -60,6 +58,8 @@ A sale is saved all at once. If something goes wrong, nothing is half-saved.
 - **Inventory** shows stock on hand in boxes and pieces (for example "12 Box 5 pcs") and its value, products that are low (below their reorder level), and batches that are near expiry or expired.
 - **Adjustments**: use these for damage, expired goods, internal use, a stock count correction or opening stock. Every adjustment needs a reason, except opening stock.
 - **Products**: each product has a SKU, names in English and Bangla, a category and brand, a base unit, packs (press **Add box** and type how many pieces are in it; each pack has its own prices and barcode), the units it is sold and bought in (**Sell in**, **Buy in**), three prices, a minimum price, a reorder level and barcodes. Use **Print labels** on the Products page to print shelf and barcode labels.
+- **Changing many products at once**: managers and the owner see a tick box beside every product. Tick the products you want, or tick the box in the header to take every product in the current search and category (not only the page you can see). Hold **Shift** while ticking to take a whole range. A bar appears above the list with **Archive**, **Restore** (when archived products are shown), **Delete permanently** and **Clear selection**. A confirmation shows how many products are affected, and when the action is done the selection is cleared.
+- **Archive or delete?** Archiving hides a product from selling but keeps all its history, and its SKU and barcodes stay reserved. **Delete permanently** removes a product for good, and is only possible for one that nothing refers to, such as a product imported by mistake: it must have no sales, purchases, returns, stock or opening stock, and no batches or adjustments. Before you confirm, the app shows how many of the selected products can be deleted and how many cannot, and why. You must type **DELETE** to go on. Products that have history are never deleted, they are archived instead, so old invoices and reports stay correct. A deleted product's SKU and barcodes become free, so the same SKU can be imported again. Up to 2,000 products can be changed in one go, and the whole action is all or nothing.
 - The cost of stock is a weighted average, so profit reports are correct even when you buy at different prices.
 
 ## 6. Customers, suppliers and payments
@@ -75,6 +75,7 @@ A sale is saved all at once. If something goes wrong, nothing is half-saved.
 - **Expenses**: record each cost with a category (rent, transport, electricity and so on), the amount and the account it was paid from.
 - **Employees and salary**: add employees with a base salary. Each month create the salary sheet, adjust it, then pay. Advances are tracked and taken off the next salary.
 - **Accounts**: cash in the drawer, bank, bKash and Nagad. The **cash book** shows every movement in and out of each account. You can move money between accounts.
+- **Funds**: the Owner can add a fund such as **DSR** on the **Funds** tab. A fund holds no money of its own. It only labels cash movements, so the money stays in your accounts and is never counted twice. A movement keeps its fund for good: if one is wrong, void it and enter it again. A fund can be hidden, which stops new entries but keeps the old ones. In the cash book a **Fund** column appears once a movement has one.
 - **Day closing**: at the end of the day count the cash and enter it. The app shows the expected cash and any difference, then locks that day. Closing the day protects your records from later changes. The business day rolls over at the hour set in Settings (4 am by default), so a late-night sale still belongs to the right day.
 
 ## 8. Reports and the dashboard
@@ -130,7 +131,7 @@ You are never locked in. Open **Settings**, then **Import, export and demo**, th
 - **raw**: every table exactly as stored, one CSV each, with amounts in poisha (100 poisha is 1 taka).
 - **database**: a full backup you can restore on any PetraDMS.
 
-Passwords, PINs and the licence are never included. Export still works after the trial or licence expires.
+Passwords and PINs are never included.
 
 ## 13. Demo mode
 
@@ -140,19 +141,11 @@ Demo mode fills an **empty** shop with sample Bangladeshi products, customers, s
 - Before loading, the app saves a copy of your empty shop.
 - To finish, press **Clear demo data**, type **DEMO**, and confirm. Everything entered during the demo is removed, the shop returns exactly as it was, and you sign in again. Do not enter real records while demo mode is on.
 
-## 14. Licence and trial
-
-- The trial lasts a number of days shown in the banner at the top.
-- When it ends the app is **read-only**: you can look at everything, print, export and back up, but not enter new records.
-- To buy a licence, send the **machine code** shown in **Settings**, then **Licence**, to your vendor. They send back a licence file. Press **Choose licence file** and select it.
-- A licence belongs to one PC. If you change PC, ask the vendor for a new one.
-- If the PC clock is set backwards, the app notices and asks you to correct it.
-
-## 15. Privacy
+## 14. Privacy
 
 PetraDMS never connects to the internet. It sends nothing, collects nothing and has no accounts or cloud. Your data is in the data folder on your PC. The **Support** tab creates a file you can send by hand if you need help; it holds versions, settings, counts and logs, and no customer, product, price or user data.
 
-## 16. When something goes wrong
+## 15. When something goes wrong
 
 - **A message appears.** Read it: it says what happened and what to do. Nothing technical is hidden from the log.
 - **The screen looks stuck.** Close the app and open it again. Your saved records are not affected.

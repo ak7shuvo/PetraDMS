@@ -16,6 +16,10 @@ Everything runs in GitHub Actions. You do not need a Windows computer, Node.js o
 
 The **CI** workflow (runs on every push to `main` and on pull requests) builds the same artifact, so the latest CI run also has one.
 
+## Safety net: a quick installer without the tests
+
+If **Windows Release** fails on something unrelated to the program itself (for example a flaky Windows test), choose **Windows Installer (quick, no tests)** in the same **Actions** list and press **Run workflow**. It only builds `PetraDMS-Setup-<version>.exe` (artifact **PetraDMS-Windows-x64-quick**, with a checksum, about 10 minutes). It runs no tests and no install check, so install it on a Windows computer and try a sale, a purchase and a backup by hand before it goes to a customer. Use the full **Windows Release** for anything you hand over whenever it is green.
+
 ## Publish a release (public download page)
 
 1. Set the new version in `apps/desktop/package.json` (for example `1.0.1`).
@@ -39,7 +43,7 @@ The **CI** workflow (runs on every push to `main` and on pull requests) builds t
 4. starts the installed program: a fresh shop opens (SQLite in WAL mode, every table, integrity check, empty), and the released version-1 database opens with every row;
 5. confirms the program makes no network request and that an outside `fetch` fails;
 6. first run in the default data folder (`%LOCALAPPDATA%\PetraDMS`): the shop is created there and nothing is written inside the install folder; sets up a shop, enters a customer, supplier, product, purchase, sale and expense, closes and reopens it;
-7. builds a second, newer version and installs it over the first: every record, the stock, the settings and the licence state are still there;
+7. builds a second, newer version and installs it over the first: every record, the stock and the settings are still there;
 8. uninstalls silently: the program is removed, the shop's data folder is not;
 9. records the signature state, and uploads the artifact.
 
@@ -66,10 +70,6 @@ To remove the warning over time, buy a code-signing certificate (an OV or EV cer
 | `WINDOWS_CSC_PASSWORD` | the certificate's password |
 
 Nothing else changes. With the secrets present the workflow signs the installer and the program, and then **fails unless the signature is valid**. Without them it builds an unsigned installer and says so in `VERSION.txt`. The certificate and its password are never in the repository.
-
-## Licence signing key (different thing)
-
-The `.pem` file is the vendor's private licence key, used only by `pnpm keygen` to issue customer licences. It is not used by the build and must not be added to GitHub. See `docs/LICENSING.md`.
 
 ## If a run fails
 

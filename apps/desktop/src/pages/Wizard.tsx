@@ -89,7 +89,6 @@ export function Wizard() {
               <>
                 <p style={{ margin: 0 }}>{t('wiz.languageBody')}</p>
                 <Segmented label={t('wiz.language')} value={lang} onChange={(v) => setUi({ lang: v })} options={[{ value: 'bn', label: 'বাংলা' }, { value: 'en', label: 'English' }]} />
-                <p style={{ margin: 0 }}>{t('wiz.trial')}</p>
               </>
             )}
             {step === 2 && (

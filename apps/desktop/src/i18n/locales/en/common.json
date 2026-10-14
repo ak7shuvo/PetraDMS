@@ -122,7 +122,6 @@
   "err.DUPLICATE_INVOICE": "This company invoice number was already entered ({docNo}). Give a reason to enter it again.",
   "err.OVER_PAYMENT": "The paid amount is more than the total.",
   "err.PERMISSION": "Your role cannot do this. Ask the Owner or a manager.",
-  "err.READ_ONLY": "The licence has expired, so PetraDMS is read-only. You can still view, print, export and back up. Enter a licence key in Settings to continue posting.",
   "err.DUPLICATE": "{what} already exists.",
   "err.IN_USE": "This record is in use and cannot be removed. Archive it instead.",
   "err.REASON_REQUIRED": "Please write a reason.",
@@ -185,5 +184,7 @@
   "err.DEMO_UNAVAILABLE": "Demo data can only be loaded into an empty shop, and can only be cleared while demo mode is on.",
   "brand.madeBy": "Made by {company}",
   "sg.type": "Type and colour",
-  "sg.typeSample": "Company invoice: 5 Box + 6 pcs at ৳1,200 a box"
+  "sg.typeSample": "Company invoice: 5 Box + 6 pcs at ৳1,200 a box",
+  "table.selectAll": "Select all {n} rows",
+  "table.selectRow": "Select {name}"
 }

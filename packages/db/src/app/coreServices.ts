@@ -6,7 +6,6 @@ import { audit } from '../audit';
 import { getRaw, loadSettings, saveSetting } from '../settings';
 import { seedDefaults } from '../masters';
 import { addUser, approve, changeSecret, countUsers, createOwner, listLoginUsers, listUsers, login, recoverOwner, sessionFor, updateUser } from './auth';
-import { installLicence, licenceStatus } from './licence';
 import type { Dispatcher } from './dispatcher';
 
 export function loadProfile(ctx: Ctx): BusinessProfile {
@@ -70,7 +69,6 @@ export function appStatus(d: Dispatcher): AppStatus {
     appVersion: d.host.appVersion,
     needsSetup: countUsers(ctx) === 0,
     session: d.session,
-    licence: licenceStatus(ctx, d.env),
     settings,
     profile: loadProfile(ctx),
     logo: loadLogo(ctx),
@@ -95,7 +93,7 @@ export function saveSettings(ctx: Ctx, patch: SettingsPatch): Settings {
   return loadSettings(ctx.db);
 }
 
-/** First-run setup: only allowed while no user exists. Seeds money accounts, expense categories and the licence row. */
+/** First-run setup: only allowed while no user exists. Seeds money accounts and expense categories. */
 export function completeSetup(d: Dispatcher, input: { language: 'bn' | 'en'; business: BusinessProfile; owner: { displayName: string; username: string; kind: 'pin' | 'password'; secret: string }; uiMode: 'simple' | 'full' }) {
   const ctx = d.ctx();
   if (countUsers(ctx) > 0) throw new PetraError('DUPLICATE', 'setup already completed', { what: 'setup' });
@@ -109,7 +107,6 @@ export function completeSetup(d: Dispatcher, input: { language: 'bn' | 'en'; bus
     saveSetting(octx, 'bnDigits', input.language === 'bn');
     saveSetting(octx, 'uiMode', input.uiMode);
     saveSetting(octx, 'dataDirRecommended', d.host.recommendedDataDir());
-    licenceStatus(ctx, d.env); // stamps the trial start
     return o;
   });
   d.session = sessionFor(ctx, created.id);
@@ -183,7 +180,4 @@ export function registerCoreServices(d: Dispatcher): void {
   d.register('profile:save', ({ ctx, input }) => saveProfile(ctx, input));
   d.register('profile:logo', ({ ctx, input }) => ({ logo: saveLogo(ctx, input.dataUrl) }));
 
-  d.register('licence:status', ({ ctx, env }) => licenceStatus(ctx, env));
-  d.register('licence:install', ({ ctx, env, input }) => installLicence(ctx, env, input.blob));
-  d.register('licence:pickFile', async ({ host }) => ({ blob: await host.pickLicenceFile() }));
 }

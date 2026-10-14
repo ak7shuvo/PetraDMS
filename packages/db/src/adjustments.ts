@@ -5,6 +5,7 @@ import { nextDocNo } from './settings';
 import { averageCostFor, loadProduct, stockIn, stockOut, type BatchSpec } from './stock';
 import { reverseDocument } from './reverse';
 import { audit } from './audit';
+import { postOnce } from './idempotency';
 
 export type AdjustKind = 'opening' | 'adjust_in' | 'adjust_out' | 'damage' | 'expired' | 'internal_use';
 
@@ -20,6 +21,8 @@ export interface AdjustmentInput {
   batch?: BatchSpec;
   /** For outgoing kinds on expiry products: take from this batch first. */
   batchId?: number | null;
+  /** Client-chosen id: the same id twice returns the first adjustment and posts nothing new. */
+  requestId?: string;
 }
 
 /**
@@ -27,6 +30,11 @@ export interface AdjustmentInput {
  * Losses are not cash: the profit report reads them straight from the stock movements as "Stock loss".
  */
 export function postStockAdjustment(ctx: Ctx, input: AdjustmentInput): { id: number; docNo: string; value: number } {
+  const { requestId, ...data } = input;
+  return postOnce(ctx, 'stock_adjust', requestId, data, () => postStockAdjustmentOnce(ctx, input));
+}
+
+function postStockAdjustmentOnce(ctx: Ctx, input: AdjustmentInput): { id: number; docNo: string; value: number } {
   if (!Number.isSafeInteger(input.baseQty) || input.baseQty <= 0) throw new PetraError('INVALID_INPUT', 'quantity must be a positive whole number', { field: 'qty' });
   if ((input.kind !== 'opening') && !(input.reason ?? '').trim() && input.kind !== 'adjust_in') {
     throw new PetraError('REASON_REQUIRED', 'a reason is required');

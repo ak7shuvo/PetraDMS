@@ -34,7 +34,7 @@ const RAW_MONEY_NOTE = 'Amounts in the raw/ files are in poisha (1 taka = 100 po
 
 /**
  * "Export everything" (plan 11.3): readable spreadsheets, every table as it is stored, and a full database backup, so the
- * shop is never locked in. Passwords, PINs and the licence are never included.
+ * shop is never locked in. Passwords and PINs are never included.
  */
 export function exportEverything(ctx: Ctx, host: Host): ExportAllResult {
   const now = new Date(ctx.now());
@@ -47,7 +47,7 @@ export function exportEverything(ctx: Ctx, host: Host): ExportAllResult {
     'spreadsheets/  Open these in Excel. Amounts are in taka.',
     'raw/           Every table exactly as stored, one CSV each. Amounts are in poisha.',
     'database/      A full PetraDMS backup (.petrabak). Restore it from the Backup page to get everything back.',
-    '', RAW_MONEY_NOTE, 'Passwords, PINs and the licence file are not included.', ''
+    '', RAW_MONEY_NOTE, 'Passwords and PINs are not included.', ''
   ].join('\r\n'));
 
   add('spreadsheets/products.csv', table(ctx,

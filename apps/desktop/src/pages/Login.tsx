@@ -4,7 +4,8 @@ import { call, errorText } from '../api';
 import { useI18n } from '../i18n';
 import { useApp } from '../store/app';
 import { useUi } from '../store/ui';
-import { Button, ProductFooter, TraderBrand, Card, Field, Input, Modal, Segmented, SecretPicker, emptySecret, secretValid, RecoverySheet, Toasts, toast, type SecretValue } from '../ui';
+import petraLogo from '../assets/brand/petra-logo.png';
+import { Button, ProductFooter, TraderBrand, Field, Input, Modal, Segmented, SecretPicker, emptySecret, secretValid, RecoverySheet, Toasts, Scene3D, toast, type SecretValue } from '../ui';
 
 function Keypad({ onDigit, onBack, disabled }: { onDigit: (d: string) => void; onBack: () => void; disabled?: boolean }) {
   const { n } = useI18n();
@@ -75,13 +76,16 @@ export function Login() {
   const lockedMsg = picked?.lockedUntil ? t('auth.lockedUntil', { time: n(new Date(picked.lockedUntil).toLocaleTimeString(lang === 'bn' ? 'bn-BD' : 'en-GB', { hour: '2-digit', minute: '2-digit' })) }) : null;
 
   return (
-    <div className="center-screen">
-      <div className="auth-card">
-        <div className="row" style={{ justifyContent: 'space-between', marginBottom: 16 }}>
-          <TraderBrand testId="login-brand" />
-          <Segmented label={t('sg.language')} value={lang} onChange={(v) => setUi({ lang: v })} options={[{ value: 'bn', label: 'বাংলা' }, { value: 'en', label: 'EN' }]} />
-        </div>
-        <Card title={picked ? picked.displayName : t('auth.whoIsThis')}>
+    <div className="center-screen has-scene login-screen">
+      <Scene3D />
+      <div className="login-top">
+        <Segmented label={t('sg.language')} value={lang} onChange={(v) => setUi({ lang: v })} options={[{ value: 'bn', label: 'বাংলা' }, { value: 'en', label: 'EN' }]} />
+      </div>
+      <main className="login-glass" aria-labelledby="login-title">
+        <img className="login-logo" src={petraLogo} width={1280} height={553} alt="PETRA Software Solutions" data-testid="login-logo" draggable={false} />
+        <TraderBrand testId="login-brand" />
+        <h2 className="login-title" id="login-title">{picked ? picked.displayName : t('auth.whoIsThis')}</h2>
+        <div className="login-body">
           {!picked && (
             <div className="grid" style={{ gap: 8 }} data-testid="user-list">
               {(users ?? []).map((u) => (
@@ -97,8 +101,8 @@ export function Login() {
             </div>
           )}
           {picked && (
-            <div className="grid" style={{ gap: 12 }}>
-              <p style={{ margin: 0 }}>{picked.secretKind === 'pin' ? t('auth.enterPin') : t('auth.enterPassword')}</p>
+            <>
+              <p className="login-hint">{picked.secretKind === 'pin' ? t('auth.enterPin') : t('auth.enterPassword')}</p>
               {picked.secretKind === 'pin' ? (
                 <>
                   <div className="pin-dots" data-testid="pin-dots" aria-label={`${secret.length}`}>
@@ -118,16 +122,16 @@ export function Login() {
                 </form>
               )}
               {(error || lockedMsg) && <div className="p-error shake" role="alert" data-testid="login-error">{lockedMsg ?? error}</div>}
-              <div className="row">
+              <div className="login-actions">
                 {users && users.length > 1 && <Button variant="ghost" onClick={() => { setPicked(null); setSecret(''); setError(null); }}>{t('act.back')}</Button>}
                 <span className="spacer" />
                 {picked.role === 'owner' && <Button variant="ghost" onClick={() => setRecover(true)} data-testid="forgot">{t('auth.forgot')}</Button>}
               </div>
-            </div>
+            </>
           )}
-        </Card>
+        </div>
         <ProductFooter />
-      </div>
+      </main>
       <Recover open={recover} onClose={() => setRecover(false)} onDone={() => { setRecover(false); void refresh(); }} />
       <Toasts />
     </div>

@@ -1,12 +1,8 @@
 import { test, expect } from '@playwright/test';
-import { generateKeyPairSync, sign as edSign, createHash } from 'node:crypto';
-import { DatabaseSync } from 'node:sqlite';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
 import { launch, completeSetup, signInPin } from './helpers';
-
-const DAY = 86_400_000;
 
 test('fresh install: wizard, recovery code, sign out, sign in, wrong PIN, lockout, recovery', async () => {
   const { app, page, dataDir, consoleErrors } = await launch();
@@ -17,7 +13,6 @@ test('fresh install: wizard, recovery code, sign out, sign in, wrong PIN, lockou
   await expect(page.getByTestId('account')).toContainText('Rahim');
   await page.locator('nav').getByRole('link', { name: 'Settings', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Settings', exact: true }).first()).toBeVisible();
-  await expect(page.getByTestId('licence-banner')).toContainText('30 days');
 
   // the database was created in the chosen folder with the owner and defaults
   expect(fs.existsSync(path.join(dataDir, 'data', 'petra.db'))).toBe(true);
@@ -101,58 +96,4 @@ test('staff cannot reach settings; roles are enforced in the main process', asyn
   const denied = await page.evaluate(() => window.petra.invoke('users:list').then(() => 'allowed', (e: Error) => e.message));
   expect(denied).toContain('PERMISSION');
   await app.close();
-});
-
-test('licence: trial banner, tampered key, key for another machine, valid key; expiry makes the app read-only', async () => {
-  const { publicKey, privateKey } = generateKeyPairSync('ed25519');
-  const pem = publicKey.export({ type: 'spki', format: 'pem' }).toString().replace(/\n/g, '\\n');
-  const machine = createHash('sha256').update('e2e-machine').digest('hex');
-  const env = { PETRA_LICENCE_PUBLIC_KEY: pem, PETRA_MACHINE_HASH: machine };
-  const issue = (m: string, expiresAt: string | null) => {
-    const body = Buffer.from(JSON.stringify({ v: 1, customer: 'Rahim Traders', edition: 'standard', machine: m, issuedAt: '2026-10-01', expiresAt }));
-    return `${body.toString('base64url')}.${edSign(null, body, privateKey).toString('base64url')}`;
-  };
-  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'petra-lic-'));
-  let run = await launch({ dataDir, env });
-  await completeSetup(run.page, { lang: 'en' });
-  await run.page.locator('nav').getByRole('link', { name: 'Settings', exact: true }).click();
-  await run.page.getByRole('tab', { name: 'Licence' }).click();
-  await expect(run.page.getByTestId('machine-code')).toHaveText(`${machine.slice(0, 16).toUpperCase().match(/.{4}/g)!.join('-')}`);
-  // the customer can copy the code to send it to the vendor
-  await run.page.getByTestId('machine-copy').click();
-  await expect.poll(() => run.app.evaluate(({ clipboard }) => clipboard.readText())).toBe(machine.slice(0, 16).toUpperCase().match(/.{4}/g)!.join('-'));
-  await expect(run.page.getByTestId('lic-days')).toContainText('30');
-
-  const good = issue(machine.slice(0, 16), null);
-  const [gBody, gSig] = good.split('.') as [string, string];
-  const forged = JSON.parse(Buffer.from(gBody, 'base64url').toString()) as { expiresAt: string | null };
-  forged.expiresAt = '2099-12-31';
-  const tampered = `${Buffer.from(JSON.stringify(forged)).toString('base64url')}.${gSig}`;
-  await run.page.getByTestId('lic-blob').fill(tampered);
-  await run.page.getByTestId('lic-install').click();
-  await expect(run.page.getByTestId('lic-error')).toContainText('not genuine');
-  await run.page.getByTestId('lic-blob').fill(issue(createHash('sha256').update('other').digest('hex').slice(0, 16), null));
-  await run.page.getByTestId('lic-install').click();
-  await expect(run.page.getByTestId('lic-error')).toContainText('different computer');
-  await run.page.getByTestId('lic-blob').fill(good);
-  await run.page.getByTestId('lic-install').click();
-  await expect(run.page.getByText('Licensed', { exact: true })).toBeVisible();
-  await expect(run.page.getByTestId('licence-banner')).toHaveCount(0);
-  await run.app.close();
-
-  // Expire the trial (new data folder, no licence): the app opens read-only and refuses writes with a clear message.
-  const dir2 = fs.mkdtempSync(path.join(os.tmpdir(), 'petra-exp-'));
-  run = await launch({ dataDir: dir2, env });
-  await completeSetup(run.page, { lang: 'en' });
-  await run.app.close();
-  const db = new DatabaseSync(path.join(dir2, 'data', 'petra.db'));
-  const old = new Date(Date.now() - 40 * DAY).toISOString();
-  db.prepare('UPDATE license_state SET trial_started_at = ?, last_seen_max = ?').run(old, old);
-  db.close();
-  run = await launch({ dataDir: dir2, env });
-  await signInPin(run.page, '4321', 'Rahim').catch(() => signInPin(run.page, '4321'));
-  await expect(run.page.getByTestId('licence-banner')).toContainText('Read-only');
-  const msg = await run.page.evaluate(() => window.petra.invoke('settings:save', { taxBp: 500 }).then(() => 'allowed', (e: Error) => e.message));
-  expect(msg).toContain('READ_ONLY');
-  await run.app.close();
 });

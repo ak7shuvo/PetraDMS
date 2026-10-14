@@ -2,6 +2,7 @@ import type { Dispatcher } from './dispatcher';
 import { archiveProduct, listLookups, listMoneyAccounts, listProducts, listSuppliers, partyLedger, saveLookup, saveProduct, saveSupplier } from './catalog';
 import { assertManager, getPurchase, listAdjustments, listBatches, listPurchases, stockAlerts, stockMovements } from './inbound';
 import { currentBusinessDate } from './coreServices';
+import { archiveProducts, deleteProducts, previewProductsDelete } from '../productsBulk';
 import { loadSettings } from '../settings';
 import { postPurchase, postPurchaseReturn, voidPurchase, voidPurchaseReturn } from '../purchases';
 import { postPayment, voidPayment } from '../money';
@@ -17,6 +18,9 @@ export function registerCatalogServices(d: Dispatcher): void {
     archiveProduct(ctx, input.id, input.archived);
     return null;
   });
+  d.register('catalog:productsArchive', ({ ctx, input }) => archiveProducts(ctx, input.ids, input.archived));
+  d.register('catalog:productsDeletePreview', ({ ctx, input }) => previewProductsDelete(ctx, input.ids));
+  d.register('catalog:productsDelete', ({ ctx, input }) => deleteProducts(ctx, input.ids, input.confirm));
   d.register('catalog:lookups', ({ ctx }) => listLookups(ctx));
   d.register('catalog:lookupSave', ({ ctx, input }) => ({ id: saveLookup(ctx, input) }));
   d.register('catalog:suppliers', ({ ctx, input }) => listSuppliers(ctx, input.includeArchived));
@@ -29,7 +33,7 @@ export function registerCatalogServices(d: Dispatcher): void {
   });
   d.register('payment:save', ({ ctx, session, input }) => {
     if (input.partyKind === 'supplier') assertManager(session?.role);
-    return postPayment(ctx, { partyKind: input.partyKind, partyId: input.partyId, amount: input.amount, date: input.date, accountId: input.accountId, reference: input.reference, note: input.note });
+    return postPayment(ctx, { partyKind: input.partyKind, partyId: input.partyId, amount: input.amount, date: input.date, accountId: input.accountId, reference: input.reference, note: input.note, requestId: input.requestId });
   });
   d.register('payment:void', ({ ctx, input }) => {
     voidPayment(ctx, input.id, input.reason);

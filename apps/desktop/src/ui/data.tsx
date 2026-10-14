@@ -1,6 +1,7 @@
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { Button } from './controls';
 import { useI18n } from '../i18n';
+import { headerState, selectRange, toggleAll, toggleKey, type RowKey, type Selection } from './selection';
 
 export function Card({ title, actions, children, flat }: { title?: ReactNode; actions?: ReactNode; children: ReactNode; flat?: boolean }) {
   return (
@@ -39,8 +40,18 @@ export interface Column<T> {
   footer?: ReactNode;
 }
 
-export function Table<T>({ columns, rows, rowKey, onRowClick, empty, pageSize }: { columns: Column<T>[]; rows: T[]; rowKey: (r: T) => string | number; onRowClick?: (r: T) => void; empty?: ReactNode; pageSize?: number }) {
+export interface TableSelection<T> {
+  /** Adds a checkbox column. Select-all and shift-click work on the whole `rows` list, not only the visible page. */
+  selectable?: boolean;
+  selected?: Selection;
+  onSelectionChange?: (next: Set<RowKey>) => void;
+  /** Accessible name of a row's checkbox, e.g. the product name. Falls back to the row key. */
+  rowLabel?: (r: T) => string;
+}
+
+export function Table<T>({ columns, rows, rowKey, onRowClick, empty, pageSize, selectable, selected, onSelectionChange, rowLabel }: { columns: Column<T>[]; rows: T[]; rowKey: (r: T) => RowKey; onRowClick?: (r: T) => void; empty?: ReactNode; pageSize?: number } & TableSelection<T>) {
   const { t, int } = useI18n();
+  const anchor = useRef<RowKey | null>(null);
   const [sort, setSort] = useState<{ key: string; dir: 1 | -1 } | null>(null);
   const [page, setPage] = useState(0);
   let view = rows;
@@ -57,12 +68,29 @@ export function Table<T>({ columns, rows, rowKey, onRowClick, empty, pageSize }:
   const cur = Math.min(page, pages - 1);
   const shown = pageSize ? view.slice(cur * pageSize, cur * pageSize + pageSize) : view;
   const hasFooter = columns.some((c) => c.footer !== undefined);
+  const selOn = Boolean(selectable && selected && onSelectionChange);
+  // order as shown (sorted, all pages): shift-click ranges follow it, select-all covers all of it
+  const viewKeys = selOn ? view.map(rowKey) : [];
+  const hs = selOn ? headerState(selected!, viewKeys) : 'none';
   return (
     <div>
       <div className="p-tablewrap">
         <table className="p-table">
           <thead>
             <tr>
+              {selOn && (
+                <th className="sel">
+                  <input
+                    type="checkbox"
+                    ref={(el) => { if (el) el.indeterminate = hs === 'some'; }}
+                    checked={hs === 'all'}
+                    disabled={rows.length === 0}
+                    aria-label={t('table.selectAll', { n: int(rows.length) })}
+                    onChange={() => { anchor.current = null; onSelectionChange!(toggleAll(selected!, viewKeys)); }}
+                    data-testid="select-all"
+                  />
+                </th>
+              )}
               {columns.map((c) => (
                 <th
                   key={c.key}
@@ -77,17 +105,40 @@ export function Table<T>({ columns, rows, rowKey, onRowClick, empty, pageSize }:
             </tr>
           </thead>
           <tbody>
-            {shown.map((r) => (
-              <tr key={rowKey(r)} className={onRowClick ? 'clickable' : undefined} onClick={onRowClick ? () => onRowClick(r) : undefined}>
+            {shown.map((r) => {
+              const k = rowKey(r);
+              const isSel = selOn && selected!.has(k);
+              const cls = [onRowClick ? 'clickable' : '', isSel ? 'selected' : ''].filter(Boolean).join(' ');
+              return (
+              <tr key={k} className={cls || undefined} onClick={onRowClick ? () => onRowClick(r) : undefined}>
+                {selOn && (
+                  // the checkbox must never open the row editor; shift needs mousedown cancelled or the browser selects text
+                  <td className="sel" onClick={(e) => e.stopPropagation()} onMouseDown={(e) => { if (e.shiftKey) e.preventDefault(); }}>
+                    <input
+                      type="checkbox"
+                      checked={isSel}
+                      aria-label={t('table.selectRow', { name: rowLabel ? rowLabel(r) : String(k) })}
+                      onChange={() => undefined}
+                      onClick={(e) => {
+                        // click (not change) carries shiftKey, and Space on a focused checkbox also fires click
+                        onSelectionChange!(e.shiftKey ? selectRange(selected!, viewKeys, anchor.current, k) : toggleKey(selected!, k));
+                        anchor.current = k;
+                      }}
+                      data-testid="select-row"
+                    />
+                  </td>
+                )}
                 {columns.map((c) => (
                   <td key={c.key} className={c.right ? 'right num' : undefined}>{c.render(r)}</td>
                 ))}
               </tr>
-            ))}
+              );
+            })}
           </tbody>
           {hasFooter && (
             <tfoot>
               <tr>
+                {selOn && <td />}
                 {columns.map((c) => (
                   <td key={c.key} className={c.right ? 'right num' : undefined}>{c.footer}</td>
                 ))}

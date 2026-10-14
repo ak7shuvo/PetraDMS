@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Badge, Card, Table } from './data';
 import { Button, Field, Input } from './controls';
 import { MoneyInput, DateInput } from './inputs';
@@ -10,6 +10,7 @@ import { useDisplayDate } from './format';
 import { call, errorText } from '../api';
 import { useI18n } from '../i18n';
 import { useApp } from '../store/app';
+import { newRequestId } from './requestId';
 
 /** Payment modal shared by customers (receive) and suppliers (pay). */
 export function PaymentModal({ open, kind, partyId, partyName, balance, onClose, onDone }: { open: boolean; kind: 'customer' | 'supplier'; partyId: number; partyName: string; balance: number; onClose: () => void; onDone: () => void }) {
@@ -22,6 +23,7 @@ export function PaymentModal({ open, kind, partyId, partyName, balance, onClose,
   const [reference, setReference] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const reqId = useRef(newRequestId());
   const received = kind === 'customer';
   const valid = amount !== null && amount > 0 && date !== null;
   const reset = () => {
@@ -29,6 +31,7 @@ export function PaymentModal({ open, kind, partyId, partyName, balance, onClose,
     setReference('');
     setError(null);
     setDate(today);
+    reqId.current = newRequestId();
   };
   return (
     <Modal
@@ -44,7 +47,7 @@ export function PaymentModal({ open, kind, partyId, partyName, balance, onClose,
             data-testid="payment-save"
             onClick={() => {
               setBusy(true);
-              void call('payment:save', { partyKind: kind, partyId, amount: amount!, date: date!, accountId, reference, note: '' }).then(
+              void call('payment:save', { partyKind: kind, partyId, amount: amount!, date: date!, accountId, reference, note: '', requestId: reqId.current }).then(
                 (r) => { toast.ok(`${received ? t('pay.received') : t('pay.paid')} ${r.docNo}`); reset(); onDone(); },
                 (e: unknown) => setError(errorText(e))
               ).finally(() => setBusy(false));

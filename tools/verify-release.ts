@@ -6,8 +6,8 @@
 //   4. the packaged app makes no network request and an outside fetch / XHR is blocked
 //   5. first run in the DEFAULT data location (no PETRA_DATA_DIR): the shop is created under the per-user application
 //      data folder, nothing is written next to the program, data survives closing and reopening
-//   6. upgrade: version A is installed and used, version B is installed over it, and every record, the settings and the
-//      licence state are still there
+//   6. upgrade: version A is installed and used, version B is installed over it, and every record and the settings are
+//      still there
 //   7. Windows only: executable metadata (product, publisher, version), Start Menu and Desktop shortcuts, a per-user
 //      uninstall entry, the signature state, and a silent uninstall that removes the program but keeps the shop's data
 // On Linux and macOS the NSIS installer cannot be made, so the unpacked app from the same configuration stands in for
@@ -51,7 +51,7 @@ const bumped = (v: string): string => { const [a, b, c] = v.split('.').map(Numbe
 const versionB = bumped(version);
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'petra-release-'));
-const installDir = path.join(tmp, win ? 'PetraDMS installed' : 'app-installed');
+const installDir = path.join(tmp, win ? 'PetraDMS-installed' : 'app-installed');
 const sh = (cmd: string, args: string[]) => spawnSync(cmd, args, { stdio: 'inherit' });
 const killApp = () => { if (win) spawnSync('taskkill', ['/F', '/IM', 'PetraDMS.exe'], { stdio: 'ignore' }); };
 
@@ -82,7 +82,6 @@ const needsDisplay = process.platform === 'linux' && !process.env.DISPLAY;
 const baseEnv = (): Record<string, string> => {
   const e = { ...process.env, ELECTRON_DISABLE_SECURITY_WARNINGS: '1', PETRA_NO_REVEAL: '1' } as Record<string, string>;
   delete e.PETRA_DATA_DIR; // a customer's computer has no such variable
-  delete e.PETRA_MACHINE_HASH;
   return e;
 };
 
@@ -206,14 +205,11 @@ const setup = {
   owner: { displayName: 'Rahim', username: 'rahim', kind: 'pin', secret: '4321' },
   uiMode: 'full'
 };
-let machineA = '';
 await withApp(appExe, homeEnv, async (page) => {
-  const st = (await invoke(page, 'app:status')) as { needsSetup: boolean; appVersion: string; dataDir: string; licence: { state: string; daysLeft: number; machineCode: string } };
+  const st = (await invoke(page, 'app:status')) as { needsSetup: boolean; appVersion: string; dataDir: string };
   check(st.needsSetup, 'first run: the setup wizard must come first');
   check(path.resolve(st.dataDir) === path.resolve(shopDir), `first run: data folder is ${st.dataDir}, expected ${shopDir}`);
-  check(st.licence.state === 'trial' && st.licence.daysLeft >= 29, `first run: licence is ${st.licence.state}, ${st.licence.daysLeft} days`);
   check(st.appVersion === version, `first run: version ${st.appVersion}`);
-  machineA = st.licence.machineCode;
   await invoke(page, 'setup:complete', setup);
   await invoke(page, 'settings:save', { taxBp: 500 });
   const supplier = (await invoke(page, 'catalog:supplierSave', { name: 'Release Supplier' })) as { id: number };
@@ -234,12 +230,11 @@ pass('first launch creates the shop in the per-user data folder', shopDir);
 const readBack = (label: string, v: string) => withApp(appExe, homeEnv, async (page) => {
   const users = (await invoke(page, 'auth:users')) as { id: number }[];
   await invoke(page, 'auth:login', { userId: users[0]?.id, secret: '4321' });
-  const st = (await invoke(page, 'app:status')) as { needsSetup: boolean; appVersion: string; profile: { name: string }; settings: { taxBp: number }; licence: { state: string; machineCode: string; readOnly: boolean } };
+  const st = (await invoke(page, 'app:status')) as { needsSetup: boolean; appVersion: string; profile: { name: string }; settings: { taxBp: number } };
   check(!st.needsSetup, `${label}: the shop came back asking for setup again`);
   check(st.appVersion === v, `${label}: version is ${st.appVersion}, expected ${v}`);
   check(st.profile.name === 'Release Check Traders', `${label}: business profile lost`);
   check(st.settings.taxBp === 500, `${label}: settings lost`);
-  check(st.licence.state === 'trial' && !st.licence.readOnly && st.licence.machineCode === machineA, `${label}: licence state changed (${st.licence.state}, ${st.licence.machineCode})`);
   const products = (await invoke(page, 'catalog:products', { includeArchived: false })) as { sku: string; stockQty: number }[];
   check(products.length === 1 && products[0]?.sku === 'REL-1' && products[0]?.stockQty === 90, `${label}: products or stock wrong ${JSON.stringify(products)}`);
   const customers = (await invoke(page, 'customer:list', { includeArchived: false })) as { name: string }[];
@@ -251,7 +246,7 @@ const readBack = (label: string, v: string) => withApp(appExe, homeEnv, async (p
 await readBack('after restart', version);
 const afterStart = smoke(appExe, homeEnv, 'restart');
 check(afterStart.integrity === 'ok' && afterStart.counts.sales === 1 && afterStart.counts.products === 1 && afterStart.counts.purchases === 1 && afterStart.counts.suppliers === 1 && afterStart.counts.customers === 1, `restart: counts ${JSON.stringify(afterStart.counts)}`);
-pass('data survives closing and reopening', 'products, stock, customer, sale, purchase, settings, licence state');
+pass('data survives closing and reopening', 'products, stock, customer, sale, purchase, settings');
 
 // ------------------------------------------------------------------------------------------------ upgrade A -> B
 section(`Upgrade ${version} -> ${versionB}`);
@@ -274,7 +269,7 @@ await readBack('after upgrade', versionB);
 const afterUpgrade = smoke(appExe, homeEnv, 'upgrade');
 check(afterUpgrade.version === versionB && afterUpgrade.integrity === 'ok', `upgrade: version ${afterUpgrade.version}, integrity ${afterUpgrade.integrity}`);
 check(afterUpgrade.counts.sales === 1 && afterUpgrade.counts.customers === 1, `upgrade: counts ${JSON.stringify(afterUpgrade.counts)}`);
-pass(`upgrade ${version} to ${versionB} keeps everything`, 'same data folder, records, settings and licence state');
+pass(`upgrade ${version} to ${versionB} keeps everything`, 'same data folder, records, settings');
 
 // ------------------------------------------------------------------------------------------------ uninstall
 section('Uninstall keeps the shop data');

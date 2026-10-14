@@ -1,143 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { generateKeyPairSync, sign as edSign, createPublicKey } from 'node:crypto';
-import { PetraError, type LicenceStatus } from '@petra/core';
-import { createBareDb } from './testkit';
-import { DAY, MACHINE, PUB, T0, makeApp, setupInput } from './testApp';
-import { makeCtx } from './ctx';
-import { checkLicence, installLicence, licenceStatus, machineCodeOf, machineHash, signLicence, TRIAL_DAYS, type LicencePayload } from './app/licence';
+import { PetraError } from '@petra/core';
+import { DAY, T0, makeApp, setupInput } from './testApp';
 import { LOCK_MINUTES, MAX_ATTEMPTS, generateRecoveryCode, hashSecret, verifySecret } from './app/auth';
-import { TEST_PRIVATE as privateKey } from './testApp';
 
 async function ok<T>(p: Promise<{ ok: boolean; data?: unknown; error?: { code: string } }>): Promise<T> {
   const r = await p;
   if (!r.ok) throw new Error(`call failed: ${r.error?.code}`);
   return r.data as T;
 }
-
-const other = generateKeyPairSync('ed25519');
-
-function issue(over: Partial<LicencePayload> = {}, key = privateKey): string {
-  const payload: LicencePayload = { v: 1, customer: 'Rahim Traders', edition: 'standard', machine: MACHINE.slice(0, 16), issuedAt: '2026-10-01', expiresAt: null, ...over };
-  return signLicence(payload, key, (data, k) => edSign(null, data, k));
-}
-
-function clock(ms: { t: number }) {
-  return () => new Date(ms.t).toISOString();
-}
-
-describe('licence', () => {
-  const env = { publicKeyPem: PUB, machine: MACHINE };
-
-  it('a valid licence is accepted and shown as licensed with no expiry', () => {
-    const { db, close } = createBareDb();
-    const ctx = makeCtx(db, null, () => new Date(T0).toISOString());
-    const st = installLicence(ctx, env, issue());
-    expect(st.state).toBe('licensed');
-    expect(st.readOnly).toBe(false);
-    expect(st.customer).toBe('Rahim Traders');
-    expect(st.daysLeft).toBeNull();
-    close();
-  });
-
-  it('a tampered licence is rejected', () => {
-    const blob = issue();
-    const [body, sig] = blob.split('.') as [string, string];
-    const forged = JSON.parse(Buffer.from(body, 'base64url').toString()) as LicencePayload;
-    forged.expiresAt = '2099-01-01';
-    const tamperedBody = Buffer.from(JSON.stringify(forged)).toString('base64url');
-    expect(checkLicence(`${tamperedBody}.${sig}`, PUB, MACHINE)).toEqual({ ok: false, problem: 'tampered' });
-    expect(checkLicence(issue({}, other.privateKey), PUB, MACHINE)).toEqual({ ok: false, problem: 'tampered' });
-    expect(checkLicence('not-a-licence', PUB, MACHINE)).toEqual({ ok: false, problem: 'malformed' });
-    const { db, close } = createBareDb();
-    const ctx = makeCtx(db, null, () => new Date(T0).toISOString());
-    expect(() => installLicence(ctx, env, `${tamperedBody}.${sig}`)).toThrow(PetraError);
-    close();
-  });
-
-  it('a licence for another machine is rejected', () => {
-    const otherMachine = machineHash({ hostname: 'OTHER-PC', cpuModel: 'Intel(R) Core(TM) i3', platform: 'win32', arch: 'x64' });
-    expect(checkLicence(issue({ machine: otherMachine.slice(0, 16) }), PUB, MACHINE)).toEqual({ ok: false, problem: 'wrong_machine' });
-    const { db, close } = createBareDb();
-    const ctx = makeCtx(db, null, () => new Date(T0).toISOString());
-    try {
-      installLicence(ctx, env, issue({ machine: otherMachine.slice(0, 16) }));
-      throw new Error('should have thrown');
-    } catch (e) {
-      expect((e as PetraError).params.problem).toBe('wrong_machine');
-    }
-    close();
-  });
-
-  it('an expired licence makes the app read-only; the last valid day still works', () => {
-    const { db, close } = createBareDb();
-    const now = { t: T0 };
-    const ctx = makeCtx(db, null, clock(now));
-    installLicence(ctx, env, issue({ expiresAt: '2026-10-10' }));
-    now.t = Date.parse('2026-10-10T12:00:00Z');
-    expect(licenceStatus(ctx, env).state).toBe('licensed');
-    now.t = Date.parse('2026-10-11T06:00:00Z');
-    const st = licenceStatus(ctx, env);
-    expect(st.state).toBe('expired');
-    expect(st.readOnly).toBe(true);
-    close();
-  });
-
-  it('clock rollback is detected and the app goes read-only until the clock is restored', () => {
-    const { db, close } = createBareDb();
-    const now = { t: T0 };
-    const ctx = makeCtx(db, null, clock(now));
-    expect(licenceStatus(ctx, env).state).toBe('trial');
-    now.t = T0 + 20 * DAY;
-    licenceStatus(ctx, env);
-    now.t = T0 + 2 * DAY; // user winds the clock back to extend the trial
-    const st = licenceStatus(ctx, env);
-    expect(st.state).toBe('clock_rollback');
-    expect(st.readOnly).toBe(true);
-    now.t = T0 + 20 * DAY + 3600_000; // back to real time
-    expect(licenceStatus(ctx, env).state).toBe('trial');
-    close();
-  });
-
-  it('a small clock adjustment (under a day) is tolerated', () => {
-    const { db, close } = createBareDb();
-    const now = { t: T0 };
-    const ctx = makeCtx(db, null, clock(now));
-    licenceStatus(ctx, env);
-    now.t = T0 + 3 * DAY;
-    licenceStatus(ctx, env);
-    now.t = T0 + 3 * DAY - 2 * 3600_000;
-    expect(licenceStatus(ctx, env).state).toBe('trial');
-    close();
-  });
-
-  it('the trial lasts 30 days from first run, then the app is read-only', () => {
-    const { db, close } = createBareDb();
-    const now = { t: T0 };
-    const ctx = makeCtx(db, null, clock(now));
-    let st = licenceStatus(ctx, env);
-    expect(st.state).toBe('trial');
-    expect(st.daysLeft).toBe(TRIAL_DAYS);
-    now.t = T0 + 29 * DAY;
-    st = licenceStatus(ctx, env);
-    expect(st).toMatchObject({ state: 'trial', daysLeft: 1, readOnly: false });
-    now.t = T0 + 30 * DAY;
-    st = licenceStatus(ctx, env);
-    expect(st).toMatchObject({ state: 'expired', readOnly: true, daysLeft: 0 });
-    close();
-  });
-
-  it('machine code is a stable, readable prefix of the fingerprint', () => {
-    // with an OS machine id the code ignores the PC name and CPU; without one it is the old host-based code
-    const a = machineHash({ hostname: 'A', cpuModel: 'x', platform: 'win32', arch: 'x64', machineId: '3F2A9C1E-5B7D-4E8A-9C0B-1D2E3F4A5B6C' });
-    const b = machineHash({ hostname: 'RENAMED', cpuModel: 'another cpu', platform: 'win32', arch: 'x64', machineId: '3f2a9c1e-5b7d-4e8a-9c0b-1d2e3f4a5b6c' });
-    expect(a).toBe(b);
-    expect(a).not.toBe(machineHash({ hostname: 'A', cpuModel: 'x', platform: 'win32', arch: 'x64', machineId: '00000000-0000-4000-8000-000000000001' }));
-    expect(machineHash({ hostname: 'A', cpuModel: 'x', platform: 'win32', arch: 'x64', machineId: null })).toBe(machineHash({ hostname: 'A', cpuModel: 'x', platform: 'win32', arch: 'x64' }));
-    expect(machineHash({ hostname: 'A', cpuModel: 'x', platform: 'win32', arch: 'x64', machineId: 'not a guid' })).toBe(machineHash({ hostname: 'A', cpuModel: 'x', platform: 'win32', arch: 'x64' }));
-    expect(machineCodeOf(MACHINE)).toMatch(/^[0-9A-F]{4}(-[0-9A-F]{4}){3}$/);
-    expect(createPublicKey(PUB).asymmetricKeyType).toBe('ed25519');
-  });
-});
 
 describe('secrets', () => {
   it('hashes with scrypt and verifies', () => {
@@ -164,9 +34,8 @@ describe('secrets', () => {
 describe('first run, auth and roles through the dispatcher', () => {
   it('fresh database needs setup; setup creates the owner, defaults and a recovery code, and can run only once', async () => {
     const { d, close } = makeApp();
-    let st = await ok<{ needsSetup: boolean; licence: LicenceStatus }>(d.call('app:status', undefined));
+    let st = await ok<{ needsSetup: boolean }>(d.call('app:status', undefined));
     expect(st.needsSetup).toBe(true);
-    expect(st.licence.state).toBe('trial');
     const done = await ok<{ recoveryCode: string; session: { role: string } }>(d.call('setup:complete', setupInput));
     expect(done.session.role).toBe('owner');
     expect(done.recoveryCode).toMatch(/^([A-Z2-9]{4}-){4}[A-Z2-9]{4}$/);
@@ -231,14 +100,13 @@ describe('first run, auth and roles through the dispatcher', () => {
     close();
   });
 
-  it('after the trial ends writes fail with READ_ONLY while reads, backup-style calls and sign-in still work', async () => {
+  it('the app never locks: writes keep working long after first run', async () => {
     const now = { t: T0 };
     const { d, close } = makeApp(now);
     await ok(d.call('setup:complete', setupInput));
-    now.t = T0 + 31 * DAY;
-    expect(await d.call('profile:save', setupInput.business)).toMatchObject({ ok: false, error: { code: 'READ_ONLY' } });
+    now.t = T0 + 400 * DAY;
+    expect(await d.call('profile:save', setupInput.business)).toMatchObject({ ok: true });
     expect(await d.call('settings:get', undefined)).toMatchObject({ ok: true });
-    expect(await d.call('auth:users', undefined)).toMatchObject({ ok: true });
     close();
   });
 

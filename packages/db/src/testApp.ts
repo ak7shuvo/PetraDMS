@@ -1,4 +1,3 @@
-import { generateKeyPairSync } from 'node:crypto';
 import type { IpcChannel, IpcInput, IpcOutput, Role } from '@petra/core';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -16,12 +15,8 @@ import { registerSalesServices } from './app/salesServices';
 import { registerMoneyServices } from './app/moneyServices';
 import { registerReportServices } from './app/reportServices';
 import { registerToolServices } from './app/toolServices';
-import { machineHash } from './app/licence';
 import { checkIntegrity, formatViolations } from './integrity';
 
-export const { publicKey: TEST_PUBLIC, privateKey: TEST_PRIVATE } = generateKeyPairSync('ed25519');
-export const PUB = TEST_PUBLIC.export({ type: 'spki', format: 'pem' }).toString();
-export const MACHINE = machineHash({ hostname: 'SHOP-PC', cpuModel: 'Intel(R) Core(TM) i3', platform: 'win32', arch: 'x64' });
 export const DAY = 86_400_000;
 export const T0 = Date.parse('2026-10-01T05:00:00.000Z');
 
@@ -58,7 +53,6 @@ export function makeApp(nowRef: { t: number } = { t: T0 }, opts: { dataDir?: str
     pickDataDir: async () => null,
     applyDataDir: async () => undefined,
     recommendedDataDir: () => 'D:\\PetraData',
-    pickLicenceFile: async () => null,
     fontCss: () => '',
     printHtml: async (html) => { printed.push(html); },
     pdfHtml: async (html, o) => { printed.push(html); pdfs.push(o.file); },
@@ -74,7 +68,7 @@ export function makeApp(nowRef: { t: number } = { t: T0 }, opts: { dataDir?: str
       d.swapDb(nd);
     }
   };
-  const d = new Dispatcher(db, { publicKeyPem: PUB, machine: MACHINE }, host, () => new Date(nowRef.t).toISOString());
+  const d = new Dispatcher(db, host, () => new Date(nowRef.t).toISOString());
   registerCoreServices(d);
   registerCatalogServices(d);
   registerSalesServices(d);

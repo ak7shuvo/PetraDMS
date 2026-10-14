@@ -4,7 +4,7 @@ import type { Dispatcher } from './dispatcher';
 import { auditPage, deleteBackup, diagnosticsZip, dismissRecovery, inspectBackup, listForUi, restoreBackup, runBackup } from './safetyApp';
 import type { AutoBackup } from './autoBackup';
 
-/** Phase 10: backup, restore, audit log, diagnostics. All Owner only (plan 13.1), and available even when the licence is read-only. */
+/** Phase 10: backup, restore, audit log, diagnostics. All Owner only (plan 13.1). */
 export function registerSafetyServices(d: Dispatcher, auto?: () => AutoBackup | null): void {
   d.register('backup:list', ({ ctx, host }) => listForUi(ctx, host));
   d.register('backup:create', ({ ctx, host }) => {

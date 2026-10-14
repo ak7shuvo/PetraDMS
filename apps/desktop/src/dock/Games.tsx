@@ -111,8 +111,8 @@ function Snake({ active }: { active: boolean }) {
     if (!c) return;
     const css = getComputedStyle(document.documentElement);
     const red = css.getPropertyValue('--red').trim() || '#C8202F';
-    const ink = css.getPropertyValue('--black').trim() || '#121212';
-    c.fillStyle = css.getPropertyValue('--cream').trim() || '#F6F1E7';
+    const ink = css.getPropertyValue('--black').trim() || '#0F172A';
+    c.fillStyle = css.getPropertyValue('--cream').trim() || '#F1F5F9';
     c.fillRect(0, 0, s.w * CELL, s.h * CELL);
     c.fillStyle = 'rgba(0,0,0,.035)';
     for (let y = 0; y < s.h; y++) for (let x = (y % 2); x < s.w; x += 2) c.fillRect(x * CELL, y * CELL, CELL, CELL);
@@ -121,7 +121,7 @@ function Snake({ active }: { active: boolean }) {
     c.arc(s.food.x * CELL + CELL / 2, s.food.y * CELL + CELL / 2, CELL / 2 - 2, 0, Math.PI * 2);
     c.fill();
     s.body.forEach((p, i) => {
-      c.fillStyle = i === 0 ? ink : '#3D3934';
+      c.fillStyle = i === 0 ? ink : '#334155';
       c.beginPath();
       c.roundRect(p.x * CELL + 1, p.y * CELL + 1, CELL - 2, CELL - 2, 4);
       c.fill();
@@ -174,7 +174,7 @@ const SHAPES = [
   <path key="6" d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z" />,
   <path key="7" d="M6 4h12l-3 8 3 8H6l3-8z" />
 ];
-const SHAPE_COLORS = ['#C8202F', '#121212', '#2E6B43', '#9A6A12', '#C8202F', '#A21A27', '#3D3934', '#2E6B43'];
+const SHAPE_COLORS = ['#14B8A6', '#0F172A', '#D4AF37', '#0F766E', '#14B8A6', '#334155', '#D4AF37', '#0F766E'];
 
 function Memory({ active }: { active: boolean }) {
   const { t, int } = useI18n();

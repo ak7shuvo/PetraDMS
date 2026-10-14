@@ -1,6 +1,6 @@
 {
   "name": "petra-dms",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "description": "PetraDMS - offline Windows distribution management system",
@@ -22,8 +22,7 @@
     "dist:win": "pnpm --filter @petra/desktop dist:win",
     "dist:dir": "pnpm --filter @petra/desktop dist:dir",
     "verify:package": "tsx tools/verify-release.ts",
-    "verify:release": "pnpm verify && pnpm verify:package",
-    "keygen": "tsx tools/keygen/index.ts"
+    "verify:release": "pnpm verify && pnpm verify:package"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",

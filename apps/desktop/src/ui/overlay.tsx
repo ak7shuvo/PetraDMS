@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { Button } from './controls';
 import { IconClose } from './icons';
@@ -59,7 +60,8 @@ export function Modal({ open, title, onClose, children, footer, wide }: PanelPro
   const move = mode === 'full';
   const t = useT();
   useDialogBehaviour(open, onClose, ref);
-  return (
+  // rendered on <body>: inside the page it sat under the top bar and the dock handle (the page fade is its own stacking layer)
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div className="p-scrim" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: d(0.16) }} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
@@ -83,7 +85,8 @@ export function Modal({ open, title, onClose, children, footer, wide }: PanelPro
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
 
@@ -93,7 +96,8 @@ export function Drawer({ open, title, onClose, children, footer }: PanelProps) {
   const move = mode === 'full';
   const t = useT();
   useDialogBehaviour(open, onClose, ref);
-  return (
+  // rendered on <body>: inside the page it sat under the top bar and the dock handle (the page fade is its own stacking layer)
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div className="p-scrim right" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: d(0.16) }} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
@@ -117,7 +121,8 @@ export function Drawer({ open, title, onClose, children, footer }: PanelProps) {
           </motion.aside>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
 

@@ -61,7 +61,7 @@ export function SearchPalette({ open, onClose, initial }: { open: boolean; onClo
       <ul className="palette-list" role="listbox" aria-label={t('search.title')}>
         {hits.map((h, i) => (
           <li key={`${h.kind}-${h.id}`} role="option" aria-selected={i === hi} className={i === hi ? 'on' : ''} onMouseEnter={() => setHi(i)} onClick={() => go(h)} data-testid={`palette-hit-${i}`}>
-            <Badge tone={h.kind === 'product' ? 'red' : 'default'}>{t(`search.kind.${h.kind}`)}</Badge>
+            <Badge tone={h.kind === 'product' ? 'dark' : 'default'}>{t(`search.kind.${h.kind}`)}</Badge>
             <span className="t">{h.title}</span>
             <span className="s">{n(h.subtitle)}</span>
           </li>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useRequest } from '../ui/requestId';
 import { useLocation } from 'react-router-dom';
 import { formatBoxPcs, joinBoxPcs, mulDiv, type PurchaseDetail, type PurchaseListItem } from '@petra/core';
 import { call, errorText } from '../api';
@@ -164,6 +165,7 @@ function ReturnModal({ open, detail, onClose, onDone }: { open: boolean; detail:
   const [mode, setMode] = useState<'due' | 'cash'>(detail.supplierId ? 'due' : 'cash');
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const req = useRequest();
   const rows = lines.map((l) => {
     const q = joinBoxPcs(box[l.productId] ?? 0, pcs[l.productId] ?? 0, l.factor);
     const left = l.bought - l.returned;
@@ -181,7 +183,7 @@ function ReturnModal({ open, detail, onClose, onDone }: { open: boolean; detail:
       wide
       title={t('pur.return')}
       onClose={onClose}
-      footer={<><Button onClick={onClose}>{t('act.cancel')}</Button><Button variant="primary" disabled={!valid} data-testid="return-save" onClick={() => void call('purchase:return', { supplierId: detail.supplierId, purchaseId: detail.id, date: today, refundMode: mode, accountId: null, reason, lines: active.map((r) => ({ productId: r.l.productId, baseQty: r.q, credit: r.credit ?? 0, batchId: r.l.batchId })) }).then(() => { toast.ok(t('pur.returned')); onDone(); }, (e: unknown) => setError(errorText(e)))}>{t('pur.return')}</Button></>}
+      footer={<><Button onClick={onClose}>{t('act.cancel')}</Button><Button variant="primary" disabled={!valid} data-testid="return-save" onClick={() => void req.guard(() => call('purchase:return', { supplierId: detail.supplierId, purchaseId: detail.id, date: today, refundMode: mode, accountId: null, reason, requestId: req.id(), lines: active.map((r) => ({ productId: r.l.productId, baseQty: r.q, credit: r.credit ?? 0, batchId: r.l.batchId })) }).then(() => { req.renew(); toast.ok(t('pur.returned')); onDone(); }, (e: unknown) => setError(errorText(e))))}>{t('pur.return')}</Button></>}
     >
       <div className="grid" style={{ gap: 12 }}>
         <p className="muted" style={{ margin: 0 }}>{t('pur.returnHelp')}</p>

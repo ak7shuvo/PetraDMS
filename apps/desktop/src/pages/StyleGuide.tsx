@@ -76,7 +76,7 @@ export function StyleGuide() {
             </tbody>
           </table>
           <div className="row wrap" style={{ gap: 12 }}>
-            {['--red', '--black', '--cream', '--paper', '--line-strong', '--ok', '--warn'].map((c) => <span key={c} className="sg-swatch" style={{ background: `var(${c})` }} title={c}><small>{c}</small></span>)}
+            {['--brand', '--accent', '--gold', '--cream', '--paper', '--line-strong', '--red', '--ok', '--warn'].map((c) => <span key={c} className="sg-swatch" style={{ background: `var(${c})` }} title={c}><small>{c}</small></span>)}
           </div>
         </div>
       </Section>

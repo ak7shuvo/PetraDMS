@@ -96,6 +96,14 @@ jobs:
           $notes + "`n`nInstall: see docs/INSTALL.md. The installer is " + $(if ($sig -eq 'Valid') { 'digitally signed.' } else { 'not code-signed, so Windows SmartScreen may warn: choose More info, then Run anyway.' }) | Out-File -Encoding utf8 out/RELEASE-NOTES.md
           "version=$version" | Out-File -Append -Encoding utf8 $env:GITHUB_OUTPUT
           Get-Content out/VERSION.txt
+      - name: Fail unless the real installer exists, and report its path and size
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem "out/PetraDMS-Setup-*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $exe -or $exe.Length -lt 20MB) { throw 'The Windows installer (PetraDMS-Setup-<version>.exe) was not produced, or is far too small.' }
+          $line = "Installer: $($exe.FullName) ($([math]::Round($exe.Length / 1MB, 1)) MB)"
+          Write-Host $line
+          @("## PetraDMS Windows installer", "", $line, "", "Artifact: **PetraDMS-Windows-x64** (download from this run's Artifacts; unzip, then run PetraDMS-Setup-*.exe)", "", '```', (Get-Content out/VERSION.txt -Raw), '```') | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:

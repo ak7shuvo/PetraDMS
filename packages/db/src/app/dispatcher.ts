@@ -4,7 +4,6 @@ import { randomBytes } from 'node:crypto';
 import type { PrintFormat } from '@petra/core';
 import type { Db } from '../sql';
 import { makeCtx, type Ctx } from '../ctx';
-import { assertWritable, licenceStatus, type LicenceEnv } from './licence';
 
 /** Things only the Electron main process can do. Injected so the services stay testable without Electron. */
 export interface Host {
@@ -14,7 +13,6 @@ export interface Host {
   pickDataDir(): Promise<string | null>;
   applyDataDir(path: string): Promise<void>;
   recommendedDataDir(): string;
-  pickLicenceFile(): Promise<string | null>;
   /** @font-face CSS with the bundled fonts embedded as base64, so printed pages and PDFs carry Bangla glyphs. */
   fontCss(): string;
   printHtml(html: string, o: { format: PrintFormat; silent: boolean; printerName: string }): Promise<void>;
@@ -34,7 +32,6 @@ export interface CallArgs<I = unknown> {
   session: SessionDto | null;
   input: I; // validated by the channel's zod schema before the handler runs
   host: Host;
-  env: LicenceEnv;
   dispatcher: Dispatcher;
 }
 export type Handler<C extends IpcChannel = IpcChannel> = (a: CallArgs<z.output<(typeof ipcContract)[C]['input']>>) => IpcOutput<C> | Promise<IpcOutput<C>>;
@@ -52,7 +49,6 @@ export class Dispatcher {
 
   constructor(
     public db: Db,
-    public env: LicenceEnv,
     public host: Host,
     public now: () => string = () => new Date().toISOString()
   ) {}
@@ -90,7 +86,7 @@ export class Dispatcher {
     return makeCtx(this.db, this.session?.userId ?? null, this.now);
   }
 
-  /** The single entry point used by IPC: validate, authorise, guard licence, run, wrap errors. */
+  /** The single entry point used by IPC: validate, authorise, run, wrap errors. */
   async call(channel: string, raw: unknown): Promise<Wire<unknown>> {
     try {
       const def = (ipcContract as Record<string, (typeof ipcContract)[IpcChannel]>)[channel];
@@ -105,16 +101,11 @@ export class Dispatcher {
         if (ROLE_RANK[this.session.role] < RANK[def.access]) throw new PetraError('PERMISSION', `${def.access} role required`);
       }
       const ctx = this.ctx();
-      if (def.write) assertWritable(ctx, this.env);
-      const data = await handler({ ctx, session: this.session, input: parsed.data, host: this.host, env: this.env, dispatcher: this });
+      const data = await handler({ ctx, session: this.session, input: parsed.data, host: this.host, dispatcher: this });
       if (def.write) this.writeGen++;
       return { ok: true, data };
     } catch (e) {
       return { ok: false, error: toWireError(e) };
     }
-  }
-
-  licence() {
-    return licenceStatus(this.ctx(), this.env);
   }
 }

@@ -5,8 +5,9 @@ import { ExpensesTab } from './money/ExpensesTab';
 import { CashbookTab } from './money/CashbookTab';
 import { DayCloseTab } from './money/DayCloseTab';
 import { AccountsTab } from './money/AccountsTab';
+import { FundsTab } from './money/FundsTab';
 
-type Tab = 'expenses' | 'cashbook' | 'day' | 'accounts';
+type Tab = 'expenses' | 'cashbook' | 'day' | 'accounts' | 'funds';
 
 /** Expenses, cash book, day closing and money accounts. Full mode opens it as "Expenses", Simple mode as "Money". */
 export function MoneyPage({ initial = 'expenses', title }: { initial?: Tab; title: string }) {
@@ -19,13 +20,15 @@ export function MoneyPage({ initial = 'expenses', title }: { initial?: Tab; titl
         { value: 'expenses', label: t('nav.expenses') },
         { value: 'cashbook', label: t('money.cashbook') },
         { value: 'day', label: t('money.day') },
-        { value: 'accounts', label: t('money.accounts') }
+        { value: 'accounts', label: t('money.accounts') },
+        { value: 'funds', label: t('money.funds') }
       ]} />
       <div style={{ marginTop: 12 }}>
         {tab === 'expenses' && <ExpensesTab />}
         {tab === 'cashbook' && <CashbookTab />}
         {tab === 'day' && <DayCloseTab />}
         {tab === 'accounts' && <AccountsTab />}
+        {tab === 'funds' && <FundsTab />}
       </div>
     </div>
   );

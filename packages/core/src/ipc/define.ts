@@ -11,7 +11,7 @@ export interface Channel<I extends ZodType = ZodType, O = unknown> {
   readonly out?: O;
   /** Roles allowed to call; omitted means any signed-in user. 'public' channels work before sign-in. */
   access: 'public' | 'user' | 'manager' | 'owner';
-  /** True when the call changes data. Blocked while the licence is read-only. */
+  /** True when the call changes data. */
   write: boolean;
 }
 

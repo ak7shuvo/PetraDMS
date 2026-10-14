@@ -174,7 +174,7 @@ describe('import customers and dues', () => {
     expectIntegrity(app!);
   });
 
-  it('staff cannot import or export, and a read-only licence blocks the import but never the export', async () => {
+  it('staff cannot import or export', async () => {
     const { d, users } = await start();
     const { signInAs } = await import('./testApp');
     await signInAs(d, users.staff, 'staff');

@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useRequest } from '../../ui/requestId';
 import { formatBoxPcs, fromBnDigits, type ProductDto, type SupplierProductDto } from '@petra/core';
 import { call, errorCode, errorParams, errorText } from '../../api';
 import { useI18n, type I18n } from '../../i18n';
@@ -67,6 +68,7 @@ export function NewPurchase({ onDone, onCancel }: { onDone: (saved: { id: number
   const [paste, setPaste] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const req = useRequest();
   const [loaded, setLoaded] = useState(false);
   const tableRef = useRef<HTMLTableElement>(null);
 
@@ -234,8 +236,12 @@ export function NewPurchase({ onDone, onCancel }: { onDone: (saved: { id: number
     }
   };
 
-  const save = async () => {
-    if (!valid || busy) return;
+  const save = (): Promise<void> => {
+    if (!valid || busy) return Promise.resolve();
+    // a ref guard: a double click, a double F9 or Ctrl+S cannot start two saves
+    return req.guard(saveOnce).then(() => undefined);
+  };
+  const saveOnce = async () => {
     setBusy(true);
     setError(null);
     try {
@@ -243,8 +249,9 @@ export function NewPurchase({ onDone, onCancel }: { onDone: (saved: { id: number
         supplierId, supplierRef: ref, date: date!, invoiceDate, dueDate,
         discKind: bill.disc ? bill.discKind : null, discValue: bill.disc ?? 0, tax: bill.tax ?? 0, freight: bill.freight ?? 0,
         paid: paidVal, accountId: paidVal > 0 ? accountId : null, note, duplicateReason: dupDoc ? dupReason : '',
-        lines: toSaveLines(rows, byId)
+        lines: toSaveLines(rows, byId), requestId: req.id()
       });
+      req.renew();
       toast.ok(`${t('pur.saved')} ${r.docNo}`);
       onDone({ id: r.id, docNo: r.docNo });
     } catch (e) {

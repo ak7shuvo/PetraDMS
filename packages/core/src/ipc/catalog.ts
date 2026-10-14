@@ -327,7 +327,9 @@ export const purchaseSaveInput = z.object({
   accountId: z.number().int().positive().nullable().default(null),
   note: z.string().trim().max(300).default(''),
   /** Needed to post a company invoice number that was already entered for this company. */
-  duplicateReason: z.string().trim().max(200).default('')
+  duplicateReason: z.string().trim().max(200).default(''),
+  /** Optional id chosen by the screen when the form opens; sending it again (double click, retry) never posts twice. */
+  requestId: z.string().min(8).max(64).optional()
 });
 
 export const supplierLinkInput = z.object({
@@ -356,7 +358,9 @@ export const purchaseReturnInput = z.object({
   lines: z.array(z.object({ productId: z.number().int().positive(), baseQty: qty, credit: poisha, batchId: z.number().int().positive().nullable().default(null) })).min(1).max(100),
   refundMode: z.enum(['due', 'cash']),
   accountId: z.number().int().positive().nullable().default(null),
-  reason: z.string().trim().max(300).default('')
+  reason: z.string().trim().max(300).default(''),
+  /** Optional id chosen by the screen when the form opens; sending it again (double click, retry) never posts twice. */
+  requestId: z.string().min(8).max(64).optional()
 });
 
 export const paymentSaveInput = z.object({
@@ -366,7 +370,9 @@ export const paymentSaveInput = z.object({
   date: dateStr,
   accountId: z.number().int().positive().nullable().default(null),
   reference: z.string().trim().max(60).default(''),
-  note: z.string().trim().max(300).default('')
+  note: z.string().trim().max(300).default(''),
+  /** Optional id chosen by the screen when the form opens; sending it again (double click, retry) never posts twice. */
+  requestId: z.string().min(8).max(64).optional()
 });
 
 export const adjustInput = z.object({
@@ -378,15 +384,34 @@ export const adjustInput = z.object({
   /** Total value in poisha for `opening` and `adjust_in`. Omit to use the average cost. */
   value: poisha.optional(),
   batch: z.object({ batchNo: z.string().trim().max(40).default(''), expiry: dateStr.nullable().default(null) }).optional(),
-  batchId: z.number().int().positive().nullable().optional()
+  batchId: z.number().int().positive().nullable().optional(),
+  /** Optional id chosen by the screen when the form opens; sending it again (double click, retry) never posts twice. */
+  requestId: z.string().min(8).max(64).optional()
 });
 
 const range = z.object({ from: dateStr.optional(), to: dateStr.optional() });
+
+// ===== Bulk product actions =====
+export type ProductDeleteBlockReason = 'hasSales' | 'hasPurchases' | 'hasStock' | 'hasHistory';
+
+export interface ProductsDeletePreview {
+  /** Products with no history anywhere: these would really be deleted. */
+  deletable: number[];
+  /** Products that have history: these can only be archived. */
+  blocked: { id: number; reason: ProductDeleteBlockReason }[];
+}
+
+/** Most products one bulk action may touch; keeps a single transaction short and bounded. */
+export const BULK_PRODUCT_MAX = 2000;
+const bulkIds = z.array(z.number().int().positive()).min(1).max(BULK_PRODUCT_MAX);
 
 export const catalogChannels = {
   'catalog:products': ch<ProductDto[]>()(z.object({ includeArchived: z.boolean().default(false) })),
   'catalog:productSave': ch<{ id: number }>()(productSaveInput, { access: 'manager', write: true }),
   'catalog:productArchive': ch()(z.object({ id: z.number().int().positive(), archived: z.boolean() }), { access: 'manager', write: true }),
+  'catalog:productsArchive': ch<{ changed: number; skipped: number }>()(z.object({ ids: bulkIds, archived: z.boolean() }), { access: 'manager', write: true }),
+  'catalog:productsDeletePreview': ch<ProductsDeletePreview>()(z.object({ ids: bulkIds }), { access: 'manager' }),
+  'catalog:productsDelete': ch<{ deleted: number; archivedInstead: number }>()(z.object({ ids: bulkIds, confirm: z.literal('DELETE') }), { access: 'manager', write: true }),
   'catalog:lookups': ch<{ categories: LookupDto[]; brands: LookupDto[] }>()(none),
   'catalog:lookupSave': ch<{ id: number }>()(lookupSaveInput, { access: 'manager', write: true }),
   'catalog:suppliers': ch<SupplierDto[]>()(z.object({ includeArchived: z.boolean().default(false) }), { access: 'manager' }),

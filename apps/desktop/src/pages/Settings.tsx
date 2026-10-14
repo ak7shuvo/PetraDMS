@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LOGO_MAX_BYTES, LOGO_TYPES, isBdMobile, type BusinessProfile, type LicenceStatus, type Settings, type UserRow, type Role } from '@petra/core';
+import { LOGO_MAX_BYTES, LOGO_TYPES, isBdMobile, type BusinessProfile, type Settings, type UserRow, type Role } from '@petra/core';
 import { call, errorText } from '../api';
 import { useI18n } from '../i18n';
 import { useApp, rememberMode } from '../store/app';
 import { useUi } from '../store/ui';
 import { Badge, Button, Card, ChangeSecretModal, Checkbox, Field, Input, Modal, Segmented, Select, SecretPicker, Switch, Table, Tabs, Textarea, TraderBrand, emptySecret, secretValid, toast, type SecretValue } from '../ui';
 
-type Tab = 'business' | 'appearance' | 'rules' | 'users' | 'licence';
+type Tab = 'business' | 'appearance' | 'rules' | 'users' | 'security';
 
 export function SettingsPage() {
   const { t } = useI18n();
@@ -25,7 +25,7 @@ export function SettingsPage() {
           { value: 'appearance', label: t('set.tab.appearance') },
           { value: 'rules', label: t('set.tab.rules') },
           { value: 'users', label: t('set.tab.users') },
-          { value: 'licence', label: t('set.tab.licence') }
+          { value: 'security', label: t('set.tab.security') }
         ]}
       />
       <div style={{ marginTop: 16 }}>
@@ -33,7 +33,7 @@ export function SettingsPage() {
         {tab === 'appearance' && <AppearanceTab />}
         {tab === 'rules' && <RulesTab />}
         {tab === 'users' && <UsersTab />}
-        {tab === 'licence' && <LicenceTab />}
+        {tab === 'security' && <SecurityTab />}
       </div>
     </div>
   );
@@ -332,51 +332,11 @@ function UserModal({ open, user, isSelf, onClose, onDone }: { open: boolean; use
   );
 }
 
-function LicenceTab() {
-  const { t, n } = useI18n();
-  const refresh = useApp((s) => s.refresh);
-  const [st, setSt] = useState<LicenceStatus | null>(null);
-  const [blob, setBlob] = useState('');
-  const [error, setError] = useState<string | null>(null);
+function SecurityTab() {
+  const { t } = useI18n();
   const [changeOpen, setChangeOpen] = useState(false);
-  useEffect(() => {
-    void call('licence:status').then(setSt);
-  }, []);
-  if (!st) return null;
-  const install = async (b: string) => {
-    setError(null);
-    try {
-      const next = await call('licence:install', { blob: b });
-      setSt(next);
-      setBlob('');
-      toast.ok(t('lic.installed'));
-      await refresh();
-    } catch (e) {
-      const problem = (e as { params?: { problem?: string } }).params?.problem;
-      setError(problem ? t(`lic.problem.${problem}`) : errorText(e));
-    }
-  };
   return (
     <div className="grid" style={{ gap: 16, maxWidth: 760 }}>
-      <Card title={t('lic.title')}>
-        <div className="grid" style={{ gap: 8 }}>
-          <div className="row"><Badge tone={st.state === 'licensed' ? 'ok' : st.state === 'trial' ? 'warn' : 'red'}>{t(`lic.state.${st.state}`)}</Badge>{st.daysLeft !== null && st.state !== 'clock_rollback' && <span data-testid="lic-days">{t('lic.daysLeft', { n: n(st.daysLeft) })}</span>}</div>
-          {st.state === 'licensed' && <div>{t('lic.customer')}: <strong>{st.customer}</strong> ({st.edition})</div>}
-          {st.state === 'licensed' && <div>{st.expiresAt ? t('lic.expiresOn', { date: n(st.expiresAt.split('-').reverse().join('/')) }) : t('lic.noExpiry')}</div>}
-          <div><strong>{t('lic.machine')}</strong><div className="num" style={{ textAlign: 'left', fontSize: 'var(--fs-xl)' }} data-testid="machine-code">{st.machineCode}</div><div className="p-hint">{t('lic.machineHelp')}</div>
-            <div style={{ marginTop: 8 }}><Button size="sm" onClick={() => void navigator.clipboard.writeText(st.machineCode).then(() => toast.ok(t('lic.copied')), () => toast.error(t('lic.copyFailed')))} data-testid="machine-copy">{t('lic.copyMachine')}</Button></div></div>
-        </div>
-      </Card>
-      <Card title={t('lic.install')}>
-        <div className="grid" style={{ gap: 12 }}>
-          <Field label={t('lic.paste')}>{(a) => <Textarea id={a.id} rows={3} value={blob} onChange={(e) => setBlob(e.target.value)} data-testid="lic-blob" />}</Field>
-          {error && <div className="p-error shake" role="alert" data-testid="lic-error">{error}</div>}
-          <div className="row">
-            <Button variant="primary" disabled={blob.trim().length < 20} onClick={() => void install(blob)} data-testid="lic-install">{t('lic.install')}</Button>
-            <Button onClick={() => void call('licence:pickFile').then(async (r) => { if (r.blob) await install(r.blob); })}>{t('lic.chooseFile')}</Button>
-          </div>
-        </div>
-      </Card>
       <Card title={t('set.changeSecret')}><Button onClick={() => setChangeOpen(true)}>{t('set.changeSecret')}</Button></Card>
       <ChangeSecretModal open={changeOpen} onClose={() => setChangeOpen(false)} />
     </div>

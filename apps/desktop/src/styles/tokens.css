@@ -1,25 +1,35 @@
-/* Design tokens (plan section 9). Colours fall back to the plan's values because the prototype
-   index.html was not supplied: red #C8202F, black #121212, cream #F6F1E7. */
+/* Design tokens (plan section 9). v1.1.2 palette: Deep Navy #0F172A (primary), Teal #14B8A6 and Gold #D4AF37 (accents),
+   Light Gray #F1F5F9 (background). Names kept from earlier versions so no rule had to move: --black is now the navy,
+   --cream the light gray, --paper white. --red is NOT a brand colour any more: it means danger and nothing else
+   (errors, delete, money owed). Teal marks what is interactive or selected, gold marks highlights. Light text on teal or
+   gold is too faint (about 2.4:1), so those fills carry navy text; teal used as text or as a switch uses --accent-dark. */
 :root {
   /* colour */
+  --brand: #0F172A;
+  --brand-dark: #020617;
+  --accent: #14B8A6;
+  --accent-dark: #0F766E;
+  --accent-tint: #D5F3EF;
+  --gold: #D4AF37;
+  --gold-tint: #F6EBC6;
   --red: #C8202F;
   --red-dark: #A21A27;
   --red-tint: #F4DCDD;
-  --black: #121212;
-  --ink: #1B1917;
-  --ink-2: #3D3934;
-  --muted: #6F685C;
-  --cream: #F6F1E7;
-  --cream-2: #EDE5D4;
-  --cream-3: #E2D8C2;
-  --paper: #FBF8F1;
-  --line: #D6CBB3;
-  --line-strong: #B9AC90;
+  --black: #0F172A;
+  --ink: #0F172A;
+  --ink-2: #334155;
+  --muted: #566579;
+  --cream: #F1F5F9;
+  --cream-2: #E5EAF1;
+  --cream-3: #D3DBE6;
+  --paper: #FFFFFF;
+  --line: #CBD5E1;
+  --line-strong: #75839A;
   --ok: #2E6B43;
-  --ok-tint: #DDEBDD;
-  --warn: #9A6A12;
-  --warn-tint: #F4E6C4;
-  --focus: #1B1917;
+  --ok-tint: #DCEFE3;
+  --warn: #8A6410;
+  --warn-tint: #F8EDC9;
+  --focus: #0F172A;
 
   /* spacing (4 px base) */
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
@@ -74,7 +84,7 @@
 
   /* depth (v1.1.1): warm, layered shadows. Resting sits on the page, raised is a hovered card or a primary button,
      floating is a menu, toast, dock panel or dialog. The inset highlight is the lit top edge. */
-  --sh-color: 46, 32, 18;
+  --sh-color: 15, 23, 42;
   --hl-top: inset 0 1px 0 rgba(255, 255, 255, .75);
   --shadow-rest: 0 1px 1px rgba(var(--sh-color), .04), 0 2px 6px -1px rgba(var(--sh-color), .08);
   --shadow-raised: 0 2px 4px rgba(var(--sh-color), .05), 0 12px 24px -8px rgba(var(--sh-color), .18);
@@ -82,18 +92,18 @@
   --shadow-inset: inset 0 1px 2px rgba(var(--sh-color), .09), inset 0 0 0 1px rgba(var(--sh-color), .02);
   --shadow-sticky: 0 3px 8px -2px rgba(var(--sh-color), .22);
   /* surfaces: a faint top-lit gradient on cards and controls */
-  --grad-card: linear-gradient(180deg, #FFFEFA 0%, var(--paper) 55%, #F9F4EA 100%);
-  --grad-control: linear-gradient(180deg, #FFFFFF 0%, #FBF8F1 100%);
-  --grad-primary: linear-gradient(180deg, #DA3747 0%, var(--red) 55%, #B91B29 100%);
-  --grad-primary-hover: linear-gradient(180deg, #CF2C3C 0%, #B81C2A 60%, #A01824 100%);
-  --grad-dark: linear-gradient(180deg, #2A2622 0%, var(--black) 100%);
-  --primary-edge: #8C1520;
+  --grad-card: linear-gradient(180deg, #FFFFFF 0%, var(--paper) 55%, #F8FAFC 100%);
+  --grad-control: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+  --grad-primary: linear-gradient(180deg, #1E293B 0%, var(--brand) 55%, #0B1220 100%);
+  --grad-primary-hover: linear-gradient(180deg, #334155 0%, #1E293B 60%, #0F172A 100%);
+  --grad-dark: linear-gradient(180deg, #1E293B 0%, var(--black) 100%);
+  --primary-edge: #020617;
 
   /* kept names (older rules) */
   --shadow-pop: var(--shadow-float);
   --shadow-1: var(--shadow-rest);
   --shadow-2: var(--shadow-raised);
-  --ring: 0 0 0 3px rgba(200, 32, 47, .22);
+  --ring: 0 0 0 3px rgba(20, 184, 166, .35);
 }
 
 html[lang='bn'] {
@@ -117,7 +127,7 @@ html[data-fontsize='xlarge'] { --fs-scale: 1.3; }
 html[data-contrast='high'] {
   --shadow-1: none; --shadow-2: none; --ring: 0 0 0 3px #000;
   --shadow-rest: none; --shadow-raised: none; --shadow-float: 0 0 0 2px #000; --shadow-inset: none; --shadow-sticky: none; --hl-top: 0 0 0 transparent;
-  --grad-card: var(--paper); --grad-control: var(--paper); --grad-primary: var(--red); --grad-primary-hover: var(--red-dark); --grad-dark: var(--black);
+  --grad-card: var(--paper); --grad-control: var(--paper); --grad-primary: var(--brand); --grad-primary-hover: var(--brand-dark); --grad-dark: var(--black);
   --ink: #000; --ink-2: #000; --muted: #2A2A2A;
   --cream: #FFFFFF; --cream-2: #F2F2F2; --cream-3: #E0E0E0; --paper: #FFFFFF;
   --line: #000; --line-strong: #000;
@@ -138,5 +148,5 @@ html[data-motion='off'] *, html[data-motion='off'] *::before, html[data-motion='
 html[data-lite='1'] {
   --shadow-rest: 0 1px 0 rgba(var(--sh-color), .10); --shadow-raised: 0 2px 0 rgba(var(--sh-color), .14); --shadow-float: 0 0 0 1px rgba(var(--sh-color), .25), 0 4px 0 rgba(var(--sh-color), .12);
   --shadow-inset: none; --shadow-sticky: 0 1px 0 rgba(var(--sh-color), .2);
-  --grad-card: var(--paper); --grad-control: var(--paper); --grad-primary: var(--red); --grad-primary-hover: var(--red-dark); --grad-dark: var(--black);
+  --grad-card: var(--paper); --grad-control: var(--paper); --grad-primary: var(--brand); --grad-primary-hover: var(--brand-dark); --grad-dark: var(--black);
 }

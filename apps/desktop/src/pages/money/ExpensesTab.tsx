@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { ExpenseDto } from '@petra/core';
 import { call, errorText } from '../../api';
 import { useI18n } from '../../i18n';
 import { useApp } from '../../store/app';
+import { newRequestId } from '../../ui/requestId';
 import { Badge, Button, Card, DateInput, DateRange, Drawer, EmptyState, Field, Input, Modal, MoneyInput, Select, Stat, Table, Textarea, monthStart, toast, useDisplayDate, useQuery, type Range } from '../../ui';
 
 export function ExpensesTab() {
@@ -74,12 +75,13 @@ export function ExpenseModal({ open, onClose, onDone }: { open: boolean; onClose
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const reqId = useRef(newRequestId());
   const cat = categoryId ?? categories.data?.[0]?.id ?? null;
   const valid = cat !== null && amount !== null && amount > 0 && day !== null;
-  const reset = () => { setAmount(null); setPayee(''); setNote(''); setError(null); setDay(today); };
+  const reset = () => { setAmount(null); setPayee(''); setNote(''); setError(null); setDay(today); reqId.current = newRequestId(); };
   const save = () => {
     setBusy(true);
-    void call('exp:save', { categoryId: cat!, amount: amount!, date: day!, accountId, payee, note })
+    void call('exp:save', { categoryId: cat!, amount: amount!, date: day!, accountId, payee, note, requestId: reqId.current })
       .then((r) => { toast.ok(`${t('exp.saved')} ${r.docNo}`); reset(); onDone(); }, (e: unknown) => setError(errorText(e)))
       .finally(() => setBusy(false));
   };

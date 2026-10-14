@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { EmployeeDto, SalarySheetDto } from '@petra/core';
 import { call, errorText } from '../api';
 import { useI18n } from '../i18n';
 import { useApp } from '../store/app';
 import { Badge, Button, Card, Checkbox, DateInput, Drawer, EmptyState, Field, Input, Modal, MoneyInput, PartyLedgerView, Segmented, Select, Stat, Table, Tabs, Textarea, toast, useDisplayDate, useQuery } from '../ui';
+import { newRequestId } from '../ui/requestId';
 
 export function EmployeesPage({ embedded }: { embedded?: boolean }) {
   const { t } = useI18n();
@@ -127,11 +128,19 @@ function PayModal({ open, employee, onClose, onDone }: { open: boolean; employee
   const [accountId, setAccountId] = useState<number | null>(null);
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const reqId = useRef(newRequestId());
   const valid = amount !== null && amount > 0 && day !== null;
-  const close = () => { setAmount(null); setNote(''); setError(null); onClose(); };
+  const close = () => { setAmount(null); setNote(''); setError(null); reqId.current = newRequestId(); onClose(); };
+  const pay = () => {
+    setBusy(true);
+    void call('emp:pay', { employeeId: employee.id, amount: amount!, date: day!, purpose, accountId, note, requestId: reqId.current })
+      .then((r) => { toast.ok(`${t('pay.paid')} ${r.docNo}`); setAmount(null); setNote(''); setError(null); reqId.current = newRequestId(); onDone(); }, (e: unknown) => setError(errorText(e)))
+      .finally(() => setBusy(false));
+  };
   return (
     <Modal open={open} title={`${t('emp.pay')}: ${employee.name}`} onClose={close}
-      footer={<><Button onClick={close}>{t('act.cancel')}</Button><Button variant="primary" disabled={!valid} data-testid="emp-pay-save" onClick={() => void call('emp:pay', { employeeId: employee.id, amount: amount!, date: day!, purpose, accountId, note }).then((r) => { toast.ok(`${t('pay.paid')} ${r.docNo}`); setAmount(null); setNote(''); setError(null); onDone(); }, (e: unknown) => setError(errorText(e)))}>{t('emp.pay')}</Button></>}>
+      footer={<><Button onClick={close}>{t('act.cancel')}</Button><Button variant="primary" disabled={!valid || busy} data-testid="emp-pay-save" onClick={pay}>{t('emp.pay')}</Button></>}>
       <div className="grid" style={{ gap: 12 }}>
         <div>{t('emp.balance')}: <strong>{money(employee.balance)}</strong></div>
         <Segmented label={t('emp.purpose')} value={purpose} onChange={setPurpose} options={[{ value: 'salary', label: t('emp.purposeSalary') }, { value: 'advance', label: t('emp.purposeAdvance') }]} />

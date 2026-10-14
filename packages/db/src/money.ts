@@ -5,6 +5,7 @@ import { nextDocNo } from './settings';
 import { type PartyKind, postCash, postLedger, resolveAccount } from './ledger';
 import { reverseDocument } from './reverse';
 import { audit } from './audit';
+import { postOnce } from './idempotency';
 
 // ===== Payments (customer receipts, supplier payments, employee salary/advance) =====
 
@@ -20,12 +21,19 @@ export interface PaymentInput {
   invoiceRefId?: number | null;
   purpose?: 'normal' | 'salary' | 'advance';
   note?: string;
+  /** Client-chosen id: submitting the same one again returns the first payment instead of posting another. */
+  requestId?: string;
 }
 
 const PARTY_TABLE: Record<PartyKind, string> = { customer: 'customers', supplier: 'suppliers', employee: 'employees' };
 
 /** Receive from a customer (RCT) or pay a supplier / employee (PAY). */
 export function postPayment(ctx: Ctx, input: PaymentInput): { id: number; docNo: string } {
+  const { requestId, ...data } = input;
+  return postOnce(ctx, 'payment', requestId, data, () => postPaymentOnce(ctx, input));
+}
+
+function postPaymentOnce(ctx: Ctx, input: PaymentInput): { id: number; docNo: string } {
   if (!Number.isSafeInteger(input.amount) || input.amount <= 0) throw new PetraError('INVALID_INPUT', 'amount must be a positive whole number of poisha', { field: 'amount' });
   const purpose = input.purpose ?? 'normal';
   if (input.partyKind === 'customer' && purpose !== 'normal') throw new PetraError('INVALID_INPUT', 'invalid payment purpose');
@@ -90,9 +98,18 @@ export interface ExpenseInput {
   accountId?: number | null;
   payee?: string;
   note?: string;
+  /** Fund this expense is paid from (DSR). Null or absent: an ordinary business expense. */
+  fundId?: number | null;
+  /** Client-chosen id: submitting the same one again returns the first expense instead of posting another. */
+  requestId?: string;
 }
 
 export function postExpense(ctx: Ctx, input: ExpenseInput): { id: number; docNo: string } {
+  const { requestId, ...data } = input;
+  return postOnce(ctx, 'expense', requestId, data, () => postExpenseOnce(ctx, input));
+}
+
+function postExpenseOnce(ctx: Ctx, input: ExpenseInput): { id: number; docNo: string } {
   if (!Number.isSafeInteger(input.amount) || input.amount <= 0) throw new PetraError('INVALID_INPUT', 'amount must be a positive whole number of poisha', { field: 'amount' });
   return tx(ctx, () => {
     assertDateOpen(ctx, input.date);
@@ -104,8 +121,8 @@ export function postExpense(ctx: Ctx, input: ExpenseInput): { id: number; docNo:
       "INSERT INTO expenses(doc_no, category_id, amount, account_id, payee, note, business_date, status, user_id, created_at) VALUES(?,?,?,?,?,?,?,'posted',?,?)",
       docNo, input.categoryId, input.amount, accountId, input.payee ?? '', input.note ?? '', input.date, ctx.userId, ctx.now()
     ).id;
-    postCash(ctx, { accountId, date: input.date, amount: -input.amount, source: 'expense', refType: 'expense', refId: id, note: input.payee });
-    audit(ctx, { action: 'expense.create', entity: 'expense', entityId: id, after: { docNo, amount: input.amount } });
+    postCash(ctx, { accountId, date: input.date, amount: -input.amount, source: 'expense', refType: 'expense', refId: id, note: input.payee, fundId: input.fundId ?? null });
+    audit(ctx, { action: 'expense.create', entity: 'expense', entityId: id, after: { docNo, amount: input.amount, ...(input.fundId ? { fundId: input.fundId } : {}) } });
     return { id, docNo };
   });
 }

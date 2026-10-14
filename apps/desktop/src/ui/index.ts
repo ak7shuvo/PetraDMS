@@ -20,3 +20,4 @@ export * from './PrintActions';
 export * from './ReceivePayment';
 export * from './ErrorBoundary';
 export * from './TraderBrand';
+export * from './Scene3D';

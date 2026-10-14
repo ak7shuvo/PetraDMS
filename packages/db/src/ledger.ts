@@ -1,6 +1,7 @@
 import { PetraError } from '@petra/core';
 import { get, run } from './sql';
 import type { Ctx } from './ctx';
+import { requireActiveFund } from './funds';
 
 export type PartyKind = 'customer' | 'supplier' | 'employee';
 export type LedgerKind = 'opening' | 'sale' | 'purchase' | 'payment' | 'return' | 'adjustment' | 'salary_due' | 'salary_paid' | 'advance' | 'void_reversal';
@@ -37,6 +38,12 @@ export function postLedger(ctx: Ctx, p: LedgerPost): number {
 
 export type CashSource = 'opening' | 'sale' | 'purchase' | 'payment' | 'expense' | 'salary' | 'advance' | 'refund' | 'day_close' | 'void_reversal';
 
+/**
+ * Kinds of cash movement that may be classified to a fund. Only DSR expenses for now; later DSR stages add their own
+ * kinds here. Sales, purchases, opening balances and day closes are business money and can never belong to a fund.
+ */
+const FUND_SOURCES: ReadonlySet<CashSource> = new Set<CashSource>(['expense']);
+
 export interface CashPost {
   accountId: number;
   date: string;
@@ -49,17 +56,29 @@ export interface CashPost {
   partyId?: number | null;
   note?: string;
   reversesId?: number | null;
+  /** Fund this movement belongs to (null or absent: ordinary business money). A reversal always inherits it. */
+  fundId?: number | null;
 }
 
 export function postCash(ctx: Ctx, p: CashPost): number {
   if (!Number.isSafeInteger(p.amount)) throw new PetraError('INVALID_INPUT', 'amount must be an integer');
   const acc = get<{ id: number; active: number }>(ctx.db, 'SELECT id, active FROM money_accounts WHERE id = ?', p.accountId);
   if (!acc) throw new PetraError('NOT_FOUND', 'money account not found', { what: 'account', id: p.accountId });
+  let fundId: number | null = null;
+  if (p.reversesId !== undefined && p.reversesId !== null) {
+    // a reversal compensates the original in the SAME fund, so the fund balance nets to zero
+    fundId = get<{ fund_id: number | null }>(ctx.db, 'SELECT fund_id FROM cash_transactions WHERE id = ?', p.reversesId)?.fund_id ?? null;
+    if (p.fundId !== undefined && p.fundId !== fundId) throw new PetraError('INVALID_INPUT', 'a reversal keeps the fund of the original', { field: 'fund' });
+  } else if (p.fundId !== undefined && p.fundId !== null) {
+    if (!FUND_SOURCES.has(p.source)) throw new PetraError('INVALID_INPUT', 'this kind of cash movement cannot belong to a fund', { field: 'fund' });
+    requireActiveFund(ctx, p.fundId);
+    fundId = p.fundId;
+  }
   const r = run(
     ctx.db,
-    'INSERT INTO cash_transactions(account_id, business_date, direction, amount, source, ref_type, ref_id, reverses_id, party_kind, party_id, note, user_id, created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',
+    'INSERT INTO cash_transactions(account_id, business_date, direction, amount, source, ref_type, ref_id, reverses_id, party_kind, party_id, note, user_id, created_at, fund_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
     p.accountId, p.date, p.amount >= 0 ? 'in' : 'out', p.amount, p.source, p.refType ?? null, p.refId ?? null, p.reversesId ?? null,
-    p.partyKind ?? null, p.partyId ?? null, p.note ?? '', ctx.userId, ctx.now()
+    p.partyKind ?? null, p.partyId ?? null, p.note ?? '', ctx.userId, ctx.now(), fundId
   );
   run(ctx.db, 'UPDATE money_accounts SET balance = balance + ? WHERE id = ?', p.amount, p.accountId);
   return r.id;

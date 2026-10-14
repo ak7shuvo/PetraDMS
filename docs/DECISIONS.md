@@ -172,3 +172,59 @@ No certificate is available. `signAndEditExecutable` stays true so icon/version 
 - **Games.** 2048, Snake and Memory are pure rule modules (`dock/games.ts`) with an injected random source, unit-tested for 2048 merge rules, snake collisions and memory pairing. They pause whenever the panel is closed or the window is not focused. Their keys are handled on the game element and stop there, so nothing reaches the page. Best scores are kept in browser storage on this computer.
 - **Settings.** "Show the utility dock" and "Show games in the dock" are in Settings, **Language and look** (the app has no separate General tab), Owner only. The main process refuses `settings:save` from Managers and Staff, as for every setting. Games off leaves only the calculator; dock off hides both and their shortcuts.
 - **Size.** Renderer bundle 1.65 MB → 1.35 MB, because the bundled fonts drop from 585 KB to 233 KB. JS +32 KB (+10 KB gzipped), CSS +19 KB (+3 KB gzipped). Fonts for printing in the Electron bundle drop from 301 KB to 217 KB.
+
+## D24. Licensing removed
+
+- **What.** The licence feature is gone: no 30-day trial, no licence key, no machine code, no read-only lock, no licence banner and no Licence tab in Settings. PetraDMS never locks itself.
+- **Code.** `licence.ts`, `publicKey.ts`, the `licence:*` IPC channels, `licence` in `AppStatus`, the `READ_ONLY` error, the `Dispatcher` licence guard and its `env` argument, the Electron machine-id code and the `tools/keygen` tool are deleted. `Dispatcher` is now built as `new Dispatcher(db, host, now?)`.
+- **Settings.** The old Licence tab also held the Change PIN/password card. That card now lives on a **Security** tab.
+- **Database.** No migration. The unused `license_state` table stays in the schema (migration 0001 is never edited) and is still left out of the full export. New shops no longer get a row in it.
+- **Docs.** `docs/LICENSING.md` is deleted. Earlier entries (D12, D21 and others) describe the old licence design and are kept only as history.
+
+
+## D25. Bulk product archive and delete: history means archive, never delete
+
+- **What.** The Products page can archive, restore or permanently delete many products at once (`catalog:productsArchive`, `catalog:productsDeletePreview`, `catalog:productsDelete`, in `packages/db/src/productsBulk.ts`). Each call is one transaction, so a failure leaves nothing half done, and writes one audit entry holding the ids and counts. A delete entry also keeps the SKU and name of what was removed, because the rows are gone.
+- **Why a product with history can only be archived.** Sales, purchases, returns, stock movements, batches and adjustments all point at a product, and invoices, ledgers, the stock value and every report are rebuilt from them. Removing the product would orphan those rows or change old totals, and the integrity checks (I1 to I12) would fail. Archiving hides the product from selling and keeps everything resolving. So the delete action never hard deletes such a product: the preview lists it as blocked (with the first applicable reason: sales, purchases, stock, other history) and the delete archives it instead, counted in `archivedInstead`.
+- **What counts as history.** Any row in a table with a foreign key to `products`, other than the product's own children (`product_packs`, `product_barcodes`, `supplier_products`). The tables are read from the schema at run time, so a table added by a future migration blocks deletion by default instead of being forgotten. Stock on hand or a non-zero stock value also blocks, and opening stock is a stock movement, so it counts. A product that was only imported or typed in, with no stock, can be deleted.
+- **What a delete removes.** The product, its packs, barcodes and company links. The default-unit links between the product and its packs are released first, since they point at each other. The SKU and barcodes are free afterwards, so the same SKU can be imported again; archiving keeps them reserved, as before.
+- **Archive rules.** `archiveProduct` has no refusal rule today (it does not look at stock), so the bulk archive applies none either. Unknown ids, repeated ids and products already in the target state are counted in `skipped` (`changed + skipped` always equals the number of ids sent), and never fail the batch. If a refusal rule is ever added to `archiveProduct`, it must be applied in `archiveProducts` too.
+- **Limits.** 1 to 2,000 ids per call. A bigger selection is not split, because that would give up all-or-nothing; the screen asks the user to select fewer. Only Manager and Owner may call the channels, and the typed word is checked by the server as well as the screen.
+- **Not changed.** No migration, no licensing, posting, stock or POS code, and the single-product archive button and channel behave exactly as before.
+
+## D26. Brand palette: navy, teal, gold, light gray; red is for danger only
+
+- **What.** Deep Navy `#0F172A` primary, Teal `#14B8A6` and Gold `#D4AF37` accents, Light Gray `#F1F5F9` background. All colour lives in `tokens.css`; new tokens `--brand`, `--brand-dark`, `--accent`, `--accent-dark`, `--accent-tint`, `--gold`, `--gold-tint`.
+- **Old token names kept.** `--black` is now the navy, `--cream` the light gray, `--paper` white. Renaming them would have touched hundreds of rules for no visible gain, so the names are legacy and the file header says so.
+- **Red.** Before, red was both the brand colour and the danger colour. It is now danger only (`.p-btn.danger`, errors, invalid fields, the red badge for money owed or low stock, the DUE stamp). Primary buttons are navy, so a delete button can no longer be mistaken for the main action.
+- **Contrast.** Raw teal and gold are too light for text on white (2.5:1 and 2.1:1). Fills in teal or gold carry navy text (7.2:1 and 8.5:1); teal as text, as a checkbox or as a switch uses `--accent-dark` `#0F766E` (5.5:1). `palette.test.ts` reads `tokens.css` and fails if any pair drops below AA.
+- **Print.** Documents stay mostly black on white so thermal and office printers behave: navy text and table header, a teal rule under the shop name. The DUE, PAID and VOID stamps keep their red, green and grey meaning.
+- **Not changed.** Layout, spacing, fonts, motion, the high-contrast mode (still black and white) and every behaviour.
+
+## D27. Sign-in backdrop: pure CSS 3D, no library
+
+- **What.** `ui/Scene3D.tsx` plus the `.scene3d` rules draw the sign-in backdrop with CSS 3D transforms (a perspective plane for the grid floor, seven six-faced cubes, two glows). No three.js or canvas, so no new dependency, no bundle growth and no GPU context to leak.
+- **Rules kept.** Only `transform` and `opacity` animate, as everywhere else. Reduced and Off motion stop every animation and the pointer tilt, and leave the picture; Lite shows 3 cubes and drops the floor mask; High contrast hides the scene and restores the plain background. The scene is `aria-hidden` and `pointer-events: none`, so the PIN pad is unaffected.
+- **Contrast.** Text that sits outside the white card (shop name, version line) turns light on the dark background; the card itself is unchanged.
+- **Scope.** Only the sign-in screen. The first-run wizard shares the `.center-screen` layout and can adopt the scene by adding `has-scene` and `<Scene3D />`.
+
+## D28. One money event, one posting: request ids and one-reversal indexes
+
+- **Finding (Stage 1 audit of posting).** `postExpense` and `postPayment` (customer receipt, supplier payment, employee salary or advance) had no protection against being called twice with the same intent, so a double click, a double Enter or a retry after a slow answer created two documents and two cash rows. Voids were already safe: `voidExpense` and `voidPayment` refuse a document that is already void inside the transaction, and `reverseDocument` only reverses rows that have no reversal yet.
+- **What changed.** The three channels (`exp:save`, `payment:save`, `emp:pay`) accept an optional `requestId` (8 to 64 characters). `postOnce` in `idempotency.ts` stores it with the first result in the table `idempotency_keys`, in the same transaction as the posting. The same id again returns that result and posts nothing; the same id with different data, or used for another kind of event, is refused with `INVALID_INPUT`. A failed attempt rolls the id back with everything else, so a corrected retry works. Ids older than 30 days are deleted when a new one is stored.
+- **Opt in, on purpose.** Without a `requestId` behaviour is unchanged, because two identical expenses can be two real expenses (two teas on one day). The screens send an id created when the form opens (`ui/requestId.ts`) and make a new one after each success or cancel.
+- **Voided then retried.** A retry with the id of a voided document returns the original document; it does not re-post. The void stays final.
+- **Reversals.** Migration 0003 adds unique partial indexes on `reverses_id` for `stock_movements`, `party_ledger` and `cash_transactions`, so the database itself refuses a second reversal of a row. Existing data already satisfies this (invariant I7), and the upgrade makes the automatic pre-migration backup first.
+- **No second record.** Nothing here adds an expense or payment table. Later DSR stages must read the existing `expenses`, `payments` and `cash_transactions` rows, not post their own.
+- **Not covered in Stage 1.** Sale and purchase saving (they have their own draft and undo flow) and salary-sheet generation (which already refuses a month that exists).
+
+## D29. DSR funds are a classification of cash rows, not a second ledger
+
+- **Choice.** A fund is a label (`cash_transactions.fund_id`, null for ordinary business money). It never holds a balance. A fund's balance, in later stages, is the sum of the cash rows that carry its id. Alternatives rejected: a separate DSR money account (it would need transfers just to pay one expense, and a DSR expense would be two postings) and a `fund_id` copied onto expenses and payments as well (two places that can disagree). The one authority is the cash row, which is also what the account balance, the cash book and day closing already read.
+- **Why it cannot double count.** Nothing is posted for a fund. An expense paid from a fund is the same one `expenses` row and the same one cash row as any other expense; the cash row has one extra column filled in. A DSR statement, the cash book and the general reports are different readings of the same rows.
+- **Fixed once posted.** A trigger refuses any change of `fund_id` on an existing row (moving a row would silently change two fund balances with no posting). A correction is a void and a new entry, like any other correction. Reversals take the fund of the original in `postCash`, so a void nets to zero inside the fund (invariant I13).
+- **What may carry a fund.** `postCash` accepts a fund only for the kinds listed in `FUND_SOURCES`, now just `expense`. Sales, purchases, customer payments, opening balances and day closes are business money and are refused. Later stages add their own kinds there.
+- **Hidden funds.** A hidden fund takes no new postings; old ones stay, and can still be voided.
+- **Roles.** Managers can read funds (they enter expenses); only the Owner creates, renames or hides them, like money accounts. The fund code is fixed after creation.
+- **Compatibility.** No existing row changes and no balance is touched. A fund starts with no money: opening balances are not invented, and nothing is posted when a fund is created.
+- **Known limit for Stage 3 and 5.** `cash_transactions.source` has a CHECK list, and SQLite cannot alter a CHECK in place. A new kind of movement (a DSR receipt, a transfer) needs that table to be rebuilt in a migration, or must reuse an existing kind. This is decided in those stages.

@@ -72,6 +72,17 @@ export interface SalarySheetDetail extends SalarySheetDto {
   rows: SalaryLineDto[];
 }
 
+export interface FundDto {
+  id: number;
+  code: string;
+  name: string;
+  nameBn: string;
+  kind: 'dsr';
+  active: boolean;
+  /** Cash movements classified to this fund, reversals included. */
+  movements: number;
+}
+
 export interface CashbookRow {
   id: number;
   date: string;
@@ -85,6 +96,9 @@ export interface CashbookRow {
   refNo: string;
   reversal: boolean;
   reversed: boolean;
+  /** Fund the movement is classified to (null: ordinary business money). */
+  fundId: number | null;
+  fundCode: string | null;
 }
 
 export interface CashbookView {
@@ -126,8 +140,18 @@ export interface DayStatus {
 const poisha = z.number().int().min(0).max(9_000_000_000_000);
 const posPoisha = z.number().int().positive().max(9_000_000_000_000);
 const posId = z.number().int().positive();
+
+export const fundSaveInput = z.object({
+  id: posId.optional(),
+  code: z.string().trim().toUpperCase().regex(/^[A-Z0-9_-]{2,12}$/, 'use 2 to 12 letters, digits, - or _'),
+  name: z.string().trim().min(1).max(60),
+  nameBn: z.string().trim().max(60).default(''),
+  active: z.boolean().default(true)
+});
 const month = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
 const reason = z.string().trim().min(1).max(300);
+/** Optional id chosen by the screen when a form opens; sending it again (double click, retry) never posts twice. */
+export const requestId = z.string().min(8).max(64).optional();
 const range = z.object({ from: dateStr.optional(), to: dateStr.optional() });
 
 export const expenseSaveInput = z.object({
@@ -136,7 +160,10 @@ export const expenseSaveInput = z.object({
   date: dateStr,
   accountId: posId.nullable().default(null),
   payee: z.string().trim().max(80).default(''),
-  note: z.string().trim().max(300).default('')
+  note: z.string().trim().max(300).default(''),
+  /** Fund (DSR) the expense is paid from; null for an ordinary business expense. */
+  fundId: posId.nullable().default(null),
+  requestId
 });
 
 export const expenseCategorySaveInput = z.object({
@@ -162,7 +189,8 @@ export const employeePayInput = z.object({
   date: dateStr,
   purpose: z.enum(['salary', 'advance']),
   accountId: posId.nullable().default(null),
-  note: z.string().trim().max(300).default('')
+  note: z.string().trim().max(300).default(''),
+  requestId
 });
 
 export const salaryGenerateInput = z.object({
@@ -201,6 +229,8 @@ export const moneyChannels = {
   'salary:void': ch()(z.object({ id: posId, reason }), { access: 'manager', write: true }),
 
   'money:accountSave': ch<{ id: number }>()(accountSaveInput, { access: 'owner', write: true }),
+  'fund:list': ch<FundDto[]>()(z.object({ includeInactive: z.boolean().default(false) }), { access: 'manager' }),
+  'fund:save': ch<{ id: number }>()(fundSaveInput, { access: 'owner', write: true }),
   'cash:book': ch<CashbookView>()(range.extend({ accountId: posId.optional() }), { access: 'manager' }),
 
   'day:status': ch<DayStatus>()(z.object({ date: dateStr.optional() }), { access: 'manager' }),

@@ -11,32 +11,6 @@ import { registeredPaths } from '../pages/registry';
 import { Tour, markTour, tourSeen } from '../tour/Tour';
 import { Dock } from '../dock/Dock';
 
-function LicenceBanner() {
-  const { t, n } = useI18n();
-  const lic = useApp((s) => s.status?.licence);
-  const navigate = useNavigate();
-  const role = useApp((s) => s.status?.session?.role);
-  if (!lic) return null;
-  let text: string | null = null;
-  let warn = false;
-  if (lic.state === 'expired') text = t('lic.banner.expired');
-  else if (lic.state === 'clock_rollback') text = t('lic.banner.clock');
-  else if (lic.state === 'trial') {
-    warn = true;
-    text = lic.daysLeft !== null && lic.daysLeft <= 1 ? t('lic.banner.trialLast') : t('lic.banner.trial', { n: n(lic.daysLeft ?? 0) });
-  } else if (lic.state === 'licensed' && lic.daysLeft !== null && lic.daysLeft <= 30) {
-    warn = true;
-    text = t('lic.banner.expiring', { n: n(lic.daysLeft) });
-  }
-  if (!text) return null;
-  return (
-    <div className={`banner${warn ? ' warn' : ''}`} role="status" data-testid="licence-banner">
-      <span style={{ flex: 1 }}>{text}</span>
-      {role === 'owner' && <Button size="sm" onClick={() => navigate('/settings')}>{t('lic.banner.open')}</Button>}
-    </div>
-  );
-}
-
 /** Shown after the app restored a backup by itself because the data file was damaged. The Owner dismisses it once read. */
 function RecoveryBanner() {
   const { t, n } = useI18n();
@@ -88,7 +62,6 @@ function Banners({ invite }: { invite: ReactNode }) {
       <RecoveryBanner />
       <DemoBanner />
       {invite}
-      <LicenceBanner />
     </div>
   );
 }
@@ -109,7 +82,6 @@ export function Shell() {
   const role = session?.role ?? 'staff';
   const nav = visibleNav(mode, registeredPaths(role));
   const [launching, setLaunching] = useState(() => effectiveMotion({ animations, liteActive }) === 'full' && !sessionStorageFlag());
-  const licence = useApp((s) => s.status?.licence);
   const recovery = useApp((s) => s.status?.recovery);
   const demo = useApp((s) => s.status?.demo);
   const [touring, setTouring] = useState(false);
@@ -120,7 +92,7 @@ export function Shell() {
     setInviteGone(true);
     if (session) markTour(session.userId, finished ? 'done' : 'skipped');
   };
-  const hasBanner = showInvite || !!demo || !!recovery || (!!licence && (licence.state !== 'licensed' || (licence.daysLeft !== null && licence.daysLeft <= 30)));
+  const hasBanner = showInvite || !!demo || !!recovery;
 
   useEffect(() => {
     const start = () => setTouring(true);

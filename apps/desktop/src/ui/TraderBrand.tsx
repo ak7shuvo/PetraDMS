@@ -37,13 +37,15 @@ export function TraderBrand({ name, sub, testId }: { name?: string; sub?: string
   );
 }
 
-/** "PetraDMS · v1.1.1" with "Made by Petra" under it: the product and its maker, small and quiet. */
+/**
+ * The product and its maker, small and quiet: "PetraDMS" with "Made by Petra" under it. No version number: the
+ * version belongs in Help > About and in the support file, not in the product's name.
+ */
 export function ProductFooter() {
-  const { t, n } = useI18n();
-  const version = useApp((s) => s.status?.appVersion ?? '');
+  const { t } = useI18n();
   return (
     <div className="powered" data-testid="product-footer">
-      <div className="powered-product" data-testid="footer-product"><strong>{VENDOR.productName}</strong>{version ? ` · v${n(version)}` : ''}</div>
+      <div className="powered-product" data-testid="footer-product"><strong>{VENDOR.productName}</strong></div>
       <div className="powered-maker" data-testid="made-by">{t('brand.madeBy', { company: VENDOR.companyName })}</div>
     </div>
   );

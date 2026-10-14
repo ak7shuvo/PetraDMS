@@ -102,5 +102,20 @@
   "sal.emptyTitle": "No salary sheet yet",
   "sal.emptyBody": "Generate one at the end of the month.",
   "sal.noneTitle": "Nobody has a salary",
-  "sal.noneBody": "Set a monthly salary on each employee first."
+  "sal.noneBody": "Set a monthly salary on each employee first.",
+  "money.funds": "Funds",
+  "fund.title": "Funds",
+  "fund.intro": "A fund labels which cash movements belong to a purpose, such as DSR. It holds no money of its own: the money stays in your accounts and the fund only marks it, so nothing is counted twice.",
+  "fund.add": "Add fund",
+  "fund.edit": "Edit fund",
+  "fund.code": "Code",
+  "fund.codeHint": "2 to 12 letters or digits, for example DSR. It cannot be changed later.",
+  "fund.movements": "Movements",
+  "fund.hide": "Hide fund",
+  "fund.show": "Show fund",
+  "fund.hidden": "Hidden",
+  "fund.showHidden": "Show hidden funds",
+  "fund.emptyTitle": "No funds yet",
+  "fund.emptyBody": "Add a DSR fund to start labelling cash movements.",
+  "fund.col": "Fund"
 }

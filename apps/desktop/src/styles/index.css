@@ -2,9 +2,13 @@
 @import './fonts.css';
 @import './tokens.css';
 @import './components.css';
+@import './login.css';
 
 @theme inline {
   --color-red: var(--red);
+  --color-brand: var(--brand);
+  --color-accent: var(--accent);
+  --color-gold: var(--gold);
   --color-black: var(--black);
   --color-cream: var(--cream);
   --font-sans: var(--font-ui);
@@ -26,11 +30,11 @@ body {
 html { font-synthesis: none; }
 strong, b, th, optgroup { font-weight: var(--fw-strong); }
 /* Bangla has no bold; emphasis is carried by ink colour and a touch of spacing instead */
-html[lang='bn'] .main :is(strong, b), html[lang='bn'] .p-modal :is(strong, b) { color: var(--ink); letter-spacing: .01em; }
+html[lang='bn'] .main :is(strong, b), html[lang='bn'] .p-modal :is(strong, b), html[lang='bn'] .p-drawer :is(strong, b) { color: var(--ink); letter-spacing: .01em; }
 * { box-sizing: border-box; }
 button, input, select, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-::selection { background: var(--red); color: var(--paper); }
+::selection { background: var(--accent); color: var(--brand); }
 h1, h2, h3, h4 { margin: 0; font-weight: var(--fw-strong); letter-spacing: var(--track-head); line-height: var(--lh-tight); }
 /* big headings, the brand and hero figures: the same soft face, larger, never heavier */
 .page-h h2, .topbar h1, .display, .p-stat-value, .brand-name, .center-screen h1 { font-family: var(--font-display); letter-spacing: var(--track-head); }

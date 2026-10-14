@@ -38,10 +38,4 @@ describe('no secrets in the repository', () => {
     }
     expect(hits).toEqual([]);
   });
-
-  it('the only key in the source is the PUBLIC verification key', () => {
-    const src = fs.readFileSync(path.join(root, 'packages', 'db', 'src', 'app', 'publicKey.ts'), 'utf8');
-    expect(src).toContain('BEGIN PUBLIC KEY');
-    expect(src).not.toContain('PRIVATE');
-  });
 });

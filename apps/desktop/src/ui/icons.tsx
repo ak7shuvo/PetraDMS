@@ -38,8 +38,8 @@ export const IconBack = (p: P) => <Svg {...p}><path d="M15 5l-7 7 7 7" /></Svg>;
 export function BrandMark({ size = 34 }: { size?: number }) {
   return (
     <svg className="brand-mark logo-draw" width={size} height={size} viewBox="0 0 40 40" aria-hidden="true">
-      <rect x="1.5" y="1.5" width="37" height="37" fill="#C8202F" stroke="#F6F1E7" strokeWidth="1.5" />
-      <path d="M12 31V9h9.5a6.5 6.5 0 010 13H12" fill="none" stroke="#F6F1E7" strokeWidth="3.2" strokeLinecap="square" />
+      <rect x="1.5" y="1.5" width="37" height="37" fill="#0F172A" stroke="#D4AF37" strokeWidth="1.5" />
+      <path d="M12 31V9h9.5a6.5 6.5 0 010 13H12" fill="none" stroke="#D4AF37" strokeWidth="3.2" strokeLinecap="square" />
     </svg>
   );
 }

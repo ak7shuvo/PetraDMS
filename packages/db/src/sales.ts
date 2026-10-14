@@ -9,6 +9,7 @@ import { postCash, postLedger, resolveAccount } from './ledger';
 import { loadProduct, stockIn, stockOut, type ProductRow } from './stock';
 import { reverseDocument } from './reverse';
 import { audit } from './audit';
+import { postOnce } from './idempotency';
 
 export type PriceTier = 'retail' | 'wholesale' | 'dealer';
 
@@ -38,6 +39,8 @@ export interface SaleInput {
   priceTier?: PriceTier;
   /** A manager/owner who approved a below-minimum price or a credit-limit breach. */
   approvedBy?: number | null;
+  /** Client-chosen id: submitting the same one again (double click, retry) returns the first invoice and posts nothing new. */
+  requestId?: string;
 }
 
 export interface SaleResult {
@@ -175,6 +178,12 @@ function postSaleBody(ctx: Ctx, saleId: number, revision: number, date: string, 
 type InvoiceResultLine = InvoiceResult['lines'][number];
 
 export function postSale(ctx: Ctx, input: SaleInput): SaleResult {
+  const { requestId, approvedBy, ...data } = input;
+  void approvedBy; // who approved is not part of what was sold
+  return postOnce(ctx, 'sale', requestId, data, () => postSaleOnce(ctx, input));
+}
+
+function postSaleOnce(ctx: Ctx, input: SaleInput): SaleResult {
   return tx(ctx, () => {
     assertDateOpen(ctx, input.date);
     const p = prepareSale(ctx, input);
@@ -267,6 +276,8 @@ export interface SaleReturnInput {
   refundMode: 'due' | 'cash';
   accountId?: number | null;
   reason?: string;
+  /** Client-chosen id: the same id twice returns the first return and posts nothing new. */
+  requestId?: string;
 }
 
 export interface SaleReturnResult {
@@ -285,6 +296,11 @@ export function returnedQty(ctx: Ctx, saleItemId: number): number {
 }
 
 export function postSaleReturn(ctx: Ctx, input: SaleReturnInput): SaleReturnResult {
+  const { requestId, ...data } = input;
+  return postOnce(ctx, 'sale_return', requestId, data, () => postSaleReturnOnce(ctx, input));
+}
+
+function postSaleReturnOnce(ctx: Ctx, input: SaleReturnInput): SaleReturnResult {
   return tx(ctx, () => {
     assertDateOpen(ctx, input.date);
     const sale = loadSale(ctx, input.saleId);

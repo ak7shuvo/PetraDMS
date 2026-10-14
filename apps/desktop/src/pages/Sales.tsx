@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useRequest } from '../ui/requestId';
 import { useLocation } from 'react-router-dom';
 import type { SaleDetail, SaleItemDto, SaleListItem } from '@petra/core';
 import { formatBoxPcs, mulDiv } from '@petra/core';
@@ -182,6 +183,7 @@ function SaleReturnModal({ open, detail, onClose, onDone }: { open: boolean; det
   const [mode, setMode] = useState<'due' | 'cash'>(detail.customerId ? 'due' : 'cash');
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const req = useRequest();
   const accounts = useQuery('money:accounts', undefined, open);
   const [accountId, setAccountId] = useState<number | null>(null);
   const groups = useMemo(() => {
@@ -220,7 +222,7 @@ function SaleReturnModal({ open, detail, onClose, onDone }: { open: boolean; det
   return (
     <Modal open={open} wide title={t('sales.return')} onClose={onClose}
       footer={<><Button onClick={onClose}>{t('act.cancel')}</Button><Button variant="primary" disabled={!valid} data-testid="return-save"
-        onClick={() => void call('sale:return', { saleId: detail.id, date: today, items: active.flatMap((l) => l.parts), refundMode: mode, accountId: mode === 'cash' ? accountId : null, reason }).then(() => { toast.ok(t('pur.returned')); onDone(); }, (e: unknown) => setError(errorText(e)))}>{t('sales.return')}</Button></>}>
+        onClick={() => void req.guard(() => call('sale:return', { saleId: detail.id, date: today, items: active.flatMap((l) => l.parts), refundMode: mode, accountId: mode === 'cash' ? accountId : null, reason, requestId: req.id() }).then(() => { req.renew(); toast.ok(t('pur.returned')); onDone(); }, (e: unknown) => setError(errorText(e))))}>{t('sales.return')}</Button></>}>
       <div className="grid" style={{ gap: 12 }}>
         <p className="muted" style={{ margin: 0 }}>{t('sales.returnHelp')}</p>
         <table className="lines">

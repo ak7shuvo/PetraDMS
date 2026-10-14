@@ -43,7 +43,7 @@ export function BarChart({ data, title, fmt = (n) => String(Math.round(n)) }: { 
         const x = M.l + i * bw + bw * 0.18;
         return (
           <g key={d.label}>
-            <rect className="bar-grow" style={{ animationDelay: `${i * 40}ms` }} x={x} y={H - M.b - h} width={bw * 0.64} height={h} fill="var(--red)" />
+            <rect className="bar-grow" style={{ animationDelay: `${i * 40}ms` }} x={x} y={H - M.b - h} width={bw * 0.64} height={h} fill="var(--accent)" />
             <text x={x + bw * 0.32} y={H - M.b + 14} textAnchor="middle">{d.label}</text>
           </g>
         );
@@ -61,7 +61,7 @@ export function LineChart({ data, title, fmt = (n) => String(Math.round(n)) }: {
   for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i]![0] - pts[i - 1]![0], pts[i]![1] - pts[i - 1]![1]);
   return (
     <Frame max={max} title={title} fmt={fmt}>
-      <path className="chart-draw" style={{ ['--len' as string]: Math.ceil(len) + 2 }} d={path} fill="none" stroke="var(--red)" strokeWidth="2.5" />
+      <path className="chart-draw" style={{ ['--len' as string]: Math.ceil(len) + 2 }} d={path} fill="none" stroke="var(--brand)" strokeWidth="2.5" />
       {pts.map(([x, y], i) => (
         <g key={data[i]!.label}>
           <rect x={x - 3} y={y - 3} width="6" height="6" fill="var(--black)" />

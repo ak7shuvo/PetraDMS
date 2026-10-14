@@ -51,7 +51,7 @@ export function makeFmt(o: PrintOpts): Fmt {
 const BASE_CSS = `
 *{box-sizing:border-box}
 html{font-synthesis:none}
-body{margin:0;font-family:'Nunito','Tiro Bangla','Noto Serif Bengali','Segoe UI','Nirmala UI',sans-serif;color:#121212;font-size:12px;line-height:1.45;font-variant-numeric:tabular-nums}
+body{margin:0;font-family:'Nunito','Tiro Bangla','Noto Serif Bengali','Segoe UI','Nirmala UI',sans-serif;color:#0F172A;font-size:12px;line-height:1.45;font-variant-numeric:tabular-nums}
 :lang(bn) body,body:lang(bn){line-height:1.7}
 h1,h2,h3{margin:0;font-family:'Nunito','Tiro Bangla','Noto Serif Bengali','Nirmala UI',sans-serif;font-weight:600}
 td.r,.r .num,.num{font-family:'JetBrains Mono','Tiro Bangla',ui-monospace,monospace}
@@ -68,17 +68,17 @@ table{border-collapse:collapse;width:100%}
 const A4_CSS = `
 @page{size:A4;margin:14mm}
 body{font-size:12px}
-.head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #C8202F;padding-bottom:8px;margin-bottom:10px}
-.biz h1{font-size:22px;color:#C8202F}
+.head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #14B8A6;padding-bottom:8px;margin-bottom:10px}
+.biz h1{font-size:22px;color:#0F172A}
 .doc{text-align:right}.doc h2{font-size:18px;text-transform:uppercase;letter-spacing:.06em}
 .meta{display:flex;justify-content:space-between;gap:16px;margin:8px 0 12px}
 .meta div{flex:1}
-.items th{background:#121212;color:#fff;padding:5px 6px;text-align:left;font-weight:600}
+.items th{background:#0F172A;color:#fff;padding:5px 6px;text-align:left;font-weight:600}
 .items th.r{text-align:right}
 .items td{padding:5px 6px;border-bottom:1px solid #ddd;vertical-align:top}
 .totals{margin-left:auto;width:55%;margin-top:10px}
 .totals td{padding:3px 6px}
-.totals tr.grand td{font-size:14px;font-weight:600;border-top:2px solid #121212}
+.totals tr.grand td{font-size:14px;font-weight:600;border-top:2px solid #0F172A}
 .foot{margin-top:18px;border-top:1px solid #aaa;padding-top:6px;display:flex;justify-content:space-between;align-items:flex-end}
 `;
 
@@ -258,7 +258,7 @@ export function renderTableDoc(doc: TableDoc, b: PrintBusiness, o: PrintOpts): s
   const th = doc.columns.map((c) => `<th class="${c.align === 'r' ? 'r' : ''}">${esc(c.header)}</th>`).join('');
   const cell = (c: { align?: 'l' | 'r' }, v: string) => `<td class="${c.align === 'r' ? 'r' : ''}">${esc(v)}</td>`;
   const body = doc.rows.map((r) => `<tr>${r.map((v, i) => cell(doc.columns[i] ?? {}, v)).join('')}</tr>`).join('');
-  const tot = (doc.totals ?? []).map((r) => `<tr style="font-weight:600;border-top:2px solid #121212">${r.map((v, i) => cell(doc.columns[i] ?? {}, v)).join('')}</tr>`).join('');
+  const tot = (doc.totals ?? []).map((r) => `<tr style="font-weight:600;border-top:2px solid #0F172A">${r.map((v, i) => cell(doc.columns[i] ?? {}, v)).join('')}</tr>`).join('');
   const summary = (doc.summary ?? []).map(([k, v]) => `<div><strong>${esc(k)}:</strong> ${esc(v)}</div>`).join('');
   const head = businessHeader(b, o, doc.title, doc.subtitle ?? '');
   return wrapDoc(doc.title, `${head}${summary ? `<div class="meta"><div>${summary}</div></div>` : ''}<table class="items"><thead><tr>${th}</tr></thead><tbody>${body}${tot}</tbody></table><div class="foot"><div class="muted">${esc(f.t('printed'))}: ${esc(f.date(new Date().toISOString().slice(0, 10)))}</div></div>`, o);

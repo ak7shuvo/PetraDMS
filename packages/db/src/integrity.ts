@@ -28,7 +28,7 @@ function ids(db: Db, sql: string, ...params: (string | number)[]): number[] {
 }
 
 /**
- * Asserts invariants I1-I10 from section 7 of the plan and I11-I12 added in v1.1 (box + pcs lines, company links) (plus a few document-level consistency checks).
+ * Asserts invariants I1-I10 from section 7 of the plan and I11-I12 added in v1.1 (box + pcs lines, company links) and I13 in v1.1.2 (funds) (plus a few document-level consistency checks).
  * Returns every violation found; an empty array means the database is sound.
  */
 export function checkIntegrity(db: Db, opts: { stopAtFirst?: boolean } = {}): IntegrityViolation[] {
@@ -97,6 +97,14 @@ export function checkIntegrity(db: Db, opts: { stopAtFirst?: boolean } = {}): In
       ...ids(db, `SELECT p.id FROM products p JOIN product_packs k ON k.id = p.default_sale_pack_id WHERE k.product_id != p.id`),
       ...ids(db, `SELECT p.id FROM products p JOIN product_packs k ON k.id = p.default_purchase_pack_id WHERE k.product_id != p.id`)
     ]));
+
+  // I13: funds classify cash movements; they never change a balance by themselves.
+  //  (a) a reversal sits in the same fund as the row it reverses, so the fund nets to zero after a void
+  //  (b) only kinds of movement that may belong to a fund carry one (never sales, purchases, opening balances, day closes)
+  checks.push(() => add('I13', 'a cash reversal is in a different fund than the row it reverses',
+    ids(db, `SELECT r.id FROM cash_transactions r JOIN cash_transactions o ON o.id = r.reverses_id WHERE r.fund_id IS NOT o.fund_id`)));
+  checks.push(() => add('I13', 'a cash movement that may not belong to a fund carries one',
+    ids(db, `SELECT id FROM cash_transactions WHERE fund_id IS NOT NULL AND source NOT IN ('expense', 'void_reversal')`)));
 
   // I6: money account balance == sum of cash transactions
   checks.push(() => add('I6', 'money account balance differs from the sum of its cash transactions',

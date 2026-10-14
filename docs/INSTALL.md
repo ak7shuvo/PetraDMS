@@ -20,8 +20,6 @@ For Windows 10 and 11, 64-bit. No internet is needed after the file is downloade
 6. **Print or write down the recovery code and keep it away from the computer.** It is the only way back in if the PIN is forgotten.
 7. Press Finish. A short tour is offered. To look around with sample data first, open Settings, then Data, then Demo.
 
-A 30-day free trial starts now. Then enter the licence key from **Settings, Licence**; the machine code to send is shown there.
-
 ## Where things are
 
 - Data: the folder chosen in step 4, `data\petra.db`. Backups, invoices (PDF) and exports are next to it. See **Backup** inside the app.
@@ -30,7 +28,7 @@ A 30-day free trial starts now. Then enter the licence key from **Settings, Lice
 
 ## Moving to another computer
 
-Back up (Backup page, copy the `.petrabak` file), install PetraDMS on the new computer, and use **Backup, Restore** on a fresh install. The licence is tied to a computer, so request a new key for the new machine code.
+Back up (Backup page, copy the `.petrabak` file), install PetraDMS on the new computer, and use **Backup, Restore** on a fresh install.
 
 ## If something goes wrong
 

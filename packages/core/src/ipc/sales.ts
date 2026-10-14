@@ -179,7 +179,7 @@ export const saleBodyInput = z.object({
   approvalToken: z.string().max(80).optional()
 });
 
-export const saleSaveInput = saleBodyInput.extend({ date: dateStr });
+export const saleSaveInput = saleBodyInput.extend({ date: dateStr, requestId: z.string().min(8).max(64).optional() });
 export const saleEditInput = saleBodyInput.extend({ id: z.number().int().positive(), reason: z.string().trim().min(1).max(300) });
 
 export const saleReturnInput = z.object({
@@ -188,7 +188,8 @@ export const saleReturnInput = z.object({
   items: z.array(z.object({ saleItemId: z.number().int().positive(), baseQty: qty })).min(1).max(300),
   refundMode: z.enum(['due', 'cash']),
   accountId: z.number().int().positive().nullable().default(null),
-  reason: z.string().trim().max(300).default('')
+  reason: z.string().trim().max(300).default(''),
+  requestId: z.string().min(8).max(64).optional()
 });
 
 export const printFormat = z.enum(['a4', 'thermal80', 'thermal58']);

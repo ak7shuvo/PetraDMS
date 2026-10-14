@@ -6,7 +6,7 @@ describe('manuals', () => {
   const en = manualFor('en');
   const bn = manualFor('bn');
   it('have the same number of sections in both languages', () => {
-    expect(en.sections.length).toBe(16);
+    expect(en.sections.length).toBe(15);
     expect(bn.sections.length).toBe(en.sections.length);
   });
   it('have a title, an intro and a body for every section', () => {

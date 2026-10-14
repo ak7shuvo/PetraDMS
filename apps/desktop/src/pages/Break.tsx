@@ -11,7 +11,7 @@ const ROWS = 5;
 const BRICK_H = 18;
 const PAD_W = 96;
 const PAD_H = 12;
-const COLOURS = ['#C8202F', '#A21A27', '#1B1917', '#3D3934', '#B9B0A0'];
+const COLOURS = ['#0F172A', '#14B8A6', '#D4AF37', '#0F766E', '#94A3B8'];
 
 interface State {
   bricks: boolean[];
@@ -112,7 +112,7 @@ export function BreakPage({ onExit }: { onExit: () => void }) {
     const draw = () => {
       const c = canvas.current?.getContext('2d');
       if (!c) return;
-      c.fillStyle = '#F6F1E7';
+      c.fillStyle = '#F1F5F9';
       c.fillRect(0, 0, W, H);
       const bw = W / COLS;
       s.bricks.forEach((alive, i) => {
@@ -120,9 +120,9 @@ export function BreakPage({ onExit }: { onExit: () => void }) {
         c.fillStyle = COLOURS[Math.floor(i / COLS)] as string;
         c.fillRect((i % COLS) * bw + 2, 40 + Math.floor(i / COLS) * BRICK_H + 2, bw - 4, BRICK_H - 4);
       });
-      c.fillStyle = '#1B1917';
+      c.fillStyle = '#0F172A';
       c.fillRect(s.px, H - 24, PAD_W, PAD_H);
-      c.fillStyle = '#C8202F';
+      c.fillStyle = '#14B8A6';
       c.beginPath();
       c.arc(s.bx, s.by, 6, 0, Math.PI * 2);
       c.fill();

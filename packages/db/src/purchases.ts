@@ -8,6 +8,7 @@ import { resolvePack } from './sales';
 import { reverseDocument } from './reverse';
 import { audit } from './audit';
 import { touchSupplierProduct } from './supplierProducts';
+import { postOnce } from './idempotency';
 
 export interface PurchaseLineInput {
   productId: number;
@@ -49,6 +50,8 @@ export interface PurchaseInput {
   note?: string;
   /** Required to post a company invoice number that was already used for this company. */
   duplicateReason?: string;
+  /** Client-chosen id: the same id twice (double click, retry) returns the first purchase and posts nothing new. */
+  requestId?: string;
 }
 
 export interface PurchaseResult { id: number; docNo: string; total: number; paid: number; due: number }
@@ -62,6 +65,11 @@ export function findDuplicateInvoice(ctx: Ctx, supplierId: number | null | undef
 }
 
 export function postPurchase(ctx: Ctx, input: PurchaseInput): PurchaseResult {
+  const { requestId, ...data } = input;
+  return postOnce(ctx, 'purchase', requestId, data, () => postPurchaseOnce(ctx, input));
+}
+
+function postPurchaseOnce(ctx: Ctx, input: PurchaseInput): PurchaseResult {
   return tx(ctx, () => {
     assertDateOpen(ctx, input.date);
     if (input.lines.length === 0) throw new PetraError('INVALID_INPUT', 'add at least one item', { field: 'lines' });
@@ -159,13 +167,22 @@ export interface PurchaseReturnInput {
   refundMode: 'due' | 'cash';
   accountId?: number | null;
   reason?: string;
+  /** Client-chosen id: the same id twice returns the first return and posts nothing new. */
+  requestId?: string;
 }
 
 /**
  * Purchase return: stock leaves at the CURRENT average cost; any difference to the credit the supplier
  * gives is booked to COGS (section 5.4) via `variance = cost_value - credit`.
  */
-export function postPurchaseReturn(ctx: Ctx, input: PurchaseReturnInput): { id: number; docNo: string; credit: number; costValue: number; variance: number } {
+export function postPurchaseReturn(ctx: Ctx, input: PurchaseReturnInput): PurchaseReturnResult {
+  const { requestId, ...data } = input;
+  return postOnce(ctx, 'purchase_return', requestId, data, () => postPurchaseReturnOnce(ctx, input));
+}
+
+type PurchaseReturnResult = { id: number; docNo: string; credit: number; costValue: number; variance: number };
+
+function postPurchaseReturnOnce(ctx: Ctx, input: PurchaseReturnInput): PurchaseReturnResult {
   return tx(ctx, () => {
     assertDateOpen(ctx, input.date);
     if (input.lines.length === 0) throw new PetraError('INVALID_INPUT', 'choose at least one item', { field: 'lines' });

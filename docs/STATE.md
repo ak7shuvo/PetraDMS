@@ -1,9 +1,11 @@
 # PetraDMS - Build state
 
 ## Current phase
+Version 1.2.0 (release candidate for customers): adds stage 3 of the double-posting protection (request ids on sale, purchase, sale return, purchase return and stock adjustment, with a ref-based in-flight guard on each screen), on top of bulk product actions, DSR funds (migration 0004), the new palette and the licence removal. `idempotency.documents.test.ts` and `e2e/double-post-documents.spec.ts` cover it.
+
 Version 1.1.1 (D23) complete: a UI/UX polish release. The product and maker names are fixed (PetraDMS / "Made by Petra"). English is set in Nunito and Bangla in Tiro Bangla, with no synthetic bold. A soft 3D design system brings a clear button hierarchy and honours all three motion modes. The right-side utility dock has a calculator and three games (2048, Snake, Memory). Built in five phases on branch `v1.1.1`. No migration, and no change to posting, stock, purchase, POS, integrity or licensing logic.
 
-Earlier: 1.1.0 (D22) company products, bulk purchase entry, box + pcs; post-Phase-12 production release work (D21), see `docs/RELEASING.md` and `docs/LICENSING.md`.
+Earlier: 1.1.0 (D22) company products, bulk purchase entry, box + pcs; post-Phase-12 production release work (D21), see `docs/RELEASING.md`.
 
 ## Done
 - Phase 1: pnpm monorepo, Electron 44 + Vite + React 19 shell, `node:sqlite` WAL opened in main, typed IPC (zod), network blocking, `ci.yml` + `release-windows.yml`, Playwright spike test.
@@ -41,7 +43,3 @@ pnpm install
 pnpm typecheck && pnpm lint && pnpm test:core && pnpm check:integrity
 pnpm build && xvfb-run -a pnpm exec playwright test   # Linux; on Windows: pnpm test:e2e
 ```
-
-## Vendor licence tool
-- `pnpm keygen issue --key <private.pem> --customer "Name" --machine ABCD-1234-EF56-7890 [--expires YYYY-MM-DD] --out licence.petra`
-- The private key `petra-licence-private.pem` was generated with this build and is NOT in the repository. Keep it safe; whoever holds it can issue licences. The matching public key is embedded in `packages/db/src/app/publicKey.ts`.

@@ -26,7 +26,7 @@ export function registerSalesServices(d: Dispatcher): void {
   d.register('customer:quickAdd', ({ ctx, input }) => ({ id: quickAddCustomer(ctx, input) }));
 
   d.register('sale:save', ({ ctx, session, input, dispatcher }) => {
-    const r = postSale(ctx, { ...toInput(session!, input, dispatcher), date: input.date });
+    const r = postSale(ctx, { ...toInput(session!, input, dispatcher), date: input.date, requestId: input.requestId });
     dispatcher.consumeApproval(input.approvalToken);
     clearDraft(ctx, session!.userId);
     return { id: r.id, docNo: r.docNo, total: r.total, paid: r.paid, due: r.due, revision: r.revision, warnings: r.warnings };

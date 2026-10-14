@@ -5,6 +5,8 @@ import { call, errorText } from '../api';
 import { useI18n } from '../i18n';
 import { useApp } from '../store/app';
 import { Badge, Button, Checkbox, Drawer, EmptyState, Field, Input, Modal, MoneyInput, QtyInput, Select, Switch, Table, Textarea, productName, stockText, toast, useQuery, type Column } from '../ui';
+import { pruneSelection, type Selection } from '../ui/selection';
+import { ProductBulk } from './products/ProductBulk';
 
 export function ProductsPage() {
   const i18n = useI18n();
@@ -16,6 +18,7 @@ export function ProductsPage() {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState<number | 'all'>('all');
   const [editing, setEditing] = useState<ProductDto | 'new' | null>(null);
+  const [selected, setSelected] = useState<Selection>(() => new Set());
   const loc = useLocation();
   const products = useQuery('catalog:products', { includeArchived: showArchived });
   const opened = useRef<unknown>(null);
@@ -33,6 +36,9 @@ export function ProductsPage() {
     const s = q.trim().toLowerCase();
     return (products.data ?? []).filter((p) => (cat === 'all' || p.categoryId === cat) && (!s || p.name.toLowerCase().includes(s) || p.nameBn.includes(q.trim()) || p.sku.toLowerCase().includes(s) || p.barcodes.some((b) => b.includes(s))));
   }, [products.data, q, cat]);
+
+  // rows that leave the filtered list (search, category, archived switch, a reload) leave the selection too
+  useEffect(() => { setSelected((cur) => pruneSelection(cur, rows.map((p) => p.id))); }, [rows]);
 
   const cols: Column<ProductDto>[] = [
     { key: 'sku', header: t('prod.sku'), render: (p) => <span className="num" style={{ textAlign: 'left' }}>{p.sku}</span>, sortValue: (p) => p.sku },
@@ -68,12 +74,17 @@ export function ProductsPage() {
         <span className="muted">{i18n.int(rows.length)} {t('word.rows')}</span>
       </div>
       {products.error && <div className="p-error" role="alert">{products.error}</div>}
+      {canEdit && <ProductBulk ids={[...selected] as number[]} showArchived={showArchived} onClear={() => setSelected(new Set())} onDone={() => { setSelected(new Set()); products.reload(); }} />}
       <Table
         columns={cols}
         rows={rows}
         rowKey={(p) => p.id}
         pageSize={50}
         onRowClick={canEdit ? (p) => setEditing(p) : undefined}
+        selectable={canEdit}
+        selected={selected}
+        onSelectionChange={setSelected}
+        rowLabel={(p) => productName(i18n.lang, p)}
         empty={products.loading ? undefined : <EmptyState title={t('prod.emptyTitle')} body={t('prod.emptyBody')} action={canEdit ? <Button variant="primary" onClick={() => setEditing('new')}>{t('prod.add')}</Button> : undefined} />}
       />
       <ProductEditor

@@ -206,12 +206,11 @@ export const DEFAULT_EXPENSE_CATEGORIES: [string, string][] = [
   ['Mobile & internet', 'মোবাইল ও ইন্টারনেট'], ['Repairs', 'মেরামত'], ['Tea & food', 'চা ও খাবার'], ['Marketing', 'বিপণন'], ['Miscellaneous', 'বিবিধ']
 ];
 
-/** Idempotent first-run defaults: money accounts, expense categories, profile and licence rows. */
+/** Idempotent first-run defaults: money accounts, expense categories and the business profile row. */
 export function seedDefaults(ctx: Ctx, date: string): void {
   tx(ctx, () => {
     const t = ctx.now();
     run(ctx.db, 'INSERT OR IGNORE INTO business_profile(id, created_at, updated_at) VALUES(1,?,?)', t, t);
-    run(ctx.db, 'INSERT OR IGNORE INTO license_state(id, updated_at) VALUES(1,?)', t);
     if (!get(ctx.db, 'SELECT id FROM money_accounts LIMIT 1')) {
       DEFAULT_ACCOUNTS.forEach((a, i) => createMoneyAccount(ctx, { name: a.name, nameBn: a.nameBn, kind: a.kind, date, isDefault: i === 0 }));
     }

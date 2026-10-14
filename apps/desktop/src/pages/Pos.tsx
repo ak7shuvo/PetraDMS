@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type Ref } from 'react';
+import { useRequest } from '../ui/requestId';
 import { PetraError, fromBnDigits, toBnDigits, type CustomerDto, type ProductDto, type SaleDetail } from '@petra/core';
 import { call, errorText, errorCode, errorParams } from '../api';
 import { useI18n } from '../i18n';
@@ -37,6 +38,7 @@ export function Pos({ edit, onEditDone }: { edit?: SaleDetail | null; onEditDone
   const [approval, setApproval] = useState<{ reason: string; after: (token: string) => void } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const req = useRequest();
   const [done, setDone] = useState<Done | null>(null);
   const [reasonOpen, setReasonOpen] = useState(false);
   const [reason, setReason] = useState('');
@@ -192,14 +194,20 @@ export function Pos({ edit, onEditDone }: { edit?: SaleDetail | null; onEditDone
     ...(approvalToken ? { approvalToken } : {})
   });
 
-  const submit = async (printAfter: boolean, approvalToken?: string, editReason?: string) => {
-    if (!canSave) return;
+  const submit = (printAfter: boolean, approvalToken?: string, editReason?: string): Promise<void> => {
+    if (!canSave) return Promise.resolve();
+    // a ref guard: a double click or double Enter in the same frame cannot start two saves
+    return req.guard(() => submitOnce(printAfter, approvalToken, editReason)).then(() => undefined);
+  };
+
+  const submitOnce = async (printAfter: boolean, approvalToken?: string, editReason?: string) => {
     setBusy(true);
     setError(null);
     try {
       const r = edit
         ? await call('sale:edit', { id: edit.id, reason: editReason ?? '', ...body(approvalToken) })
-        : await call('sale:save', { date: today, ...body(approvalToken) });
+        : await call('sale:save', { date: today, requestId: req.id(), ...body(approvalToken) });
+      if (!edit) req.renew();
       if (r.warnings.includes('credit_limit')) toast.error(t('pos.creditWarn'));
       if (edit) {
         toast.ok(t('pos.edited', { no: r.docNo }));

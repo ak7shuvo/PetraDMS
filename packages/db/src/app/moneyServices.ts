@@ -4,6 +4,7 @@ import { currentBusinessDate } from './coreServices';
 import { loadSettings } from '../settings';
 import { postExpense, postPayment, voidExpense, generateSalarySheet, voidSalarySheet } from '../money';
 import { closeDay, reopenDay } from '../dayclose';
+import { listFunds, saveFund } from '../funds';
 import {
   archiveEmployee, cashBook, dayHistory, dayStatus, getSalarySheet, listEmployees, listExpenseCategories, listExpenses, listSalarySheets, saveAccount, saveEmployee, saveExpenseCategory
 } from './moneyApp';
@@ -15,6 +16,8 @@ export function registerMoneyServices(d: Dispatcher): void {
   d.register('exp:categories', ({ ctx, input }) => listExpenseCategories(ctx, input.includeArchived));
   d.register('exp:categorySave', ({ ctx, input }) => ({ id: saveExpenseCategory(ctx, input) }));
   d.register('exp:list', ({ ctx, input }) => listExpenses(ctx, input));
+  d.register('fund:list', ({ ctx, input }) => listFunds(ctx, input.includeInactive));
+  d.register('fund:save', ({ ctx, input }) => ({ id: saveFund(ctx, input) }));
   d.register('exp:save', ({ ctx, input }) => postExpense(ctx, input));
   d.register('exp:void', ({ ctx, input }) => {
     voidExpense(ctx, input.id, input.reason);
@@ -27,7 +30,7 @@ export function registerMoneyServices(d: Dispatcher): void {
     archiveEmployee(ctx, input.id, input.archived);
     return null;
   });
-  d.register('emp:pay', ({ ctx, input }) => postPayment(ctx, { partyKind: 'employee', partyId: input.employeeId, amount: input.amount, date: input.date, accountId: input.accountId, purpose: input.purpose, note: input.note }));
+  d.register('emp:pay', ({ ctx, input }) => postPayment(ctx, { partyKind: 'employee', partyId: input.employeeId, amount: input.amount, date: input.date, accountId: input.accountId, purpose: input.purpose, note: input.note, requestId: input.requestId }));
 
   d.register('salary:list', ({ ctx }) => listSalarySheets(ctx));
   d.register('salary:get', ({ ctx, input }) => getSalarySheet(ctx, input.id));

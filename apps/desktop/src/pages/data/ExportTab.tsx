@@ -4,7 +4,7 @@ import { Button, Card, toast } from '../../ui';
 import { call, errorText } from '../../api';
 import { useI18n } from '../../i18n';
 
-/** "Export everything": spreadsheets, every table and a full backup in one ZIP, so the shop is never locked in. Works even when the licence has expired. */
+/** "Export everything": spreadsheets, every table and a full backup in one ZIP, so the shop is never locked in. */
 export function ExportTab() {
   const { t, int } = useI18n();
   const [busy, setBusy] = useState(false);

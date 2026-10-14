@@ -148,11 +148,11 @@ export function saveAccount(ctx: Ctx, i: AccountSave, today: string): number {
 export function cashBook(ctx: Ctx, f: { from?: string; to?: string; accountId?: number }): CashbookView {
   const acc = f.accountId ?? null;
   const opening = f.from ? scalar(ctx.db, 'SELECT COALESCE(SUM(amount),0) FROM cash_transactions WHERE business_date < ? AND (? IS NULL OR account_id = ?)', [f.from, acc, acc]) : 0;
-  const rows = all<{ id: number; business_date: string; account_id: number; aname: string; source: string; amount: number; note: string; ref_type: string | null; ref_id: number | null; reverses_id: number | null; reversed: number }>(
+  const rows = all<{ id: number; business_date: string; account_id: number; aname: string; source: string; amount: number; note: string; ref_type: string | null; ref_id: number | null; reverses_id: number | null; reversed: number; fund_id: number | null; fund_code: string | null }>(
     ctx.db,
     `SELECT t.id, t.business_date, t.account_id, a.name AS aname, t.source, t.amount, t.note, t.ref_type, t.ref_id, t.reverses_id,
-            EXISTS(SELECT 1 FROM cash_transactions r WHERE r.reverses_id = t.id) AS reversed
-       FROM cash_transactions t JOIN money_accounts a ON a.id = t.account_id
+            EXISTS(SELECT 1 FROM cash_transactions r WHERE r.reverses_id = t.id) AS reversed, t.fund_id, f.code AS fund_code
+       FROM cash_transactions t JOIN money_accounts a ON a.id = t.account_id LEFT JOIN funds f ON f.id = t.fund_id
       WHERE (? IS NULL OR t.business_date >= ?) AND (? IS NULL OR t.business_date <= ?) AND (? IS NULL OR t.account_id = ?)
       ORDER BY t.business_date, t.id`,
     f.from ?? null, f.from ?? null, f.to ?? null, f.to ?? null, acc, acc
@@ -165,7 +165,7 @@ export function cashBook(ctx: Ctx, f: { from?: string; to?: string; accountId?: 
     running += r.amount;
     if (r.amount >= 0) totalIn += r.amount;
     else totalOut += -r.amount;
-    return { id: r.id, date: r.business_date, accountId: r.account_id, accountName: r.aname, source: r.source, amount: r.amount, balanceAfter: running, note: r.note, refNo: docs.get(docKey(r.ref_type, r.ref_id)) ?? '', reversal: r.reverses_id !== null, reversed: r.reversed === 1 };
+    return { id: r.id, date: r.business_date, accountId: r.account_id, accountName: r.aname, source: r.source, amount: r.amount, balanceAfter: running, note: r.note, refNo: docs.get(docKey(r.ref_type, r.ref_id)) ?? '', reversal: r.reverses_id !== null, reversed: r.reversed === 1, fundId: r.fund_id, fundCode: r.fund_code };
   });
   return { accountId: acc, opening, totalIn, totalOut, closing: running, rows: out };
 }
