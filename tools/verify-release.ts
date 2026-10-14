@@ -88,12 +88,25 @@ const baseEnv = (): Record<string, string> => {
 // ------------------------------------------------------------------------------------------------ contents
 section('Package contents');
 check(fs.existsSync(path.join(resources, 'app.asar')), 'app.asar missing');
+// the sign-in screen's PETRA logo must be inside the packaged app (read the asar header: 4 bytes size, 4 pickle, 4 pickle, 4 json length, then json)
+{
+  const fd = fs.openSync(path.join(resources, 'app.asar'), 'r');
+  const head = Buffer.alloc(16);
+  fs.readSync(fd, head, 0, 16, 0);
+  const jsonLen = head.readUInt32LE(12);
+  const json = Buffer.alloc(jsonLen);
+  fs.readSync(fd, json, 0, jsonLen, 16);
+  fs.closeSync(fd);
+  const files = (JSON.parse(json.toString('utf8')) as { files: { dist?: { files?: { assets?: { files?: Record<string, { size?: number }> } } } } }).files;
+  const logo = Object.entries(files.dist?.files?.assets?.files ?? {}).find(([n]) => /^petra-logo-.*\.png$/.test(n));
+  check(!!logo && (logo[1].size ?? 0) > 10_000, 'the PETRA logo (dist/assets/petra-logo-*.png) is missing from app.asar');
+}
 const migrations = fs.readdirSync(path.join(resources, 'migrations')).filter((f) => f.endsWith('.sql'));
 check(migrations.length >= 1, 'database migrations are not in the package');
 check(fs.existsSync(path.join(desktop, 'build', 'icon.ico')), 'icon.ico missing');
 const unwanted = fs.readdirSync(resources).filter((f) => /\.(ts|tsx|map|db)$/.test(f) || f === 'e2e' || f === 'fixtures');
 check(unwanted.length === 0, `development files shipped: ${unwanted.join(', ')}`);
-pass('package contents', `app.asar, ${migrations.length} migration(s), icon, no development files`);
+pass('package contents', `app.asar with the PETRA logo, ${migrations.length} migration(s), icon, no development files`);
 
 // ------------------------------------------------------------------------------------------------ smoke
 type Smoke = { ok: boolean; packaged: boolean; tables: number; journalMode: string; integrity: string; version: string; schema: number; dataDir: string; counts: Record<string, number> };
